@@ -2,6 +2,7 @@
 	[
 		"silence",
 
+		"temp_input2",
 		"circusChoir1",
 		"trainBass3",
 		"trainMove2",

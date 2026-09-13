@@ -52,7 +52,7 @@ SynthDef(\dulcimerVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 	var sig = PlayBuf.ar(2, bufnum,
 		rate: rate * BufRateScale.kr(bufnum) * [1, 1.007],
 		startPos: start * BufFrames.kr(bufnum), loop: 0);
-	var tone = LFTri.ar(freq * [1,1.02] * 1 * LFCub.ar(9 * amp,0, 0.1 * amp,2), 0, 0.02);
+	var tone = LFTri.ar(freq * [1,1.02] * 0.5 * LFCub.ar(9 * amp,0, 0.1 * amp,2), 0, 0.04);
 	var mix = (sig + tone) * amp * env;
 	Out.ar(out, mix);
 }).add;
@@ -64,7 +64,7 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
     gate=1, release=1.4|
 	var sig = In.ar(in, 2);
 	var env = EnvGen.kr(Env.asr(0.01, 1, release), gate, doneAction: 2);
-	sig = FreeVerb2.ar(sig[0], sig[1], mix, room, damp);
+	// sig = FreeVerb2.ar(sig[0], sig[1], mix, room, damp);
 	sig = LeakDC.ar(sig);
 	Out.ar(out, sig * env * amp);
 }).add;
@@ -113,10 +113,10 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 			\step, Pswitch(divs.collect({ |n| Pseries(0, 1, n) }),      Pkey(\divIdx)),
 			\note, Pswitch(divs.collect({ |n| Pseq(pool.keep(n), 1) }), Pkey(\divIdx)),
 			// \root, 0,//Pseq([0, 2,-2,0].stutter(24), inf),
-			\octave, Pseq([2, 4, 3, 5].stutter(2), inf),
+			\octave, Pseq([4, 3, 5].stutter(2), inf),
 			\dur,  Pkey(\div).reciprocal * beat,
 			\legato, 0.8,
-			\attack, 0.01,
+			\attack, 0.1,
 			\release, 2,
 			\pan, Pwhite(-0.3, 0.3),
 
