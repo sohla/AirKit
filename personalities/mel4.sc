@@ -57,7 +57,7 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 
 	synth.set(\start, start);
 	synth.set(\rate, rate);
-	synth.set(\amp, amp * 8);
+	synth.set(\amp, amp * 20);
 
 };
 //------------------------------------------------------------

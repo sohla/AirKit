@@ -159,15 +159,15 @@ SynthDef(\stereoSamplerH, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, freq
 
 	var dur = m.accelMassFiltered.lincurve(0,2.5,0.5,0.05,-3);
 	var move = m.accelMassFiltered.lincurve(0,1.5,1,notes.size,-1);
-	var amp = m.accelMassFiltered.lincurve(0,1.5,-40,-13,-1);
+	var amp = m.accelMassFiltered.lincurve(0,1.5,-40,-2,-1);
 	octave = m.gyroYFiltered.lincurve(-1.0,1.0,3,8,-1).asInteger;
 	
-  if(amp < -38, {amp = -100});
+	if(amp < -38, {amp = -100});
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\range, move.floor);
 	Pdef(m.ptn).set(\amp, amp.dbamp);
-  Pdef(m.ptn).set(\root, root-2);
-  Pdef(m.ptn).set(\octave, octave);
+	Pdef(m.ptn).set(\root, root-2);
+	Pdef(m.ptn).set(\octave, octave);
 
 	if(m.accelMassFiltered > 0.02,{
 		if( Pdef(m.ptn).isPlaying.not,{

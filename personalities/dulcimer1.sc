@@ -187,8 +187,8 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 
 //------------------------------------------------------------
 ~next = {|d|
-	var idx = m.accelMassFiltered.lincurve(0, 1.5, 0, divs.size - 1, 2).round.asInteger.clip(0, divs.size - 1);
-	var amp = m.accelMassFiltered.lincurve(0, 1.5, -40, -6, -2);
+	var idx = m.accelMassFiltered.lincurve(0, 1.0, 0, divs.size - 1, 2).round.asInteger.clip(0, divs.size - 1);
+	var amp = m.accelMassFiltered.lincurve(0, 1.0, -40, -6, -2);
 
 	if(amp < 39.neg, { amp = 120.neg});
 

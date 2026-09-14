@@ -7,7 +7,7 @@ var kickIdx = 0;
 var kickNames = ["drum", "kick", "bd"];
 
 var beat = 0.5;
-var divs = [1,4];
+var divs = [1,4,3];
 
 var rates = [1, 1, 1, 0.5, 2, 1.5, -1];
 
@@ -141,9 +141,9 @@ SynthDef(\multiBeatKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 //------------------------------------------------------------
 ~next = {|d|
 	var e = m.accelMassFiltered;
-	var idx = e.lincurve(0, 1.0, 0, divs.size - 1, 1).round.asInteger.clip(0, divs.size - 1);
+	var idx = e.lincurve(0, 1.3, 0, divs.size - 1, 1).round.asInteger.clip(0, divs.size - 1);
 	var pal = e.lincurve(0, 1.2, 1, buffers.size, 1).round.asInteger.clip(1, buffers.size);
-	var amp = e.lincurve(0, 0.2, -10, 0, -1);
+	var amp = e.lincurve(0, 0.5, -10, 0, -1);
 	var roll = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.75, 1.25);
 	var cutoff = ((d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5) * 2).lincurve(-1.0, 1.0, 40, 900, 1);
 

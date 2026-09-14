@@ -182,19 +182,19 @@ SynthDef(\chooka, {
 
 	var oct = m.gyroYFiltered.linlin(-1,1,8,4).floor;
   	var envRel = m.accelMassFiltered.lincurve(0,2.5,0.4,1.1,1);
-	var amp = m.accelMassFiltered.lincurve(0,0.1,0.001,1.0,-1);
+	var amp = m.accelMassFiltered.lincurve(0,2.1,0.001,1.0,-1);
 	var ff = (d.sensors.gyroEvent.y / pi.half).linexp(-1,1,80,14000,-2);
 	var atk = m.accelMassFiltered.lincurve(0,2.5,0.02,0.001,-1);
 	var dcy = ((d.sensors.gyroEvent.x / pi).fold(-0.5,0.5) * 2).lincurve(-1,1,0.001,0.4,-2);
 	var lff = (m.gyroZFiltered.fold(-0.5,0.5) * 2).linlin(-1,1,110.0,800);
 	var hff = (m.gyroZFiltered.fold(-0.5,0.5) * 2).linexp(-1,1,250.0,8000);
-	var hh = m.accelMassFiltered.lincurve(0,1.5,0,1.0,1);
+	var hh = m.accelMassFiltered.lincurve(0,2.5,0,1.0,1);
 	var notes = [28,35,40,47,52,59,64] + 12 + m.com.root;
 	var ni = (d.sensors.gyroEvent.y / pi.half).lincurve(-0.8,0.8,0,notes.size-1,-2).floor;
 	var kd = (d.sensors.gyroEvent.y / pi.half).lincurve(-0.8,0.8,0.1,2,-2);
 	var ca = m.accelMassFiltered.lincurve(0,2.5,0.0,1.0,-12);
 
-	dur = (m.rrateMassFiltered).lincurve(0.0,0.1,0.2,0.01,-1);
+	// dur = (m.rrateMassFiltered).lincurve(0.0,2.1,0.2,0.01,-1);
 
 
 	if(amp < 0.02) { amp = 0.0 };

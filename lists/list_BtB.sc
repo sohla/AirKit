@@ -5,14 +5,17 @@
 		"circusChoir1",
 		"trainBass3",
 		"trainMove2",
+		"trainChooka3",
 		"trainMelody2",
 		"melChest1",
 		"timWind1",
 		"treeWind",
-		"trainChooka3",
-		"velocity3",
-		"velocity1",
-		"velocity2",
+		"pluck1",
+		"droplet",
+		"cymbals1",
+		"harp1",
+		"metal1",
+		"miniMoog",
 
 		"melbb1",
 		"melbb2",
@@ -27,10 +30,8 @@
 		"melChair2",
 		"melChair3",
 		"melChair4",
-		"droplet",
 
 		"nicTwoNote",
-		
 		
 		"nic1",
 		"nic2",
@@ -40,16 +41,10 @@
 		"violin1",
 		"violin2",
 
-		"droplet",
-		"cymbals1",
-		"harp1",
 
 		"bee",
 		"bells",
 		"bongo1",
-		"cymbals1",
-		"pluck1",
-		"droplet",
 		"metal1",
 		"miniMoog",
 		
