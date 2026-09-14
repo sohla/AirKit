@@ -90,7 +90,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\startSize, amp * 850);
-	Pdef(m.ptn).set(\endSize, amp * 1);
+	Pdef(m.ptn).set(\endSize, amp * 1.4);
 
 
 	Pdef(m.ptn).set(\dur, dur);

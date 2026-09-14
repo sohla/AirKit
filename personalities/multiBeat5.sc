@@ -188,7 +188,7 @@ SynthDef(\multiBeatSampler, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, p
 	var e = m.accelMassFiltered;
 	var idx = e.lincurve(0, 1.5, 0, divs.size - 1, 1)
 		.round.asInteger.clip(0, divs.size - 1);
-	var amp = e.lincurve(0, 0.4, -41, 0, -1);
+	var amp = e.lincurve(0, 0.4, -41, -10, -1);
 	var oct = (d.sensors.gyroEvent.y / pi.half).lincurve(-1, 1, 4, 6, 1).asInteger;
 	var ptch = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.94, 1.06);
 	var panBias = (d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, -0.5, 0.5);

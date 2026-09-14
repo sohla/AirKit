@@ -88,7 +88,7 @@ SynthDef(\multiBeatVoice, {|out=0, freq=440, amp=0.2, pan=0,
 ~next = {|d|
 	var idx = m.accelMassFiltered.lincurve(0, 2.5, 0, divs.size - 1, 1)
 		.round.asInteger.clip(0, divs.size - 1);
-	var amp = m.accelMassFiltered.lincurve(0, 0.2, -60, -10, -1);
+	var amp = m.accelMassFiltered.lincurve(0, 0.2, -60, -16, -1);
 	var ffreq = m.accelMassFiltered.lincurve(0, 1.0, 700, 6000, 2);
 	var rel = m.accelMassFiltered.lincurve(0, 1.0, 3.1,0.2, 2);
 

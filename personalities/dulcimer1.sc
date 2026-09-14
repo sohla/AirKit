@@ -52,7 +52,7 @@ SynthDef(\dulcimerVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 	var sig = PlayBuf.ar(2, bufnum,
 		rate: rate * BufRateScale.kr(bufnum) * [1, 1.007],
 		startPos: start * BufFrames.kr(bufnum), loop: 0);
-	var tone = LFTri.ar(freq * [1,1.02] * 0.5 * LFCub.ar(9 * amp,0, 0.1 * amp,2), 0, 0.04);
+	var tone = LFTri.ar(freq * [1,1.02] * 2 * LFCub.ar(9 * amp,0, 0.1 * amp,2), 0, 0.04);
 	var mix = (sig + tone) * amp * env;
 	Out.ar(out, mix);
 }).add;
@@ -113,10 +113,10 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 			\step, Pswitch(divs.collect({ |n| Pseries(0, 1, n) }),      Pkey(\divIdx)),
 			\note, Pswitch(divs.collect({ |n| Pseq(pool.keep(n), 1) }), Pkey(\divIdx)),
 			// \root, 0,//Pseq([0, 2,-2,0].stutter(24), inf),
-			\octave, Pseq([4, 3, 5].stutter(2), inf),
+			\octave, Pseq([4, 3,2].stutter(2), inf),
 			\dur,  Pkey(\div).reciprocal * beat,
 			\legato, 0.8,
-			\attack, 0.1,
+			\attack, 0.4,
 			\release, 2,
 			\pan, Pwhite(-0.3, 0.3),
 
@@ -187,8 +187,8 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 
 //------------------------------------------------------------
 ~next = {|d|
-	var idx = m.accelMassFiltered.lincurve(0, 1.0, 0, divs.size - 1, 2).round.asInteger.clip(0, divs.size - 1);
-	var amp = m.accelMassFiltered.lincurve(0, 1.0, -40, -6, -2);
+	var idx = m.accelMassFiltered.lincurve(0, 0.3, 0, divs.size - 1, 2).round.asInteger.clip(0, divs.size - 1);
+	var amp = m.accelMassFiltered.lincurve(0, 0.3, -40, -10, -2);
 
 	if(amp < 39.neg, { amp = 120.neg});
 
