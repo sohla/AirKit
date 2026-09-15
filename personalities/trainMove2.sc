@@ -396,7 +396,7 @@ SynthDef(\warmPadMove2, {
 	// aa = a;
 
     synth.set(\freq, (note + m.com.root).midicps);
-	synth.set(\amp, a * 2);
+	synth.set(\amp, a * 1);
 	synth.set(\filtSpeed, filtSpeed);
 	synth.set(\lfoFreq, lfoFreq);
 	synth.set(\filtMin, fmin);

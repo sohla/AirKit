@@ -4,7 +4,7 @@ var buffer;
 
 var index =0;
 var trig = false;
-var notes = [0,-12] +10;
+var notes = [0,-12] + 4 + 12;
 var note = notes[0];
 m.accelMassFilteredAttack = 0.99;
 m.accelMassFilteredDecay = 0.8;

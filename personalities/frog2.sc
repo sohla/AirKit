@@ -96,7 +96,7 @@ SynthDef(\miniMoogModel, { |freq = 440, amp = 0.5, gate = 1, pan = 0,
 //------------------------------------------------------------
 ~next = {|d|
 
-	var amp = m.accelMassFiltered.linexp(0,1.5,1,3);
+	var amp = m.accelMassFiltered.linexp(0,1.5,1,4);
 	Pdef(m.ptn).set(\amp, amp);
 
 	if(m.accelMassFiltered > 0.07,{

@@ -50,7 +50,7 @@ SynthDef(\drumkitNN, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 			},
 			\start, 0.03,
 			\pan, Pwhite(-0.1,0.1),
-			\root, Pseq([0,3].stutter(64), inf),
+			\root, Pseq([0, -2].stutter(64), inf),
 			\func, Pfunc({|e|localRoot=e.root}),
 			\args, #[],
 		)
@@ -78,8 +78,8 @@ SynthDef(\drumkitNN, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 
 	var rate = m.rrateMassFiltered.linlin(0,1,0.6,3);
 	var amp = m.accelMassFiltered.lincurve(0,2.5,0.4,1, -2);
-	var notes = [0,4,7,11] + localRoot;
-	var amps = [2,1,1,1] * 0.5;
+	var notes = [0,7,5,10] + localRoot + 5;
+	var amps = [2,1,1,1] * 0.2;
 	var index = m.gyroYFiltered.fold(-0.5,0.5).lincurve(-0.5,0.5,0,notes.size,-1).asInteger;
 	var attack = m.accelMassFiltered.lincurve(0.0,1.5,0.1,0.002,-1);
 	var release = m.accelMassFiltered.lincurve(0.0,1.5,4.3,0.001,-1);

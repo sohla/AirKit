@@ -6,13 +6,13 @@ var eventTypeName = (\customEvent_ ++ m.ptn).asSymbol;
 
 var folder = PathName("~/Downloads/cotf_samples/Harpsichord");
 
-// var chordPool = [
-// 	[ 0,7,11,16],
-// 	// [ 0,3,8],
-// 	// [-3,  0,  4],
-// 	// [-1,  2,  7],
-// ];
-var chordPool = [0,11,4,7];
+var chordPool = [
+	[ 0,7,12],
+	[ 0,9,14],
+	[0,5,12],
+	// [-1,  2,  7],
+];
+// var chordPool = [0,11,4,7];
 
 //------------------------------------------------------------
 var noteToMidi = { |noteName|
@@ -93,18 +93,19 @@ SynthDef(\harpsiVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 
 			\note, Pfunc({ |e| chordPool.wrapAt(e[\chordIdx] ? 0) }),
 			// \root, 0,
-			\octave, Pseq([4,5,6,7].stutter(2), inf),
-			\dur, 0.1,
+			\octave, Pseq([6,7,8].stutter(2), inf),
+			// \strum, 0.2,
+			// \dur, 0.2,
 			\legato, 1.6,
 			\pan, Pwhite(-0.25, 0.25),
 
 			\shape, \triangle,
-			\fill, true,
+			\fill, false,
 			\sx, Pwhite(-0.05, 0.05),
 			\sy, Pwhite(-0.05, 0.05),
 			\ex, Pkey(\sx),
 			\ey, Pkey(\sy),
-			\duration, 1.1,
+			\duration, 2.1,
 
 			\args, #[],
 		);
@@ -152,14 +153,16 @@ SynthDef(\harpsiVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 //------------------------------------------------------------
 ~next = {|d|
 	var chordIdx = (d.sensors.gyroEvent.y / pi.half).linlin(-1, 1, 0, chordPool.size - 1).round.asInteger;
-	var strum = (d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5).abs.linlin(0, 0.5, 0, 0.07);
-	var amp = m.accelMassFiltered.lincurve(0, 0.3, -70, -10, -1).dbamp;
+	var strum = (d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5).abs.linlin(0, 0.5, 0.2, 0.01);
+	var amp = m.accelMassFiltered.lincurve(0, 0.3, -70, -15, -1).dbamp;
 	// var oct = m.accelMassFiltered.lincurve(0, 1.6, 5, 6, 1).round.asInteger;
 	var hue = chordIdx / chordPool.size;
+	var dur = m.accelMassFiltered.lincurve(0, 1.6, 0.4, 0.1, -1);
 
+	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\chordIdx, chordIdx);
-	Pdef(m.ptn).set(\strum, strum);
+	// Pdef(m.ptn).set(\strum, dur/2);
 	Pdef(m.ptn).set(\amp, amp);
 	Pdef(m.ptn).set(\root, m.com.root ? 0);
 

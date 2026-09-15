@@ -31,7 +31,7 @@ SynthDef(\beeSynth1, { |out=0, rr=0.1, amp = 0.0, gate = 1, release = 2, af=264,
 }).add;
 
 ~init = ~init <> {
-	synth = Synth(\beeSynth1, [\af, 200.rrand(300), \bf, 50.rrand(440)]);
+	synth = Synth(\beeSynth1, [\af, 600.rrand(300), \bf, 50.rrand(440)]);
 	
 };
 

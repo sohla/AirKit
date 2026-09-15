@@ -119,12 +119,19 @@ var initGUI = {
 	});
 };
 
-s.volume = -2; // in db
+
+"SC_JACK_DEFAULT_INPUTS".setenv("system");
+"SC_JACK_DEFAULT_OUTPUTS".setenv("system");
+
+s.volume = -2; // db
 s.options.blockSize = 128;
-s.options.numBuffers = 2048;  // more buffers
-s.options.memSize = 65536;    // more memory
-s.options.numOutputBusChannels = 2; // for quad output
-s.latency = machine[\latency]; // in seconds
+s.options.numBuffers = 2048;  
+s.options.memSize = 65536;   
+s.options.numOutputBusChannels = 2; 
+s.options.numInputBusChannels = 1;
+s.latency = machine[\latency]; 
+
+
 
 MIDIIn.connectAll;
 

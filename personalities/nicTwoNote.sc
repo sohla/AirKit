@@ -54,7 +54,7 @@ var firstNoteOf = { |stem|
 var folder = PathName("~/Downloads/nicSamples/twoNote");
 
 var cellBase = 63;					
-var cell = [2,0,-2,-12,-24] + 2;
+var cell = [2,0,-2,-12,-24] - 3 + 12;
 var octaves = [0,-1];			
 
 
@@ -141,7 +141,7 @@ SynthDef(\nicTwoNoteSampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, f
 			// never drift from the midi note pickSample was handed.
 			\freq, Pfunc({ |e| midiOf.(e).midicps }),
 			// \start, 0.0,
-			\dur, 0.25,
+			// \dur, 0.25,
 			\pan, Pwhite(-0.5, 0.5),
 			\attack, 0.02,
 			\decay, 0.1,
@@ -207,12 +207,14 @@ SynthDef(\nicTwoNoteSampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, f
 ~next = {|d|
 
 	var move = m.accelMassFiltered.lincurve(0, 0.1, 1, cell.size, 1);
-	var amp = m.accelMassFiltered.lincurve(0, 0.1, -60, -2, -1);
+	var amp = m.accelMassFiltered.lincurve(0, 0.1, -60, -8, -1);
 	var step = m.gyroXFiltered.linlin(-0.8, 0.8, 0, octaves.size - 0.001).floor;
 	var start = m.accelMassFiltered.lincurve(0, 0.5, 0.0, 0.1,0);
+	var dur = m.accelMassFiltered.lincurve(0, 1.5, 0.4, 0.1,0);
 
 	if(amp < -58, { amp = -90; });
 
+	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\range, move.asInteger);
 	Pdef(m.ptn).set(\amp, amp.dbamp);
 	Pdef(m.ptn).set(\octave, octaves[step.asInteger]);

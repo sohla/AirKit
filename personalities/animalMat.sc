@@ -65,7 +65,7 @@ SynthDef(\stereoSamplerAM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, f
 	var pan = d.sensors.gyroEvent.z.linlin(-1,1,-1,1);
   var dur = m.gyroYFiltered.lincurve(-1.0,1.0,0.9,0.075);
 
-	if(amp < 0.2, {amp = 0}, { amp = 1.1});
+	if(amp < 0.2, {amp = 0}, { amp = 3});
 
 	// if(d.sensors.digiInEvent[0] == 1, {
 	if(m.rrateMassFiltered > 0.032,{

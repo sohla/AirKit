@@ -17,41 +17,23 @@
 	"trainMelody2",
 	"trainChooka2",
 
-		"velocity3",
-		"velocity1",
-		"velocity2",
-
-
-	"melbb2",
-	"nicTwoNote",
-
-	"droplet",
-	"cymbals1",
-	"pluck1",
-		"celeste1",
-	"harpsichord1",
-
-  	"harp1",
-
-	"wind1",
-	"rain1",
-	"thunder",
-	
-	"magicWand2",
-	"arialOstinato",
-
-	"mel4",
-
 	"frog2",
-	"timWind1",
+	"animalMat",
+	"chicken2",
 
-	"violin1",
-	"violin2",
-		"droplet",
-
-	"melodicPerc2",
-
-	"velocity1",
+	"nic1",
+	"nic2",
+	"nic3",
+	"nic4",
+	"nicTwoNote",
+	
+	"melbb1",
+	"melbb2",
+	"mel1",
+	"mel2",
+	"mel3",
+	"mel4",
+	"mel5",
 
 	"silence",
 
