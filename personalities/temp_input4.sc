@@ -19,8 +19,8 @@ SynthDef(\bellChime, { |out = 0, amp = 0.3, freq = 523, ratio = 3.0, floorDb = -
 	decay = 3.0, fullScale = 0.35, curve = 0.6, window = 0.005, tone = 5000|
 
 	var in   = SoundIn.ar(0);
-	var fast = Amplitude.kr(in, 0.0005, 0.008);
-	var slow = Amplitude.kr(in, slowAtk, slowRel);
+	var fast = Amplitude.kr(in, 0.001, 0.05);
+	var slow = LagUD.kr(fast, slowAtk, slowRel);
 	var over = fast > ((slow * ratio) + floorDb.dbamp);
 	var edge = over > Delay1.kr(over);
 	var trig = Trig1.kr(edge, deadtime);
@@ -41,7 +41,7 @@ SynthDef(\bellChime, { |out = 0, amp = 0.3, freq = 523, ratio = 3.0, floorDb = -
 
 //------------------------------------------------------------
 ~init = ~init <> {
-	synth = Synth(\bellChime, [\amp,0.2, \ratio, 2.0, \floorDb, -43, \decay, 1.0]);
+	synth = Synth(\bellChime, [\amp,0.2, \ratio, 0.3, \slowRel, 0.25, \floorDb, -18, \fullScale, 1.0, \decay, 1.0]);
 };
 
 //------------------------------------------------------------

@@ -219,16 +219,23 @@ OSCdef(\level, { |msg|
 // ----------------------------------------------------------------------------
 // 1.1  Envelope following
 //
-//      Amplitude.kr(in, attackTime, releaseTime) is the foundation.
-//      Short attack follows transients faithfully; long release is
-//      smooth but slow to reset.
+//      Amplitude.kr(in, attackTime, releaseTime) is the foundation,
+//      but only releaseTime earns its name. attackTime does NOT slow
+//      the rise -- see the trap in 1.4 before you rely on it. These
+//      three differ in how they fall, not in how fast they catch a
+//      transient.
+//
+//      A short release also under-reads peaks: it drops into the
+//      troughs between waveform peaks faster than the 1.45ms control
+//      rate samples it, so it catches the envelope low. Measured on one
+//      noise burst, the 0.05 release read roughly twice the 0.008 one.
 // ----------------------------------------------------------------------------
 (
 SynthDef(\env, {
     var in   = SoundIn.ar(0);
-    var fast = Amplitude.kr(in, 0.0005, 0.010);    // transient-faithful
+    var fast = Amplitude.kr(in, 0.0005, 0.010);    // resets fastest, reads lowest
     var mid  = Amplitude.kr(in, 0.005,  0.100);    // gesture-level
-    var slow = Amplitude.kr(in, 0.100,  0.500);    // background level
+    var slow = Amplitude.kr(in, 0.100,  0.500);    // smoothest, slowest to reset
     SendReply.kr(Impulse.kr(20), '/env', [fast, mid, slow]);
 }).add;
 
@@ -313,6 +320,26 @@ OSCdef(\hit1, { |msg| ("hit %".format(msg[3].round(0.001))).postln }, '/hit1');
 //      This one trick is most of what commercial drum triggers do, and
 //      it is the biggest robustness gain in Part 1.
 //
+//      THE TRAP -- and it is silent. You cannot build the slow envelope
+//      by handing Amplitude.kr a long attackTime. attackTime does not
+//      slow the rise. Measured on a step, Amplitude.kr(in, 0.300, 0.150)
+//      and Amplitude.kr(in, 0.001, 0.05) BOTH reach 95% in one control
+//      block. Release is the only one of the two that shapes anything.
+//
+//      So a slow follower built that way rises WITH the strike, and
+//      fast > (slow * ratio) compares a value against a multiple of
+//      itself. It cannot fire on an attack. What it can still do is
+//      fire on ripples partway down the decay, once slow has released
+//      and fast has risen again -- so it triggers on the tail and on
+//      rebounds while missing the hit that caused them.
+//
+//      That failure does not read as a threshold problem, because
+//      lowering the floor never helps: the floor was never the binding
+//      term. Verified on a drum mic -- the slow follower's window peak
+//      tracked at ~74% of the fast one's.
+//
+//      Lag the rise explicitly instead. LagUD's up-time is real.
+//
 //      ratio  how much louder than background counts as an event.
 //             2-4 expressive, 5+ for noisy stages.
 //      floor  absolute minimum, stops it firing on silence.
@@ -320,8 +347,8 @@ OSCdef(\hit1, { |msg| ("hit %".format(msg[3].round(0.001))).postln }, '/hit1');
 (
 SynthDef(\adaptive, {
     var in   = SoundIn.ar(0);
-    var fast = Amplitude.kr(in, 0.0005, 0.008);
-    var slow = Amplitude.kr(in, 0.080,  0.400);
+    var fast = Amplitude.kr(in, 0.001, 0.05);
+    var slow = LagUD.kr(fast, \slowUp.kr(0.300), \slowDown.kr(0.150));
     var over = fast > ((slow * \ratio.kr(3.0)) + \floor.kr(0.004));
     var trig = Trig1.kr(over, \deadtime.kr(0.025));
     SendReply.kr(trig, '/hit2', [Latch.kr(fast, trig), Latch.kr(slow, trig)]);
@@ -335,6 +362,11 @@ OSCdef(\hit2, { |msg|
 
 // play quietly, then loudly. It should keep up with both.
 ~run.(\adaptive);
+
+// slowUp 0 removes the rise lag, reproducing the trap described above.
+// Hit once: it fires on the decay and the rebound, not on the strike.
+~run.(\adaptive, [\slowUp, 0]);
+
 ~stop.(\adaptive);
 
 
@@ -350,13 +382,20 @@ OSCdef(\hit2, { |msg|
 //      hard you actually hit.
 //
 //      The exponent at the end is a feel curve. 0.6 opens up the quiet
-//      end, usually what you want for hands and brushes.
+//      end, usually what you want for hands and brushes. Be aware it
+//      lifts false triggers disproportionately too -- a rebound at a
+//      third the level comes back at half the velocity.
+//
+//      fullScale is the one number here that is NOT portable. Measure
+//      your own loudest hit with 0.2 and set it from that, or every hit
+//      clips to 1.0 and the dynamics vanish. The slow follower uses
+//      LagUD for the reason given in 1.4.
 // ----------------------------------------------------------------------------
 (
 SynthDef(\velocity, {
     var in     = SoundIn.ar(0);
-    var fast   = Amplitude.kr(in, 0.0003, 0.006);
-    var slow   = Amplitude.kr(in, 0.080, 0.400);
+    var fast   = Amplitude.kr(in, 0.001, 0.05);
+    var slow   = LagUD.kr(fast, 0.300, 0.150);
     var over   = fast > ((slow * \ratio.kr(3.0)) + \floor.kr(0.004));
     var trig   = Trig1.kr(over, \deadtime.kr(0.025));
 
@@ -1956,6 +1995,27 @@ SynthDef(\continuous, {
 //    rolloff flatness crest in that order regardless of what you pass
 //    to `select`. Same for FluidLoudness (loudness, peak) and
 //    FluidPitch (pitch, confidence).
+//
+//  Amplitude.kr ATTACK TIME DOES NOT SLOW THE RISE
+//    Measured on a step, Amplitude.kr(in, 0.300, 0.150) reaches 95% in
+//    one control block -- identical to Amplitude.kr(in, 0.001, 0.05).
+//    Release is the only one of the two that shapes anything.
+//    So you cannot build a slow background follower by lengthening the
+//    attack. It rises with the strike, and fast > (slow * ratio) becomes
+//    a value compared against a multiple of itself, which can never fire
+//    on an attack. It fires on decay ripples and rebounds instead.
+//    Symptom: "triggers on the tail and the slap-back but not on the
+//    hit", and lowering the floor never helps, because the floor was
+//    never the binding term. Worse, the adaptive term can drive the
+//    threshold above 1.0, where triggering is arithmetically impossible.
+//    Use LagUD.kr(fast, up, down) -- its up-time is real. See 1.4.
+//
+//  A SHORT RELEASE UNDER-READS PEAKS
+//    Amplitude.kr is sampled once per control block (1.45ms at 64/44.1k).
+//    A release much shorter than that falls into the troughs between
+//    waveform peaks between samples, so it reads the envelope low. On one
+//    noise burst the 0.05 release read about twice the 0.008 one. If a
+//    "faster" follower reads lower than a slower one, this is why.
 //
 //  UNITS
 //    FluidAmpSlice / FluidAmpGate   thresholds dBFS, times SAMPLES
