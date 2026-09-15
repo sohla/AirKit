@@ -1,8 +1,8 @@
 #!/bin/bash
 # Output dir: $AKDIAG (default ~/akdiag). Created on first run.
-mkdir -p "${AKDIAG:-$HOME/akdiag}" 2>/dev/null
+AKHOME="$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)"; AKDIAG="${AKDIAG:-${AKHOME:-$HOME}/akdiag}"; mkdir -p "$AKDIAG" 2>/dev/null
 # Summarise the newest wifi-monitor run.  ~/akdiag/wifi-report.sh [basename]
-B=${1:-$(ls -t ${AKDIAG:-$HOME/akdiag}/wifimon-*.samples 2>/dev/null | head -1)}; B=${B%.samples}
+B=${1:-$(ls -t ${AKDIAG}/wifimon-*.samples 2>/dev/null | head -1)}; B=${B%.samples}
 echo "=== $B ==="
 echo
 echo "--- STATION CHURN (del/new station events per minute) ---"
