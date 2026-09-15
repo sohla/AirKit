@@ -1,6 +1,11 @@
 #!/bin/bash
 # Output dir: $AKDIAG (default ~/akdiag). Created on first run.
-mkdir -p "${AKDIAG:-$HOME/akdiag}" 2>/dev/null
+AKHOME="$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)"; AKDIAG="${AKDIAG:-${AKHOME:-$HOME}/akdiag}"; mkdir -p "$AKDIAG" 2>/dev/null
+
+# Which radio is the AP on? override with WIF=wlanN
+WIF="${WIF:-$(for i in $(ls /sys/class/net | grep -E "^wlan"); do [ "$(iw dev $i info 2>/dev/null | awk "/type/{print \$2}")" = "AP" ] && echo $i && break; done)}"
+WIF="${WIF:-$(iw dev 2>/dev/null | awk "/Interface/{print \$2; exit}")}"
+WIF="${WIF:-${WIF}}"
 # AirKit wifi diagnostics. Never scans - scanning pulls the AP off-channel.
 # Lives in ~/akdiag because /tmp is wiped on boot.
 #
@@ -8,8 +13,8 @@ mkdir -p "${AKDIAG:-$HOME/akdiag}" 2>/dev/null
 #   sudo ~/akdiag/akwifi.sh timeline       reconstruct this boot's A/B from the journal
 #   sudo ~/akdiag/akwifi.sh watch          follow station events live
 
-IF=wlan0
-OUT=${AKDIAG:-$HOME/akdiag}
+IF=${WIF}
+OUT=${AKDIAG}
 
 snap () {
   local f="$OUT/snap-${1:-unlabelled}.txt"
@@ -44,7 +49,7 @@ timeline () {
   echo "== every AP lifecycle + station event, in order"
   journalctl -b --no-pager -o short-precise \
     | grep -iE 'AP-STA|AP-ENABLED|AP-DISABLED|DHCPDISCOVER|DHCPREQUEST|DHCPACK|DHCPNAK|Started NetworkManager\.service|COMMAND=/usr/bin/systemctl restart' \
-    | sed 's/pi wpa_supplicant\[[0-9]*\]: wlan0: //; s/pi dnsmasq-dhcp\[[0-9]*\]: //; s/pi systemd\[1\]: //; s/pi sudo\[[0-9]*\]: *//'
+    | sed 's/pi wpa_supplicant\[[0-9]*\]: ${WIF}: //; s/pi dnsmasq-dhcp\[[0-9]*\]: //; s/pi systemd\[1\]: //; s/pi sudo\[[0-9]*\]: *//'
 }
 
 watch_ () {

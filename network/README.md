@@ -62,6 +62,50 @@ that clears stale per-station state, and NM's AP mode does not age out dead stat
 
 ---
 
+## The USB dongle (airkit2, from 15 Sep 2026)
+
+The internal BCM43455 on airkit2 has a faulty transmit path (see the worked example
+below). The AP now runs on a **USB dongle**, and the internal radio is disabled at boot
+via `dtoverlay=disable-wifi` in `/boot/firmware/config.txt`.
+
+The `AirKit2_Network` profile is **locked to the dongle's MAC** rather than an interface
+name, so it survives the interface being renamed — and, deliberately, it will *not* fall
+back to the internal radio if the dongle is unplugged. The AP simply stays down, which is
+the honest failure.
+
+Swapping or re-seating a dongle therefore needs a rebind. One command:
+
+```bash
+sudo network/tools/ap-bind.sh          # finds the USB radio, binds, brings the AP up
+```
+
+It skips `brcmfmac` by design, and warns if the radio doesn't advertise AP mode — not all
+dongles do.
+
+### Comparing dongles
+
+```bash
+sudo network/tools/wifi-benchmark.sh 30 "label for this dongle"
+```
+
+Appends signal, bitrate, retries, packet rate, **jitter** and late-packet counts to
+`~/akdiag/benchmarks.md`. For 100 Hz sensor streams jitter matters far more than
+throughput.
+
+**Read the results carefully.** The sticks are handheld, so signal moves with them — the
+same dongle measured −30 dBm, −70 dBm and −50 dBm within twenty minutes. Jitter tracks
+signal closely. A comparison is only meaningful with the sticks still, in the same place,
+with the same number connected.
+
+Tried so far:
+
+| dongle | driver | AP | 5 GHz | monitor | notes |
+|---|---|---|---|---|---|
+| D-Link DWA-131 rev E1 (RTL8192EU) | `rtl8xxxu` | yes | no | yes | in-kernel driver; best jitter seen (sd 1.7–1.8 ms at −33 dBm) |
+| Techkey RTL88x2BU (0bda:b812) | `rtw_8822bu` | yes | yes | yes | out-of-tree driver; patchy stats reporting (some stations show `signal: 0`) |
+
+---
+
 ## Diagnosis
 
 Tools live in `network/tools/`. They write to `$AKDIAG` (default `~/akdiag`).
