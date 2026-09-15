@@ -10,48 +10,44 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 
-SynthDef(\help_Klank, { |out = 0, freq=250|
-    var klank, n, harm, amp, ring;
-	var i = Decay.ar(Impulse.ar(Rand(0.8, 2.2)), 0.03, ClipNoise.ar(0.01));
-	var src = SoundIn.ar(0)!2;
-	var gated = Compander.ar(src, src,
-        thresh: -6.dbamp,
-        slopeBelow: 10,
-        slopeAbove:  1,
-        clampTime:   0.01,
-        relaxTime:   0.01
-    );
-    harm = \harm.ir(Array.series(4, 1.0, 1));
-    amp = \amp.ir(Array.fill(4, 0.05));
-    ring = \ring.ir(Array.fill(4, 0.6));
+SynthDef(\warmBass, { |out = 0, amp = 0.3, freq = 65, thresh = -26, full = 0.25,
+	attack = 0.006, release = 0.2, fdecay = 0.28, width = 0.45,
+	fmul = 2.5, fdepth = 4000, res = 1.6|
 
-    klank = DynKlank.ar(`[harm, amp, ring], gated * 0.04, freq.lagud(1,0.1));
+	var in = SoundIn.ar(0);
+	var follower = Amplitude.kr(in, 0.001, 0.05);
+	var trig = follower > thresh.dbamp;
+	var vel = Latch.kr(follower, trig).linlin(0.0, full, 0.25, 1.0).clip(0.25, 1.0);
 
-    Out.ar(out, klank.tanh);
+	var ampEnv = EnvGen.kr(Env.perc(attack, release, 1, [2, -4]), trig);
+	var cutEnv = EnvGen.kr(Env.perc(attack, fdecay, 1, [2, -4]), trig);
+
+	var f = freq.lag(0.003);
+	var osc = VarSaw.ar(f * [0.996, 1.004], 0, width).sum * 0.4
+		+ SinOsc.ar(f * 0.5, 0, 0.7);
+	var cutoff = (f * fmul) + (cutEnv * vel * fdepth);
+	var sig = MoogFF.ar(osc, cutoff.clip(40, 9000), res);
+
+	Out.ar(out, (sig * ampEnv * vel * amp).tanh ! 2);
 }).add;
 
 //------------------------------------------------------------
 ~init = ~init <> {
-	synth = Synth(\help_Klank,[\amp,0.3]);
+	synth = Synth(\warmBass, [\amp, 8, \thresh, -6]);
+
 };
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
-	// synth.set(\gate, 0);
 	synth.free;
 };
 
 //------------------------------------------------------------
 ~next = {|d|
-	var amp = m.accelMassFiltered.lincurve(0.0,0.3,-50,-2,-3);
-	var al = m.accelMassFiltered.lincurve(0.0,2.5,0.02,1.0,-3);
-	var notes = [0,3,5,10,12] + 60 - 24;
-	// var rt = m.gyroZFiltered.fold(-0.5,0.5).lincurve(-0.5,0.5,0.0,notes.size,0).asInteger;
+	var notes = [0,3,5,10,12] + 36;
 	var rt = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger;
 
-  	// synth.set(\rt, notes[rt].midiratio);
 	synth.set(\freq, notes[rt].midicps);
-  	// synth.set(\al, al);
 };
 //------------------------------------------------------------
 ~plotMin = -1;
@@ -62,7 +58,7 @@ SynthDef(\help_Klank, { |out = 0, freq=250|
 
 	// Velocity
 	// [d.sensors.velocity.x, d.sensors.velocity.y, d.sensors.velocity.z] * 30;
-	
+
 	// Acceleration
 	// [d.sensors.accelEvent.x, d.sensors.accelEvent.y, d.sensors.accelEvent.z] * 0.1;
 	// [m.accelMass, m.accelMassFiltered];

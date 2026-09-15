@@ -1,6 +1,10 @@
 var m = ~model;
 var synth;
 
+var ratios = [1, 2.756, 5.404, 8.933, 13.34, 18.64];
+var amps   = [0.5, 0.3, 0.2, 0.12, 0.08, 0.05];
+var rings  = [1, 0.7, 0.5, 0.35, 0.25, 0.18];
+
 m.accelMassFilteredAttack = 0.9;
 m.accelMassFilteredDecay = 0.1;
 m.rrateMassFilteredAttack = 0.95;
@@ -10,48 +14,49 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 
-SynthDef(\help_Klank, { |out = 0, freq=250|
-    var klank, n, harm, amp, ring;
-	var i = Decay.ar(Impulse.ar(Rand(0.8, 2.2)), 0.03, ClipNoise.ar(0.01));
-	var src = SoundIn.ar(0)!2;
-	var gated = Compander.ar(src, src,
-        thresh: -6.dbamp,
-        slopeBelow: 10,
-        slopeAbove:  1,
-        clampTime:   0.01,
-        relaxTime:   0.01
-    );
-    harm = \harm.ir(Array.series(4, 1.0, 1));
-    amp = \amp.ir(Array.fill(4, 0.05));
-    ring = \ring.ir(Array.fill(4, 0.6));
+SynthDef(\bellChime, { |out = 0, amp = 0.3, freq = 523, ratio = 3.0, floorDb = -48,
+	deadtime = 0.10, slowAtk = 0.300, slowRel = 0.150,
+	decay = 3.0, fullScale = 0.35, curve = 0.6, window = 0.005, tone = 5000|
 
-    klank = DynKlank.ar(`[harm, amp, ring], gated * 0.04, freq.lagud(1,0.1));
+	var in   = SoundIn.ar(0);
+	var fast = Amplitude.kr(in, 0.0005, 0.008);
+	var slow = Amplitude.kr(in, slowAtk, slowRel);
+	var over = fast > ((slow * ratio) + floorDb.dbamp);
+	var edge = over > Delay1.kr(over);
+	var trig = Trig1.kr(edge, deadtime);
 
-    Out.ar(out, klank.tanh);
+	var peak   = RunningMax.kr(fast, trig);
+	var report = TDelay.kr(trig, window);
+
+	var vel   = Latch.kr(peak, report).linlin(0.0, fullScale, 0.0, 1.0).clip(0, 1).pow(curve);
+	var pitch = Latch.kr(freq, report);
+
+	var strike = Decay2.ar(T2A.ar(report), 0.0002, 0.004)
+		* LPF.ar(PinkNoise.ar(1), (tone * vel).clip(200, 18000));
+
+	var bell = DynKlank.ar(`[ratios * pitch, amps, rings * decay], strike * vel);
+
+	Out.ar(out, (bell * amp).softclip ! 2);
 }).add;
 
 //------------------------------------------------------------
 ~init = ~init <> {
-	synth = Synth(\help_Klank,[\amp,0.3]);
+	synth = Synth(\bellChime, [\amp,0.2, \ratio, 2.0, \floorDb, -43, \decay, 1.0]);
 };
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
-	// synth.set(\gate, 0);
 	synth.free;
 };
 
 //------------------------------------------------------------
 ~next = {|d|
-	var amp = m.accelMassFiltered.lincurve(0.0,0.3,-50,-2,-3);
-	var al = m.accelMassFiltered.lincurve(0.0,2.5,0.02,1.0,-3);
-	var notes = [0,3,5,10,12] + 60 - 24;
-	// var rt = m.gyroZFiltered.fold(-0.5,0.5).lincurve(-0.5,0.5,0.0,notes.size,0).asInteger;
+	// var amp = m.accelMassFiltered.lincurve(0.0,0.3,-18,-6,-3).dbamp;
+	var notes = [0,2,4,7,9] + 42;
 	var rt = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger;
 
-  	// synth.set(\rt, notes[rt].midiratio);
 	synth.set(\freq, notes[rt].midicps);
-  	// synth.set(\al, al);
+	// synth.set(\amp, amp);
 };
 //------------------------------------------------------------
 ~plotMin = -1;
@@ -62,7 +67,7 @@ SynthDef(\help_Klank, { |out = 0, freq=250|
 
 	// Velocity
 	// [d.sensors.velocity.x, d.sensors.velocity.y, d.sensors.velocity.z] * 30;
-	
+
 	// Acceleration
 	// [d.sensors.accelEvent.x, d.sensors.accelEvent.y, d.sensors.accelEvent.z] * 0.1;
 	// [m.accelMass, m.accelMassFiltered];

@@ -3,6 +3,8 @@
 		"silence",
 
 		"temp_input2",
+		"temp_input3",
+		"temp_input4",
 		"circusChoir1",
 		"trainBass3",
 		"trainMove2",
