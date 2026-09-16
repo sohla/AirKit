@@ -9,10 +9,10 @@ m.gyroFilteredAttack = 0.7;
 m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
-SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=0.8, release=0.59, gate=1|
+SynthDef(\simple, {|out=0, amp=0.0, freq=120, attack=0.001, decay=0.03, sustain=0.8, release=0.59, gate=1|
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: Done.freeSelf);
-	var sig = SinOsc.ar(freq,0,0.5)!2 + Saw.ar(freq*2,0.1) ;
-    Out.ar(out, sig * env * amp);
+	var sig = SinOsc.ar(freq * 0.5,0,0.5)!2 + Saw.ar(freq,0.1) ;
+    Out.ar(out, sig * env * amp.lagud(0.01,1.1));
 }).add;
 
 //------------------------------------------------------------
@@ -28,16 +28,12 @@ SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=
 //------------------------------------------------------------
 ~next = {|d|
   	var notes = [40,47,52,56]-20;
-  // var notes = [40,45,52];
 	var roots = [0,12,24];
-	var amp = m.accelMassFiltered.lincurve(0.0,0.3,-40,-2,-3);
-	// var frq = ((d.sensors.gyroEvent.z / pi).fold(-0.5,0.5) * 2).lincurve(-1,1,50,250,-4);
-	// var frq = ([[(d.sensors.gyroEvent.x / pi).fold(-0.5,0.5) * 2, (d.sensors.gyroEvent.y / pi.half), (d.sensors.gyroEvent.z / pi).fold(-0.5,0.5) * 2].sum] / 3).lincurve(-1,1,50,250,-4);
+	var amp = m.accelMassFiltered.lincurve(0.0,2.3,-40,-1);
 	var ni = m.gyroYFiltered.fold(-1,1).lincurve(-0.3,0.3,0,notes.size-1,-2);
 	var ri = (m.gyroZFiltered.fold(-0.5,0.5) * 2).lincurve(-1.0,1.0,0,roots.size-1,-2);
 
   	synth.set(\amp, amp.dbamp);
-  	synth.set(\freq, (notes[ni.floor] + roots[ri.floor]).midicps);
 
 };
 //------------------------------------------------------------

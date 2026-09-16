@@ -2,12 +2,14 @@
 	[
 		"silence",
 
+		"temp_synth",
 		"temp_input2",
 		"temp_input3",
 		"temp_input4",
 		"temp_input5",
 		"temp_input6",
 		"temp_input7",
+		"temp_input8",
 		"circusChoir1",
 		"trainBass3",
 		"trainMove2",
