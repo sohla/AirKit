@@ -15,7 +15,7 @@
 SynthDef(\triggerProbe, { |ratio = 0.3, floorDb = -18,
 	slowAtk = 0.300, slowRel = 0.25, deadtime = 0.10, i3Thresh = -6|
 
-	var in = SoundIn.ar(0);
+	var in = SoundIn.ar(0) * 0.7;
 
 	// --- temp_input4 \bellChime, exactly as written ---
 	var fast   = Amplitude.kr(in, 0.001, 0.05);

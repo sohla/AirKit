@@ -1,5 +1,8 @@
 var m = ~model;
-var synth;
+var dev = ~device;
+var group, trig;
+var hitKey = ('hit_' ++ m.ptn).asSymbol;
+var relTime = 3.0;
 
 var ratios = [1, 2.756, 5.404, 7.933, 9.34, 11.64];
 var amps   = [0.5, 0.3, 0.2, 0.12, 0.08, 0.05];
@@ -14,50 +17,80 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 
-SynthDef(\bellChime, { |out = 0, amp = 0.3, freq = 523, ratio = 3.0, floorDb = -48,
-	deadtime = 0.07, slowAtk = 0.300, slowRel = 0.150, inGain = 0.7,
-	decay = 3.0, fullScale = 0.35, curve = 1.5, window = 0.005, tone = 5000|
+SynthDef(\inputTrigger, { |ratio = 3.0, floorDb = -48,
+	deadtime = 0.04, slowAtk = 0.300, slowRel = 0.150, inGain = 0.7,
+	fullScale = 0.35, curve = 1.5, window = 0.005|
 
 	var in   = SoundIn.ar(0) * inGain;
 	var fast = Amplitude.kr(in, 0.001, 0.05);
 	var slow = LagUD.kr(fast, slowAtk, slowRel);
 	var over = fast > ((slow * ratio) + floorDb.dbamp);
 	var edge = over > Delay1.kr(over);
-	var trig = Trig1.kr(edge, deadtime);
+	var trg  = Trig1.kr(edge, deadtime);
+	var peak   = RunningMax.kr(fast, trg);
+	var report = TDelay.kr(trg, window);
 
-	var peak   = RunningMax.kr(fast, trig);
-	var report = TDelay.kr(trig, window);
+	var vel = Latch.kr(peak, report).linlin(0.0, fullScale, 0.0, 1.0).clip(0, 1).pow(curve);
 
-	var vel   = Latch.kr(peak, report).linlin(0.0, fullScale, 0.0, 1.0).clip(0, 1).pow(curve);
-	var pitch = Latch.kr(freq, report);
+	SendReply.kr(report, '/akHit', [vel]);
+}).add;
 
-	var strike = Decay2.ar(T2A.ar(report), 0.0002, 0.004)
+//------------------------------------------------------------
+
+SynthDef(\bellVoice, { |out = 0, amp = 0.3, freq = 523, vel = 1.0,
+	decay = 3.0, tone = 5000, gate = 1, rel = 3.0|
+
+	var strike = Decay2.ar(Impulse.ar(0), 0.0002, 0.004)
 		* LPF.ar(PinkNoise.ar(1), (tone * vel).clip(200, 18000));
 
-	var bell = DynKlank.ar(`[ratios * pitch, amps, rings * decay], strike * vel);
+	var bell = DynKlank.ar(`[ratios * freq, amps, rings * decay], strike * vel);
+	var env  = EnvGen.kr(Env.cutoff(rel, 1, \sin), gate, doneAction: 2);
 
-	Out.ar(out, (bell * amp).softclip ! 2);
+	DetectSilence.ar(bell, 0.0001, 0.2, doneAction: 2);
+
+	Out.ar(out, (bell * env * amp).softclip ! 2);
 }).add;
 
 //------------------------------------------------------------
 ~init = ~init <> {
-	synth = Synth(\bellChime, [\amp,0.2, \ratio, 0.3, \slowRel, 0.25, \floorDb, -32, \fullScale, 0.7, \decay, 1.0]);
+	group = Group.new;
+
+	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
+		\fullScale, 0.7, \curve, 1.5], group);
+
+	OSCdef(hitKey, { |msg|
+		if (msg[1] == trig.nodeID) {
+			var notes = [0,7,12,16] + 52;
+			var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger;
+
+			Synth(\bellVoice, [\freq, notes[rt].midicps, \vel, msg[3],
+				\amp, 0.2, \decay, 6.0, \rel, relTime], group);
+		};
+	}, '/akHit', s.addr);
 };
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
-	synth.free;
+	var dying = group;
+
+	OSCdef(hitKey) !? (_.free);
+	trig !? (_.free);
+	trig = nil;
+	group = nil;
+
+	if (dying.notNil) {
+		fork {
+			dying.set(\gate, 0);
+			(relTime + 0.5).wait;
+			dying.free;
+		};
+	};
 };
 
 //------------------------------------------------------------
 ~next = {|d|
-	// var amp = m.accelMassFiltered.lincurve(0.0,0.3,-18,-6,-3).dbamp;
-	var notes = [0,7,12,16] + 52;
-	var rt = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger;
-
-	synth.set(\freq, notes[rt].midicps);
-	// synth.set(\amp, amp);
 };
+
 //------------------------------------------------------------
 ~plotMin = -1;
 ~plotMax = 1;
