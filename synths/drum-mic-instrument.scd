@@ -63,7 +63,7 @@
 //
 //   PART 7  RESPONSE
 //     7.1  Trigger to sample         7.3  Continuous mapping
-//     7.2  Excitation
+//     7.2  Excitation                7.4  The dynamic trigger
 //
 //   PART 8  GOTCHAS
 //
@@ -1959,6 +1959,124 @@ SynthDef(\continuous, {
 
 ~run.(\continuous);
 ~stop.(\continuous);
+
+
+// ----------------------------------------------------------------------------
+// 7.4  The dynamic trigger -- detector synth, per-hit voice
+//
+//      Everything above puts the detector and the sound in ONE SynthDef.
+//      That makes the instrument monophonic in a specific way: a new
+//      strike re-excites the voice that is already ringing, so it
+//      retunes its own tail. Fine for a struck resonator, wrong as soon
+//      as you want overlapping notes.
+//
+//      Split it. The detector becomes a synth that makes no sound and
+//      ends at SendReply; sclang spawns one voice per hit.
+//
+//        \inputTrigger   the whole of Part 1, ending at SendReply
+//        one voice       spawned per hit, its own envelope, self-freeing
+//
+//      The split is worth more than the polyphony. The detector no
+//      longer knows what it drives, so the same SendReply can feed a
+//      Pbind, a sampler, a pattern, or all three, and you can retune
+//      the detector without touching the instrument.
+//
+//      LATENCY. Going through sclang costs a round trip. Measured here,
+//      server -> sclang -> sound:
+//
+//        mean 7.03 ms, range 2.65-10.67 ms, jitter 8.02 ms
+//
+//      Against the 1-3 ms of a pure amplitude-domain detector that is
+//      roughly triple, and the jitter is the part you feel. Worth it
+//      for pattern control; not worth it if the detector is only ever
+//      going to excite one resonator.
+//
+//      SPAWN WITH A BARE Synth(). s.latency defaults to 200 ms, so
+//      s.bind or a Server default-latency bundle puts a fifth of a
+//      second between the stick and the sound. s.bind is right for
+//      freeing and wrong for this.
+//
+//      VOICE COUNT is deadtime x lifetime and it is easy to
+//      underestimate. A DynKlank at decay 6.0 measured ~7.9 s to fall
+//      under DetectSilence's threshold; at deadtime 0.07 that is a
+//      ceiling near 110 concurrent voices. Check it before you assume
+//      a small machine will cope.
+// ----------------------------------------------------------------------------
+(
+SynthDef(\inputTrigger, { |ratio = 0.3, floorDb = -32, deadtime = 0.07,
+    slowAtk = 0.300, slowRel = 0.25, inGain = 1.0,
+    fullScale = 0.7, curve = 1.5, window = 0.005|
+
+    var in   = SoundIn.ar(0) * inGain;
+    var fast = Amplitude.kr(in, 0.001, 0.05);
+    var slow = LagUD.kr(fast, slowAtk, slowRel);
+    var over = fast > ((slow * ratio) + floorDb.dbamp);
+    var edge = over > Delay1.kr(over);
+    var trg  = Trig1.kr(edge, deadtime);
+
+    var peak   = RunningMax.kr(fast, trg);
+    var report = TDelay.kr(trg, window);
+
+    var vel = Latch.kr(peak, report).linlin(0.0, fullScale, 0.0, 1.0).clip(0, 1).pow(curve);
+
+    SendReply.kr(report, '/akHit', [vel]);
+}).add;
+
+SynthDef(\hitVoice, { |out = 0, amp = 0.3, freq = 523, vel = 1.0,
+    decay = 3.0, tone = 5000, gate = 1, rel = 3.0|
+
+    var ratios = [1, 2.756, 5.404, 7.933, 9.34, 11.64];
+    var amps   = [0.5, 0.3, 0.2, 0.12, 0.08, 0.05];
+    var rings  = [1.0, 0.8, 0.5, 0.35, 0.25, 0.18];
+
+    var strike = Decay2.ar(Impulse.ar(0), 0.0002, 0.004)
+        * LPF.ar(PinkNoise.ar(1), (tone * vel).clip(200, 18000));
+
+    var bell = DynKlank.ar(`[ratios * freq, amps, rings * decay], strike * vel);
+    var env  = EnvGen.kr(Env.cutoff(rel, 1, \sin), gate, doneAction: 2);
+
+    DetectSilence.ar(bell, 0.0001, 0.2, doneAction: 2);
+
+    Out.ar(out, (bell * env * amp).softclip ! 2);
+}).add;
+
+~voices = Group.new;
+
+OSCdef(\akHit, { |msg|
+    Synth(\hitVoice, [\freq, [48, 55, 60, 64].choose.midicps, \vel, msg[3],
+        \amp, 0.2, \decay, 6.0, \rel, 3.0], ~voices);
+}, '/akHit', s.addr);
+)
+
+~run.(\inputTrigger);
+~stop.(\inputTrigger);
+
+// release rather than kill, so tails survive the teardown
+(
+~voices.set(\gate, 0);
+fork { 3.5.wait; ~voices.free; ~voices = nil };
+)
+
+
+//      TWO THINGS THE ENVELOPE WILL CATCH YOU ON
+//
+//      Env.cutoff, NOT Env.asr. asr with a zero attack still starts the
+//      envelope at 0, and at control rate that silences the first
+//      1.45 ms -- which is the strike transient, the only part of a
+//      percussive attack that carries the articulation. Env.cutoff
+//      holds at 1 from the first sample and only ever goes down.
+//
+//      A synth written for a Pbind has no note-off of its own. Env.adsr
+//      sustains until the gate drops, and it is the EVENT that drops it
+//      via \dur. Spawn that same SynthDef directly and every voice
+//      hangs forever. Give it its own gate:
+//
+//        var g = gate * Trig1.kr(Impulse.kr(0), dur);
+//
+//      Trig1 fires at birth and holds 1 for dur, so the note releases
+//      on its own, while an external gate 0 still cuts it short for
+//      teardown. Both doneActions can coexist -- whichever fires first
+//      frees the synth.
 
 
 // ############################################################################

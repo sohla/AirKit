@@ -275,7 +275,7 @@ if(d.sensors.digiInEvent[0] == 1, { ... });
 
 ## 7. Sound architectures
 
-Three shapes cover essentially every file in `personalities/`. Pick one; a
+Four shapes cover essentially every file in `personalities/`. Pick one; a
 file may combine A with B or C, but not all three.
 
 ### A — long-lived Synth
@@ -312,6 +312,43 @@ note → bufnum + rate before delegating to `\note` (or to
 
 Reference: `cotf_marimba1.sc` (nearest-sample lookup), `multiBeat5.sc`
 (the same lookup on the multiBeat grid), `multiBeat4.sc` (unpitched kit).
+
+### D — the dynamic trigger: detector Synth + per-hit voice
+
+An audio-input detector Synth that makes no sound and ends at
+`SendReply`, plus an `OSCdef` that spawns one voice per hit. No pattern —
+the *player* is the clock. Use for anything struck: a mic on a drum, a
+contact mic, a pad.
+
+```supercollider
+~init = ~init <> {
+    group = Group.new;
+    trig  = Synth(\inputTrigger, [...], group);
+
+    OSCdef(hitKey, { |msg|
+        if (msg[1] == trig.nodeID) {
+            Synth(\myVoice, [\vel, msg[3], ...], group);
+        };
+    }, '/akHit', s.addr);
+};
+```
+
+Reference: `temp_input5.sc` (struck resonator), `temp_input6.sc` (the
+same trigger driving `\miniMoog`). The detector itself, and why it is
+built the way it is, is `synths/drum-mic-instrument.scd` §7.4.
+
+Four things this shape needs that A–C do not:
+
+- **Key the `OSCdef` on `m.ptn`** and free it in `~deinit`. Reloads fire
+  on every save; a fixed key leaves the old responder spawning into a
+  freed Group.
+- **Filter on the detector's `nodeID`** (`msg[1]`), or two devices
+  running the same personality trigger each other.
+- **Spawn with a bare `Synth()`, never `s.bind`.** `s.latency` is 200 ms.
+  `s.bind` is right for freeing and catastrophic for spawning.
+- **Release, don't `freeAll`.** `~deinit` fires on every save, so a hard
+  free chops every ringing tail. Set `\gate, 0` on the Group, wait out
+  the release, *then* free it — see §11.
 
 ### The one-shot
 
