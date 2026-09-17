@@ -2,11 +2,7 @@
 	[
 		"silence",
 
-		"raindrops",
-		"aless1",
-		"aless2",
-		"aless3",
-		"aless4",
+		"circusChoir1",
 		"melChair1",
 		"melChair2",
 		"melbb1",
