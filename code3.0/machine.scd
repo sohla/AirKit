@@ -73,6 +73,13 @@ var defaults = (
 	secs: 0.01,
 	latency: if(isOSX, 0.03, 0.1),
 
+	// Server audio. blockSize is the control-rate period and sets the
+	// resolution of every .kr detector. hardwareBufferSize is the CoreAudio /
+	// ALSA buffer and dominates round-trip latency; nil leaves it to the
+	// driver, which on macOS means 512.
+	blockSize: 128,
+	hardwareBufferSize: nil,
+
 	border: isOSX,
 	fullScreen: isOSX.not,
 

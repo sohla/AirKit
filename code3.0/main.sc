@@ -135,15 +135,13 @@ var initGUI = {
 "SC_JACK_DEFAULT_OUTPUTS".setenv("system");
 
 s.volume = -2; // db
-s.options.blockSize = 128;
-s.options.numBuffers = 2048;  
+s.options.blockSize = machine[\blockSize];
+machine[\hardwareBufferSize] !? { |v| s.options.hardwareBufferSize = v };
+s.options.numBuffers = 2048;
 s.options.memSize = 65536;   
 s.options.numOutputBusChannels = 2; 
 s.options.numInputBusChannels = 1;
 s.latency = machine[\latency]; 
-
-
-
 
 
 

@@ -18,6 +18,9 @@
 	secs: 0.01,
 	latency: 0.03,
 
+	blockSize: 64,
+	hardwareBufferSize: 64,
+
 	border: true,
 	fullScreen: false
 )

@@ -2,6 +2,9 @@
 	[
 		"silence",
 
+		"trigTrakPattern1",
+		"hollowWood",
+		"hollowWood3",
 		"alonPerc1",
 		"movingBeast",
 		"gendy1",
