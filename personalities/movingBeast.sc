@@ -78,10 +78,11 @@ SynthDef(\movingBeast, { |out = 0, freq = 45, amp = 0.2, gate = 1,
 
 //------------------------------------------------------------
 ~next = {|d|
-	var dur = m.accelMassFiltered.lincurve(0, 2.5, 0.4, 0.1, -1);
-	var amp = m.accelMassFiltered.lincurve(0.0, 2.0, -40, -20, -2);
-	var ff  = m.rrateMassFiltered.linexp(0.0, 2.5, 180, 900);
-	var rel  = m.rrateMassFiltered.lincurve(0.0, 2.5, 0.2, 3.2,-2);
+	var sens = d.params.sensitivity;
+	var dur = m.accelMassFiltered.lincurve(0, 2.5 * sens, 0.4, 0.1, -1);
+	var amp = m.accelMassFiltered.lincurve(0.0, 2.0 * sens, -40, -10, -2);
+	var ff  = m.rrateMassFiltered.linexp(0.0, 2.5 * sens, 180, 900);
+	var rel  = m.rrateMassFiltered.lincurve(0.0, 2.5 * sens, 0.2, 3.2,-2);
 	var fb  = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0, 1.0, 0.1, 2.0, -1);
 	var harm  = (d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 1, 3);
 	var growl = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).lincurve(-0.5, 0.5, 1, 4, 2);
@@ -91,7 +92,7 @@ SynthDef(\movingBeast, { |out = 0, freq = 45, amp = 0.2, gate = 1,
 	Pdef(m.ptn).set(\fbDepth, fb);
 	Pdef(m.ptn).set(\harm, harm);
 	Pdef(m.ptn).set(\growl, growl);
-	Pdef(m.ptn).set(\rel, rel * 0.2);
+	Pdef(m.ptn).set(\rel, rel * 0.9);
 
 	if (m.accelMassFiltered > 0.05, {
 		if (Pdef(m.ptn).isPlaying.not, { Pdef(m.ptn).resume(quant: 0.5) });

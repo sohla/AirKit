@@ -93,11 +93,10 @@ SynthDef(\warmPadVoice, {
 	group = Group.new;
 	step = 0;
 
-	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -42,
-		\fullScale, 0.7, \curve, 1.5, \deadtime, 0.02], group);
-
-	// trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
-	// 	\fullScale, 0.7, \curve, 0.5, \deadtime, 0.001], group);
+	// trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -42,
+	// 	\fullScale, 0.7, \curve, 1.5, \deadtime, 0.02], group);
+	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
+		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.02], group);
 
 
 	OSCdef(hitKey, { |msg|
@@ -111,7 +110,7 @@ SynthDef(\warmPadVoice, {
 			Synth(\warmPadVoice, [
 				\freq, note.midicps,
 				\vel, msg[3],
-				\amp, 0.5,
+				\amp, 0.9,
 				\dur, 0.25,
 				\atk, 0.02,
 				\dec, 0.1,

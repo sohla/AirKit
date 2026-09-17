@@ -107,6 +107,7 @@ SynthDef(\buchlaInspired, {
 			\lpgSustain, 0,
 			\lowpassResonance, 0.1,
 			\attack, 0.001,
+			\pan, Pwhite(-0.2, 0.2),
 			\reverbMix, 0.2, \reverbRoom, 0.3, \reverbDamp, 0.5,
 
 			\amp, Pfunc({ |e| (e[\gestAmp] ? 0.12) * (e[\accent] ? 1.0) })
@@ -142,14 +143,14 @@ SynthDef(\buchlaInspired, {
 
 //------------------------------------------------------------
 ~next = {|d|
-	var e = m.accelMassFiltered;
-	var idx = e.lincurve(0, 1.3, 0, divs.size - 1, 1).round.asInteger.clip(0, divs.size - 1);
-	var pal = e.lincurve(0, 1.2, 1, notes.size, 1).round.asInteger.clip(1, notes.size);
-	var amp = e.lincurve(0.0, 2.0, -50, -15, -2);
+	var sens = d.params.sensitivity;
+	var e = m.accelMassFiltered;	
+	var idx = e.lincurve(0, 2.0 * sens, 0, divs.size - 1, 1).round.asInteger.clip(0, divs.size - 1);
+	var pal = e.lincurve(0, 2.0 * sens, 1, notes.size, 1).round.asInteger.clip(1, notes.size);
+	var amp = e.lincurve(0.0, 2.0 * sens, -50, -3, -2);
 	var roll = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.75, 1.25);
-	var cut = m.rrateMassFiltered.linexp(0.0, 1.2, 900, 12000);
+	var cut = m.rrateMassFiltered.linexp(0.0, 2.0 * sens, 900, 12000);
 	var ring = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0, 1.0, 0.05, 0.9, 2);
-	var pan = (d.sensors.gyroEvent.z / pi).linlin(-1.0, 1.0, 0.0, 2.0);
 
 	if(amp < 49.neg, { amp = 120.neg });
 
@@ -159,7 +160,6 @@ SynthDef(\buchlaInspired, {
 	Pdef(m.ptn).set(\gestAmp, amp.dbamp);
 	Pdef(m.ptn).set(\lowpassCutoff, cut);
 	Pdef(m.ptn).set(\lpgDecay, ring);
-	Pdef(m.ptn).set(\pan, pan);
 };
 
 //------------------------------------------------------------

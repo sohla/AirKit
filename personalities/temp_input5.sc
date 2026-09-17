@@ -24,7 +24,7 @@ m.gyroFilteredDecay = 0.7;
 
 
 SynthDef(\inputTrigger, { |ratio = 3.0, floorDb = -68,
-	deadtime = 0.01, slowAtk = 0.100, slowRel = 0.150, inGain = 0.7,
+	deadtime = 0.01, slowAtk = 0.100, slowRel = 0.150, inGain = 0.5,
 	fullScale = 0.35, curve = 1.5, window = 0.003|
 
 	var in   = SoundIn.ar(0) * inGain;
@@ -78,7 +78,7 @@ SynthDef(\bellVoice, { |out = 0, amp = 0.3, freq = 523, vel = 1.0,
 			var vel = msg[3];
 
 			Synth(\bellVoice, [\freq, note.midicps, \vel, vel,
-				\amp, 0.3, \decay, decay, \rel, relTime], group);
+				\amp, 0.1, \decay, decay, \rel, relTime], group);
 
 			// SystemClock.sched(dblDelay, {
 			// 	if (group.notNil, {

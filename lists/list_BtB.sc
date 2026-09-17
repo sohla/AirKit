@@ -6,9 +6,6 @@
 		"hollowWood",
 		"hollowWood3",
 		"alonPerc1",
-		"movingBeast",
-		"gendy1",
-		"buchlaMetallic",
 		"temp_input2",
 		"temp_input3",
 		"temp_input4",
@@ -16,7 +13,9 @@
 		"temp_input6",
 		"temp_input7",
 		"temp_input8",
-		"circusChoir1",
+		"movingBeast",
+		"gendy1",
+		"buchlaMetallic",
 		"trainBass3",
 		"trainMove2",
 		"trainChooka3",
@@ -55,6 +54,7 @@
 		"violin1",
 		"violin2",
 
+		"circusChoir1",
 
 		"bee",
 		"bells",

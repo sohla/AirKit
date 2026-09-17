@@ -4,7 +4,7 @@ var group, trig, buffers;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
 var relTime = 0.4;
 
-var kitFolder = "~/Music/cotf_samples/drums";
+var kitFolder = "~/Downloads/cotf_samples/drums";
 var kitNames = ["HH11X05", "SD02X05", "BD02X07"];
 
 var kit = [

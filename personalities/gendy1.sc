@@ -24,8 +24,8 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 
 	var dry = Splay.ar({
 		Gendy1.ar(ampdist, durdist, adparam, ddparam,
-			f, f + (f * det), ampscale, durscale, mul: 0.5)
-	} ! nvoices).softclip;
+			f, f + (f * det), ampscale, durscale, mul: 1)
+	} ! nvoices).softclip * 3;
 
 	var wet = GVerb.ar(dry.sum * 0.5, roomsize, revtime);
 	var sig = (dry * (1 - revmix)) + (wet * revmix);
@@ -48,8 +48,9 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 };
 
 //------------------------------------------------------------
-~next = {|d|
-	var amp    = m.accelMassFiltered.lincurve(0.0, 2.0, -50, -1, -2);
+~next = {|d| 
+	var sens = d.params.sensitivity;
+	var amp    = m.accelMassFiltered.lincurve(0.0, 2.0 * sens, -50, -1, -2);
 	var freq   = (d.sensors.gyroEvent.y / pi.half).linexp(-1.0, 1.0, 20, 40);
 	var detune = m.rrateMassFiltered.lincurve(0.0, 1.2, 0.10, 0.45, -1);
 	var cutoff = m.accelMassFiltered.linexp(0.0, 2.0, 700, 9000);
