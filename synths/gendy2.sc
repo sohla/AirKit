@@ -1,7 +1,7 @@
 
 (
 {
-	var chaos = 1, gendyFreq = 60, depth = 1;
+	var chaos = 1, gendyFreq = 40, depth = 1;
 	Gendy1.ar(
             ampdist: 10,        // Cauchy distribution for amplitude
             durdist: 1,        // Exponential distribution for durations

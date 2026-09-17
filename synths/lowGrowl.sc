@@ -1,8 +1,8 @@
 
-(
+(// moving beast
 {
 	var in = LocalIn.ar(2);
-	var sig = LFTri.ar(45*[1.0,1.003], 0, SinOsc.ar(45*MouseX.kr(1,9).round.lag(0.4),in * MouseY.kr(0.1,1.5),2));
+	var sig = LFTri.ar(45*[1.0,1.003], 0, SinOsc.ar(45*MouseX.kr(1,9).round.lag(1.4),in * MouseY.kr(0.1,1.5),2));
 	LocalOut.ar(sig);
 	sig
 }.play
@@ -22,7 +22,7 @@
 (
 {
 	var in = LocalIn.ar(2);
-	var sig = LFTri.ar(45*[1.0,1.003], 0, SinOsc.ar(1,0,in*2,2));
+	var sig = LFTri.ar(45*[1.0,1.003], 0, SinOsc.ar(MouseX.kr(1,8),0,in*2,2));
 	LocalOut.ar(sig);
 	sig
 }.play

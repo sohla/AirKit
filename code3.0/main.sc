@@ -120,6 +120,17 @@ var initGUI = {
 };
 
 
+
+// var input = ServerOptions.devices.indexOfEqual("USB Audio Device");
+// var output = ServerOptions.devices.indexOfEqual("External Headphones");
+
+// o = Server.local.options;
+// o.inDevice = ServerOptions.devices[input];
+// o.outDevice = ServerOptions.devices[output];
+// o.numOutputBusChannels = 4;
+// o.numInputBusChannels = 2;
+
+
 "SC_JACK_DEFAULT_INPUTS".setenv("system");
 "SC_JACK_DEFAULT_OUTPUTS".setenv("system");
 
@@ -130,6 +141,9 @@ s.options.memSize = 65536;
 s.options.numOutputBusChannels = 2; 
 s.options.numInputBusChannels = 1;
 s.latency = machine[\latency]; 
+
+
+
 
 
 

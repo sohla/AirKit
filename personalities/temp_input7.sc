@@ -4,7 +4,7 @@ var group, trig;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
 var relTime = 0.8;
 
-var notes = [0, 4, 7, 11];
+var notes = [0, 16, 4, 7, 14, 19, 11];
 var roots = [50,53,48].stutter(16) - 12;
 
 var step = 0;
@@ -93,8 +93,12 @@ SynthDef(\warmPadVoice, {
 	group = Group.new;
 	step = 0;
 
-	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
-		\fullScale, 0.7, \curve, 1.5, \deadtime, 0.07], group);
+	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -42,
+		\fullScale, 0.7, \curve, 1.5, \deadtime, 0.02], group);
+
+	// trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
+	// 	\fullScale, 0.7, \curve, 0.5, \deadtime, 0.001], group);
+
 
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {

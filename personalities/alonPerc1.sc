@@ -1,19 +1,24 @@
 var m = ~model;
 var dev = ~device;
-var group, trig;
+var group, trig, buffers;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
-var relTime = 2.0;
+var relTime = 0.4;
 
-m.accelMassFilteredAttack = 0.7;
+var kitFolder = "~/Music/cotf_samples/drums";
+var kitNames = ["HH11X05", "SD02X05", "BD02X07"];
+
+var kit = [
+	(idx: 0, lo: 0.00, hi: 0.8, lvl: 0.55, rate: 1.0,  cut: 16000),
+	// (idx: 1, lo: 0.5, hi: 0.80, lvl: 0.70, rate: 1.0,  cut: 12000),
+	(idx: 2, lo: 0.50, hi: 1.01, lvl: 0.95, rate: 1.0,  cut:  6000)
+];
+
+m.accelMassFilteredAttack = 0.9;
 m.accelMassFilteredDecay = 0.2;
 m.rrateMassFilteredAttack = 0.9;
 m.rrateMassFilteredDecay = 0.5;
 m.gyroFilteredAttack = 0.7;
 m.gyroFilteredDecay = 0.7;
-
-
-// tempo tracking
-// beat compare as input
 
 //------------------------------------------------------------
 
@@ -38,22 +43,35 @@ SynthDef(\inputTrigger, { |ratio = 3.0, floorDb = -68,
 
 //------------------------------------------------------------
 
-SynthDef(\miniMoogVoice, {
-	|freq = 440, amp = 0.5, attack = 0.1, decay = 0.2, sustain = 0.7, release = 0.3, gate = 1, filterFreq = 800, fq=0.5, pan = 0, dur = 0.2|
-
-	var g = gate * Trig1.kr(Impulse.kr(0), dur);
-    var env, osc, filt, sig;
-    env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), g, doneAction: 2);
-	osc = Saw.ar([freq, freq * 1.004],1) + SinOsc.ar([freq-1, freq -1 * 0.005],0,1) + LFTri.ar([freq+1, freq * 1.004],0,1);
-    filt = RLPF.ar(osc.tanh, filterFreq, fq).tanh;
-    sig = filt * env * amp * 0.5;
-    sig = Pan2.ar(sig, pan);
-    Out.ar(0, sig.tanh);
+SynthDef(\alonKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
+    attack=0.001, release=0.02, gate=1, cutoff=14000, rq=1|
+	var lr = rate * BufRateScale.kr(bufnum);
+	var env = EnvGen.kr(Env.asr(attack, 1, release), gate, doneAction: Done.freeSelf);
+	var sig = PlayBuf.ar(1, bufnum, rate: [lr, lr * 1.0], startPos: start * BufFrames.kr(bufnum),
+		loop: 0, doneAction: Done.freeSelf) * env;
+	sig = RLPF.ar(sig, cutoff.clip(200, 18000), rq);
+	sig = Compander.ar(sig, sig,
+		thresh: -15.dbamp,
+		slopeBelow: 1,
+		slopeAbove: 0.5,
+		clampTime:  0.01,
+		relaxTime:  0.01
+	);
+	sig = FreeVerb.ar(sig, 0.1, 1.1, 0.4);
+	Out.ar(out, sig * amp);
 }).add;
 
 //------------------------------------------------------------
 ~init = ~init <> {
+	var folder = kitFolder.standardizePath;
+
 	group = Group.new;
+
+	buffers = kitNames.collect({ |n|
+		Buffer.read(s, folder +/+ (n ++ ".wav"), action: { |b|
+			postf("buffer alloc [%] % \n", b, n);
+		});
+	});
 
 	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
 		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.001], group);
@@ -61,42 +79,56 @@ SynthDef(\miniMoogVoice, {
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
 			var vel = msg[3];
-			var notes = [0,7,12,16] + 40;
-			var ff = m.accelMassFiltered.lincurve(0.0, 1.0, 200, 2000, -2).clip(200, 12000);
-			var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger;
+			var ff = m.accelMassFiltered.lincurve(0.0, 1.0, 0.35, 1.6, -2);
+			var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0, 1.0, 0.1, 4, 0);
 
-			Synth(\miniMoogVoice, [
-				\freq, notes[rt].midicps,
-				\amp, vel.linlin(0.0, 1.0, 0.05, 0.5),
-				\attack, vel.linexp(0.0, 1.0, 0.05, 0.001),
-				\filterFreq, ff,
-				\attack,vel.lincurve(0.0, 1.0, 1.01, 0.002,-2),
-				\decay, 0.12,
-				\sustain, 0.1,
-				\release, relTime * vel.lincurve(0.0, 1.0, 2.01, 0.002,-2),
-				\fq, 0.3,
-				\dur, 0.2
-			], group);
+			if (buffers.notNil, {
+				var lay = kit.detect({ |l| (vel >= l[\lo]) and: { vel < l[\hi] } }) ? kit.last;
+				var b = buffers[lay[\idx]];
+
+				if (b.notNil, {
+					Synth(\alonKit, [
+						\bufnum, b,
+						\amp, lay[\lvl] * vel.linlin(lay[\lo], lay[\hi], 0.6, 1.0),
+						\rate,1,
+						\cutoff, lay[\cut] * ff,
+						\rq, 1,
+						\attack, 0.001,
+						\release, 0.02
+					], group);
+				});
+			});
 		};
 	}, '/akHit', s.addr);
 };
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
-	var dying = group;
+	var dying = group, dyingBufs = buffers;
 
 	OSCdef(hitKey) !? (_.free);
 	trig !? (_.free);
 	trig = nil;
 	group = nil;
+	buffers = nil;
 
-	if (dying.notNil) {
+	if (dying.notNil, {
 		fork {
 			dying.set(\gate, 0);
 			(relTime + 0.5).wait;
+			dying.freeAll;
+			s.sync;
 			dying.free;
+			s.sync;
+			dyingBufs !? { |bs|
+				bs.do({ |b|
+					postf("buffer dealloc [%] \n", b);
+					b.free;
+					s.sync;
+				});
+			};
 		};
-	};
+	});
 };
 
 //------------------------------------------------------------

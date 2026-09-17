@@ -79,14 +79,14 @@ Synth(\buchlaInspired, [
 
 // 2. Metallic Percussion
 (
-s.record;
+// s.record;
 
 Synth(\buchlaInspired, [
-    \freq, 440,
+    \freq,440,
     \osc1Waveform, 1, \osc1Ratio, 2.7, \osc1Index, 0.8,
-    \osc2Waveform, 2, \osc2Ratio, 4.5, \osc2Index, 0.6,
+    \osc2Waveform, 0, \osc2Ratio, 4.5, \osc2Index, 0.7,
     \complexOscFold, 1.5, \complexOscWarp, 0.3,
-    \lpgDecay, 0.2, \lpgSustain, 0,
+    \lpgDecay, 0.1, \lpgSustain, 0,
     \lowpassCutoff, 5000, \lowpassResonance, 0.1,
     \attack, 0.001, \decay, 0.1, \sustain, 0.1, \release, 0.5,
     \reverbMix, 0.2, \reverbRoom, 0.3, \reverbDamp, 0.5
@@ -163,7 +163,8 @@ Synth(\buchlaInspired, [
 ]);
 )
 // 8. Plucked String
-(Synth(\buchlaInspired, [
+(
+Synth(\buchlaInspired, [
     \freq, 220,
     \osc1Waveform, 1, \osc1Ratio, 1, \osc1Index, 1,
     \osc2Waveform, 1, \osc2Ratio, 2, \osc2Index, 0.5,

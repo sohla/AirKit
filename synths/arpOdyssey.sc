@@ -196,12 +196,14 @@ Pbind(
 		\octave, Pseq([2,3,4,5].stutter(2)+1, 4),
 		\amp,0.1,
 
-    \osc1Waveform, 0, \osc1Level, 1,
-    \osc2Waveform, 2, \osc2Level, 1, \osc2Detune, 0.01,
-    \cutoff, 500, \resonance, 0.7,
-    \attack, 0.01, \decay, 0.2, \sustain, 0.6, \release, 0.3,
-    \filterEnvAmount, 2800, \filterAttack, 0.01, \filterDecay, 0.3, \filterSustain, 0.4, \filterRelease, 0.2,
-    \lfoRate, 0.2, \lfoAmount, 0.5, \lfoDestination, 2
+    \osc1Waveform, 2, \osc1Level, 1.0,
+    \osc2Waveform, 0, \osc2Level, 1, \osc2Detune, 0.007,
+    \cutoff, 500, \resonance, 0.2,
+		    \pwm, 0.9, \pwmRate, 0.3,
+
+    \attack, 0.2, \decay, 0.2, \sustain, 0.6, \release, 0.3,
+    \filterEnvAmount,1000, \filterAttack, 0.1, \filterDecay, 0.3, \filterSustain, 0.4, \filterRelease, 0.5,
+    \lfoRate, 0.2, \lfoAmount, 0.9, \lfoDestination, 2
 
 );
 ).play(quant:0.0);

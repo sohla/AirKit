@@ -1,73 +1,93 @@
 var m = ~model;
 var synth;
-// var notes = [30,37,42,46,49,54,56,59,63,66];
-var notes = [30,37,42,46,47,49] +5;
-m.accelMassFilteredAttack = 0.99;
-m.accelMassFilteredDecay = 0.8;
-// gentle
-//------------------------------------------------------------
-SynthDef(\sheet1, { |out=0, frq=111, gate=0, amp = 0, freq=45, detune=0.01, rtime=1|
-	var env = EnvGen.ar(Env.asr(0.3,1.0,8.0), gate, doneAction:Done.freeSelf);
-	var sig = Splay.ar( {Gendy1.ar(1,00, 0.001, 1, freq, freq + (freq * detune), 0, 0.0, mul: 0.1)}!20).softclip;
-  var follow = Amplitude.kr(amp, 0.1, 0.4);
-	sig = GVerb.ar(sig * env * follow, 1, rtime).distort;
-	BLowShelf.ar(sig,400, db:-8);
-	Out.ar(out, sig);
-}).add;
-SynthDef(\miniMoog, {
-	|freq = 440, amp = 0.0, attack = 0.1, decay = 0.2, sustain = 0.7, release = 0.3, gate = 1, filterFreq = 800, fq=0.5, pan = 0|
+var nvoices = 8;
 
-    var env, osc, filt, sig;
-    env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
-	osc = Saw.ar([freq, freq * 1.004],1) + SinOsc.ar([freq-1, freq -1 * 0.005],0,1) + LFTri.ar([freq+1, freq * 1.004],0,1);
-    filt = RLPF.ar(osc.tanh, filterFreq, fq);
-    sig = filt * env * amp.lag(1) * 0.5;
-    sig = Pan2.ar(sig, pan);
-    Out.ar(0, sig.tanh);
+m.accelMassFilteredAttack = 0.95;
+m.accelMassFilteredDecay = 0.7;
+m.rrateMassFilteredAttack = 0.9;
+m.rrateMassFilteredDecay = 0.6;
+m.gyroFilteredAttack = 0.8;
+m.gyroFilteredDecay = 0.8;
+
+//------------------------------------------------------------
+
+SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
+	freq = 45, detune = 0.12, ampdist = 1, durdist = 0,
+	adparam = 0.001, ddparam = 1, ampscale = 0, durscale = 0.0,
+	atk = 2.0, rel = 6.0, glide = 0.6,
+	cutoff = 6000, roomsize = 1, revtime = 0.1, revmix = 0.35,
+	shelfFreq = 250, shelfDb = -2|
+
+	var env = EnvGen.kr(Env.asr(atk, 1, rel), gate, doneAction: Done.freeSelf);
+	var f   = freq.lag(glide);
+	var det = detune.lag(glide);
+
+	var dry = Splay.ar({
+		Gendy1.ar(ampdist, durdist, adparam, ddparam,
+			f, f + (f * det), ampscale, durscale, mul: 0.5)
+	} ! nvoices).softclip;
+
+	var wet = GVerb.ar(dry.sum * 0.5, roomsize, revtime);
+	var sig = (dry * (1 - revmix)) + (wet * revmix);
+
+	sig = LPF.ar(sig, cutoff.clip(120, 18000).lag(glide));
+	sig = BLowShelf.ar(sig, shelfFreq, db: shelfDb);
+
+	Out.ar(out, (sig * env * amp.lag(glide)).softclip);
 }).add;
+
+//------------------------------------------------------------
 ~init = ~init <> {
-	synth = Synth(\miniMoog, [\gate, 1]);
+	synth = Synth(\gendyDrone, [\gate, 1, \amp, 0]);
 };
 
+//------------------------------------------------------------
 ~deinit = ~deinit <> {
-	synth.set(\release, 5);
-	synth.set(\gate, 0);
+	synth !? { |x| x.set(\rel, 4.0); x.set(\gate, 0) };
+	synth = nil;
 };
 
 //------------------------------------------------------------
 ~next = {|d|
+	var amp    = m.accelMassFiltered.lincurve(0.0, 2.0, -50, -1, -2);
+	var freq   = (d.sensors.gyroEvent.y / pi.half).linexp(-1.0, 1.0, 20, 40);
+	var detune = m.rrateMassFiltered.lincurve(0.0, 1.2, 0.10, 0.45, -1);
+	var cutoff = m.accelMassFiltered.linexp(0.0, 2.0, 700, 9000);
 
-var amp = m.accelMassFiltered.linlin(0,1.5,0.001,1.0);
-  var detune = m.accelMassFiltered.linlin(0,2.5,0.1,0.2);
-  var filterFreq = m.rrateMassFiltered.linexp(0,1,400,9.2e3);
-	
-  var index = m.gyroYFiltered.linlin(pi.half.neg,pi.half,0,notes.size).floor;
-	var freq = notes[index].midicps;
-	if(amp < 0.02, { amp = 0 });
-	if(amp > 0.9, { amp = 0.9 });
-
-	if(filterFreq < 400, { filterFreq = 400 });
-	if(filterFreq > 9.2e3, { filterFreq = 9.2e3 });
-
-	synth.set(\amp, amp * 1.2);
-  synth.set(\filterFreq, filterFreq);
-  synth.set(\detune, detune);
-  synth.set(\freq, freq);
+	synth !? { |x|
+		x.set(\amp, amp.dbamp);
+		x.set(\freq, freq);
+		x.set(\detune, detune);
+		x.set(\cutoff, cutoff);
+	};
 };
 
 //------------------------------------------------------------
 ~plotMin = -1;
 ~plotMax = 1;
 ~plot = { |d,p|
-	// [d.sensors.quatEvent.x, d.sensors.quatEvent.y, d.sensors.quatEvent.z];
-	// [m.accelMassFiltered * 0.1, d.sensors.rotateEvent.y];
-	// [m.accelMass + m.rrateMassFiltered, m.accelMassFiltered,m.rrateMassThreshold];
-	// [m.rrateMassFiltered, m.rrateMassThreshold, m.accelMassAmp];
-	// [d.sensors.gyroEvent.x, d.sensors.gyroEvent.y, d.sensors.gyroEvent.z];
-	[d.sensors.gyroEvent.y / pi * 2];
-	// [d.sensors.gyroEvent.z] / pi;
+
+	// [yellow, cyan , magenta]??
+
+	// Velocity
+	// [d.sensors.velocity.x, d.sensors.velocity.y, d.sensors.velocity.z] * 30;
+
+	// Acceleration
+	// [d.sensors.accelEvent.x, d.sensors.accelEvent.y, d.sensors.accelEvent.z] * 0.1;
+	[m.accelMass, m.accelMassFiltered];
+	// [d.sensors.accelEvent.x.abs * d.sensors.accelEvent.y.abs *  m.accelMassFiltered] * 0.5;
+
+	// Rotation
 	// [d.sensors.rrateEvent.x, d.sensors.rrateEvent.y, d.sensors.rrateEvent.z];
-	// [d.sensors.accelEvent.x, d.sensors.accelEvent.y, d.sensors.accelEvent.z];
+	// [[d.sensors.rrateEvent.x, d.sensors.rrateEvent.y, d.sensors.rrateEvent.z].sumabs];
+	// [m.rrateMass, m.rrateMassFiltered];
 
-
+	// Gyro
+	// [(d.sensors.gyroEvent.x / pi)];//roll
+	// [(d.sensors.gyroEvent.y / pi.half)];//up down
+	// [(d.sensors.gyroEvent.z / pi)];//left right
+	// [(d.sensors.gyroEvent.x / pi), (d.sensors.gyroEvent.y / pi.half), (d.sensors.gyroEvent.z / pi)];
+  // [m.gyroXFiltered, m.gyroYFiltered, m.gyroZFiltered];
+	// [ ((m.gyroZFiltered.fold(-0.5,0.5) * 2)+1) + (m.gyroYFiltered + 1)] - 2 * 0.5 ;
+	// [(d.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,-1.0,1.0,3)];
 };

@@ -52,8 +52,8 @@ SynthDef(\simpleHit, {|out=0, amp=0.0, freq=120, attack=0.001, decay=0.03, susta
 	group = Group.new;
 	step = 0;
 
-	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
-		\fullScale, 0.7, \curve, 1.5, \deadtime, 0.17], group);
+	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -52,
+		\fullScale, 0.7, \curve, 1.5, \deadtime, 0.02], group);
 
 	synth = Synth(\simpleHit, [\hitAmp, 0.7, \duckAmt, 0.7, \hitDec, 0.4], group, \addToTail);
 
@@ -63,7 +63,7 @@ SynthDef(\simpleHit, {|out=0, amp=0.0, freq=120, attack=0.001, decay=0.03, susta
 
 			step = step + 1;
 
-			synth.set(\freq, note.midicps, \vel, msg[3], \t_hit, 1);
+			synth.set(\freq, 220, \vel, msg[3], \t_hit, 1);
 		};
 	}, '/akHit', s.addr);
 };

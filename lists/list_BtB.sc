@@ -2,7 +2,10 @@
 	[
 		"silence",
 
-		"temp_synth",
+		"alonPerc1",
+		"movingBeast",
+		"gendy1",
+		"buchlaMetallic",
 		"temp_input2",
 		"temp_input3",
 		"temp_input4",
