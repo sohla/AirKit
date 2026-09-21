@@ -75,7 +75,7 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, 
 //------------------------------------------------------------
 ~next = {|d|
 	var amp = m.accelMass.linlin(0,0.5,0.00001,1);
-	var speed= m.accelMassFiltered.lincurve(0.5,2.5,0.01,2,-2);
+	var speed= m.accelMassFiltered.lincurve(0.1,0.5,0.01,2,-2);
 	var rate = m.gyroYFiltered.linlin(-1,1,1,2).asInteger;
 	var pan = m.gyroZFiltered.linlin(-1,1,-1,1);
 

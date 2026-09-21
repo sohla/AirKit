@@ -94,8 +94,8 @@ SynthDef(\drumkit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 //------------------------------------------------------------
 ~next = {|d|
 
-	var rate = m.rrateMassFiltered.linlin(0,0.5,0.2,10.4);
-	var amp = m.accelMassFiltered.lincurve(0,0.5,0.0,2, 2);
+	var rate = m.rrateMassFiltered.linlin(0,0.3,0.2,10.4);
+	var amp = m.accelMassFiltered.lincurve(0,0.3,0.0,2, 2);
 	var roll = ((d.sensors.gyroEvent.x / pi).fold(-0.5,0.5) * 2).lincurve(-1.0,1.0,0.5,1.0,0);
 	var thr = (d.sensors.accelEvent.y.abs).lincurve(0,0.5,0.0,1.0,-2).asInteger;
 	var ff = ((d.sensors.gyroEvent.z / pi).fold(-0.5,0.5) * 2).lincurve(-1.0,1.0,500,50.0,1);
@@ -105,7 +105,7 @@ SynthDef(\drumkit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	Pdef(m.ptn).set(\cutoff, ff);
 
 	Pdef(m.ptn).set(\viewID, d.port);
-  	Pdef(m.ptn).set(\startSize, 50 * amp);
+  	Pdef(m.ptn).set(\startSize, 70 * amp);
   	Pdef(m.ptn).set(\endSize, 130 + (40 * amp));
   	Pdef(m.ptn).set(\startWidth, (2.pow(amp)));
 
@@ -123,7 +123,7 @@ SynthDef(\drumkit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	Pdef(m.ptn).set(\endColor, Color.hsv(bi/buffers.size,1,1.0,0.1));
 
 	if(TempoClock.beats >= (lastTime + 0.18),{
-		if(m.accelMassFiltered > 0.5,{
+		if(m.accelMassFiltered > 0.3,{
 			lastTime = TempoClock.beats;
 			dur = 0.18/2;
 		},{
@@ -132,7 +132,7 @@ SynthDef(\drumkit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	});
 	Pdef(m.ptn).set(\dur, 0.18);
 
-	if(m.accelMassFiltered > 0.02,{
+	if(m.accelMassFiltered > 0.01,{
 		if( Pdef(m.ptn).isPlaying.not,{
 			Pdef(m.ptn).resume(quant:0.18);
 		});

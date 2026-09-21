@@ -191,7 +191,7 @@ SynthDef(\drumkit2, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 ~next = {|d|
 
 	var rel = m.gyroYFiltered.clip(-0.5,0.5).lincurve(-0.5,0.5,0.3,0.01,3);
-	var amp = m.accelMassFiltered.lincurve(0,1.0,0.0,0.8, -1);
+	var amp = m.accelMassFiltered.lincurve(0,0.3,0.0,0.8, -1);
 	var roll = m.gyroXFiltered.lincurve(-0.2,0.4,1,4,-2) * 0.5;
 	var sa = m.rrateMassFiltered.lincurve(0,0.3,0.1,0.35, -1);
 

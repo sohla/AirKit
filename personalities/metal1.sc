@@ -130,7 +130,7 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 	var trig = LPF.ar(PinkNoise.ar(0.01),600) * env * follow;
 	var sig =  DynKlank.ar(`[([30,42,54] + pchx.lag(3)).midicps, nil, [2, 1, 1, 1]], trig);
 	var dly = DelayC.ar(sig,0.03,[0.02,0.027]);
-	Out.ar(out, dly);
+	Out.ar(out, Pan2.ar(Mix(dly),1));
 }).add;
 
 //------------------------------------------------------------
@@ -305,9 +305,9 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 //------------------------------------------------------------
 ~next = {|d|
 
-	var move = m.accelMassFiltered.linlin(0,2,0,1);
-	var oct = m.accelMassFiltered.linlin(0,5,2,5).floor;
-	var dur = m.accelMassFiltered.lincurve(0,1.5,0.3,0.05,-3);
+	var move = m.accelMassFiltered.linlin(0,0.4,0,1);
+	var oct = m.accelMassFiltered.linlin(0,3,2,5).floor;
+	var dur = m.accelMassFiltered.lincurve(0,1.0,0.3,0.05,-3);
 	
   	var a = m.accelMass * 0.5;
 	var f = 50 + (m.accelMassFiltered * 100);
@@ -316,7 +316,7 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 	// pchs[i.floor].postln;
 	if(a<0.02,{a=0.0});
 	if(a>0.9,{a=0.3});
-	synth.set(\amp, a * 0.6);
+	synth.set(\amp, a * 1);
 
 	// tells the visual router which device these shapes came from
 	Pdef(m.ptn).set(\viewID, d.port);

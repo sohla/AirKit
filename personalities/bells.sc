@@ -124,7 +124,7 @@ SynthDef(\bambooComplex, {
     output = LeakDC.ar(output);
     output = Limiter.ar(output, 0.95);
 
-    Out.ar(out, output);
+    Out.ar(out, Pan2.ar(Mix(output), -1));
 }).add;
 
 
@@ -222,7 +222,7 @@ SynthDef(\bambooComplex, {
 				ex: rrand(-0.1, 0.1),
 				ey: rrand(-0.1, 0.1),
 				yEnv: Env([0, 1], [1], \sin),
-				startColor: Color.hsv(noteIndex / notes.size, 0.45, 1.0, 0.5),
+				startColor: Color.hsv(noteIndex / notes.size, 0.45, 1.0, 1),
 				endColor: Color.hsv(noteIndex / notes.size, 0.9, 0.6, 0.0),
 				rotation: 2pi.rand,
 				duration: m.accelMassFiltered.lincurve(0,2.5,1.0,3,-1),

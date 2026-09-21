@@ -137,7 +137,7 @@ SynthDef(\chooka, {
     		\filtRes, 0.8,
 
 			\type, \customVisualEvent,
-			\shape, \line,
+			\shape, \square,
 			\numPoints, Pfunc({ |e| (e[\note] ? 0).linlin(-1, 13, 3, 7) }),
 			\fill, true,
 			\vstep, Pseries(0, 0.0, inf),
@@ -146,8 +146,8 @@ SynthDef(\chooka, {
 			\sy, 0,
 			\ey, 1.0,
 			\rotation, 0,
-			\startSize, 1,
-			\endSize, 200,
+			\startSize, 2000,
+			\endSize, 2000,
 			\sizeEnv, Pfunc({ Env([0, 1], [1], 0) }),
 			\startWidth, Pfunc({ |e| 
 				var a = (e[\amp] ? 0);

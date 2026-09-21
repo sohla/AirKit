@@ -61,8 +61,8 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1, di
 //------------------------------------------------------------
 ~next = {|d|
 	// var amp = d.sensors.velocity.sum.abs.lincurve(0,0.03,0.0,1.0,-2);
-	var amp = m.accelMassFiltered.lincurve(0,2.5,0.0,1,-3);
-	var rfo = m.accelMassFiltered.lincurve(0,2.5,0.0,1,-3);
+	var amp = m.accelMassFiltered.lincurve(0,0.5,0.0,1,-3);
+	var rfo = m.accelMassFiltered.lincurve(0,1.5,0.0,1,-3);
   // var ffo = m.gyroYFiltered.lincurve(-1.0,1,1,18,-3);
   var pos = m.gyroZFiltered.lincurve(-1.0,1,0.0,1.0,0);
     

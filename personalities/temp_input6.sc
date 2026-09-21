@@ -61,7 +61,8 @@ SynthDef(\miniMoogVoice, {
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
 			var vel = msg[3];
-			var notes = [0,7,12,16] + 40;
+			// var notes = [0,7,12,16] + 40;
+			var notes = [2,4,5,7,9,11,12,14] + 40;
 			var ff = m.accelMassFiltered.lincurve(0.0, 1.0, 200, 2000, -2).clip(200, 12000);
 			var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger;
 

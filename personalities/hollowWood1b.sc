@@ -14,7 +14,7 @@ var ioiMin = 0.04;
 var ioiMax = 2.0;
 var smooth = 0.99;
 
-var notes = [0, 7, 10, 12, 15,19,24] - 32;
+var notes = [0, 7, 10, 12, 15,19,24] + 12;
 
 m.accelMassFilteredAttack = 0.9;
 m.accelMassFilteredDecay = 0.3;
@@ -118,17 +118,30 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			// rt = rate.linlin(0.5, 15.0, 25, 200);	
 			rt = ang.linlin(0.0, 1.0, 0, notes.size - 1).asInteger;	
 			note = notes.clipAt(rt) + 45;
-
 			Synth(\hollowWood, [
 				\freq, note.midicps,
 				\vel, vel,
 				\amp, 0.5 * ang,
-				\decay, ang * 3,
+				\decay, ang * 5,
 				\coef, cf,
-				\body, ang * 3,
-				\rel, ang * 3,
+				\body, ang * 5,
+				\rel, ang * 5,
 				\pan, (dev.sensors.gyroEvent.z / pi).clip(-1, 1) * 0.5
 			], group);
+
+			SystemClock.sched(0.2, {
+			Synth(\hollowWood, [
+				\freq, note.midicps,
+				\vel, vel,
+				\amp, 0.5 * ang,
+				\decay, ang * 5,
+				\coef, cf,
+				\body, ang * 5,
+				\rel, ang * 5,
+				\pan, (dev.sensors.gyroEvent.z / pi).clip(-1, 1) * 0.5
+			], group);
+			});
+
 		};
 	}, '/akHit', s.addr);
 };
@@ -180,7 +193,7 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 	// Acceleration
 	// [d.sensors.accelEvent.x, d.sensors.accelEvent.y, d.sensors.accelEvent.z] * 0.1;
-	[m.accelMass, m.accelMassFiltered];
+	// [m.accelMass, m.accelMassFiltered];
 
 	// Rotation
 	// [d.sensors.rrateEvent.x, d.sensors.rrateEvent.y, d.sensors.rrateEvent.z];
@@ -188,7 +201,7 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 	// Gyro
 	// [(d.sensors.gyroEvent.x / pi)];//roll
-	// [(d.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1)];//up down
+	[(d.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1)];//up down
 	// [(d.sensors.gyroEvent.z / pi)];//left right
 	// [(d.sensors.gyroEvent.x / pi), (d.sensors.gyroEvent.y / pi.half), (d.sensors.gyroEvent.z / pi)];
   // [m.gyroXFiltered, m.gyroYFiltered, m.gyroZFiltered];

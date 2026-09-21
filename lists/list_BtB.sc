@@ -4,6 +4,7 @@
 
 		"trigTrakPattern1",
 		"hollowWood",
+		"hollowWood1b",
 		"hollowWood3",
 		"alonPerc1",
 		"temp_input2",
@@ -37,6 +38,7 @@
 		"mel2",
 		"mel3",
 		"mel4",
+		"violin2",
 		"mel5",
 
 		"melChair1",
@@ -53,6 +55,14 @@
 
 		"violin1",
 		"violin2",
+		"gendy1",
+		"gendy3",
+		"cymbals1",
+		"harp1",
+		"melChair1",
+		"melChair2",
+		"melChair3",
+		"melChair4",
 
 		"circusChoir1",
 
@@ -60,6 +70,7 @@
 		"bells",
 		"bongo1",
 		"metal1",
+		"pluck1",
 		"miniMoog",
 		
 		"waves",
