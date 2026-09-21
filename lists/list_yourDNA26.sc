@@ -3,6 +3,14 @@
 
 		"silence",
 
+		"beatbell1",
+		"woiworung3",
+		"ticktockbeat2",
+		"marimbabeat1",
+		"shaker1",
+		"westminsterChimes1",
+		"bells",
+
 		"chicken2",
 		"animalMat",
 		"chopMat",		
@@ -11,8 +19,6 @@
 		"heatherLaugh1",
 		
 		"bees",
-		"westminsterChimes1",
-		"bells",
 		"magicWand",
 		"magicWand2",
 		"metal1",

@@ -124,7 +124,7 @@ SynthDef(\bambooComplex, {
     output = LeakDC.ar(output);
     output = Limiter.ar(output, 0.95);
 
-    Out.ar(out, Pan2.ar(Mix(output), -1));
+    Out.ar(out, output);
 }).add;
 
 
@@ -194,7 +194,8 @@ SynthDef(\bambooComplex, {
 				\freq, (2 + notes[noteIndex] + currentRoot).midicps,
 				\gate, 1,
 				\att, 0.03,
-				\amp, 0.3 * amp,
+				\amp, 0.2 * amp,
+				\pan, rrand(-0.9, 0.9),
 				\strikePos, 1.0.rand, // Position of strike (affects resonance)
 				\resonance, 0.06, // Amount of resonant body sound
 				\bambooMoisture, 1.0.rand, // Affects damping and resonance
