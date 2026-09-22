@@ -3,7 +3,8 @@ var group;
 
 var beat = 1.0;
 var divs = [4, 8,16];
-var pool = [11, 9, 7, 2, 7, 11, 9, 2];
+var pool = [11, 9, 7, 2, 7, 11, 9, 2] + 5 + 12;
+// var pool = [0];
 
 var partials       = [0.5, 1, 2.76, 5.4, 8.93, 13.34];
 var partialAmps    = [0.7, 1, 0.55, 0.32, 0.18, 0.09];
@@ -31,7 +32,7 @@ SynthDef(\beatBell, { |out = 0, freq = 440, amp = 0.2, pan = 0,
 		freq * partials * (1 + (inharm * partialStretch)),
 		partialAmps,
 		partialTimes * ring
-	], exciter, freqscale: 1 + (warble * [-1, 1])).sum * 0.5;
+	], exciter, freqscale: 1 + (warble * [-1, 1])).sum * 0.3;
 
 	var env = EnvGen.kr(Env.perc(0.002, ring, curve: -4.5), gate, doneAction: 2);
 	var sig = LeakDC.ar(LPF.ar(bell, 9000)) * env * amp;
@@ -81,7 +82,7 @@ SynthDef(\beatBell, { |out = 0, freq = 440, amp = 0.2, pan = 0,
 			\step, Pswitch(divs.collect({ |n| Pseries(0, 1, n) }),      Pkey(\divIdx)),
 			\note, Pswitch(divs.collect({ |n| Pseq(pool.keep(n), 1) }), Pkey(\divIdx)),
 			\octave, Pwhite(5, 7),
-			\root, Pseq([0,-2].stutter(32), inf),
+			\root, Pseq([0,-2,3].stutter(32), inf),
 			\dur, Pkey(\div).reciprocal * beat,
 			\pan, Pwhite(-0.25, 0.25),
 			\warble, Pwhite(0.0008, 0.0022),
@@ -148,8 +149,8 @@ SynthDef(\beatBell, { |out = 0, freq = 440, amp = 0.2, pan = 0,
 //------------------------------------------------------------
 ~next = { |d|
 	var idx = m.accelMassFiltered.lincurve(0, 2.8, 0, divs.size - 1, -1).round.asInteger.clip(0, divs.size - 1);
-	var amp = m.accelMassFiltered.lincurve(0, 1.2, -26, -16, 1);
-	var ring = m.accelMassFiltered.lincurve(0, 1.5, 5.5, 0.9, 2);
+	var amp = m.accelMassFiltered.lincurve(0, 0.4, -26, -10, 1);
+	var ring = m.accelMassFiltered.lincurve(0, 0.5, 5.5, 0.9, 2);
 	var hard = m.rrateMassFiltered.lincurve(0, 0.8, 0.05, 1.0, -1);
 	var inharm = (d.sensors.gyroEvent.y / pi.half).linlin(-1, 1, 0.0, 1.0);
 

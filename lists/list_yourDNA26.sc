@@ -3,14 +3,32 @@
 
 		"silence",
 
+		"trigTrakPattern1",
+		"hollowWood",
+		"hollowWood1b",
+		"hollowWood3",
+		"alonPerc1",
+		"temp_input2",
+		"temp_input3",
+		"temp_input4",
+		"temp_input5",
+		"temp_input6",
+		"temp_input7",
+		"temp_input8",
+		"insects1",
+
 		"hover1",
-		"beatbell1",
 		"woiworung3",
+		"beatbell1",
 		"ticktockbeat2",
 		"marimbabeat1",
 		"shaker1",
-		
+		"leaves",
+
 		"westminsterChimes1",
+		"harp1",
+
+
 		"bells",
 		"daveBell1",
 

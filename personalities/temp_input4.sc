@@ -41,7 +41,7 @@ SynthDef(\bellChime, { |out = 0, amp = 0.3, freq = 523, ratio = 3.0, floorDb = -
 
 //------------------------------------------------------------
 ~init = ~init <> {
-	synth = Synth(\bellChime, [\amp,0.2, \ratio, 0.3, \slowRel, 0.25, \floorDb, -32, \fullScale, 0.7, \decay, 1.0]);
+	synth = Synth(\bellChime, [\amp,0.2, \ratio, 0.3, \slowRel, 0.25, \floorDb, -32, \fullScale, 0.7, \decay, 3.0]);
 };
 
 //------------------------------------------------------------

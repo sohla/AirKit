@@ -48,7 +48,7 @@ SynthDef(\syntheticLeaf, {
     
 	if(a<0.0003,{a=0});
 
-	synth.set(\amp, a * 0.3);
+	synth.set(\amp, a * 1);
 	synth.set(\pan, pan);
 
 };

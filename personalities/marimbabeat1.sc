@@ -206,7 +206,7 @@ SynthDef(\marimbaBeat, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, p
 	Pdef(m.ptn).set(\bassAmp, bassAmp.dbamp);
 	Pdef(m.ptn).set(\topAmp, topAmp.dbamp);
 	Pdef(m.ptn).set(\topOct, topOct);
-	Pdef(m.ptn).set(\root, (m.com.root ? 0).wrap(0, 11));
+	Pdef(m.ptn).set(\root, (m.com.root ? 0).wrap(0, 11) + 5);
 };
 
 //------------------------------------------------------------

@@ -5,8 +5,10 @@ var frame = 0;
 
 var synth, bassSynth;
 var dur = 0.11;
-var notes = [0,2,5,7,9,11,12,14,12,11] + 1;
-var bass = [2,9,5,12,5,9,2].stutter(2) + 1;
+// var notes = [0,2,5,7,9,11,12,14,12,11] + 1;
+// var bass = [2,9,5,12,5,9,2].stutter(2) + 1;
+var notes = [4,0,2,-5] + 12;
+var bass = [0].stutter(2) + 12;
 var root = [0];
 var offset = 0;
 var bassCount = 0;
@@ -198,7 +200,7 @@ SynthDef(\funBass, {
 ~next = {|d|
 
 	var move = m.accelMassFiltered.lincurve(0,0.04,1,notes.size,1);
-	var amp = m.accelMassFiltered.lincurve(0,0.4,-50, 5,-1);
+	var amp = m.accelMassFiltered.lincurve(0,0.4,-90, -20,-1);
 	var ff = m.rrateMassFiltered.lincurve(0.0,2.0,200,2000,-3); 
 	var wd = m.rrateMassFiltered.lincurve(0.0,2.0,10,0.1,-3); 
 	var step = m.gyroXFiltered.linlin(-0.8,0.8,0,3).floor; //up down
@@ -231,9 +233,6 @@ SynthDef(\funBass, {
 		),
 	);
 			
-
-
-
 
 	Pdef(m.ptn).set(\range, move.floor);
 	Pdef(m.ptn).set(\amp, amp.dbamp);
@@ -268,7 +267,7 @@ SynthDef(\funBass, {
 		});
 	});
 
-	if(m.accelMassFiltered > 0.08, {
+	if(m.accelMassFiltered > 0.8, {
 		if(TempoClock.beats > (lastTime + (dur*4)),{
 			lastTime = TempoClock.beats;
 			~playNote.(n + 12,0, 3,amp.dbamp * 0.8);

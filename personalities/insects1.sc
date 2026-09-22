@@ -27,7 +27,7 @@ SynthDef(\insects, {
     sig = SinOsc.ar(freq) * SinOsc.ar(freq * 0.5) * SinOsc.ar(freq * 0.5) ;
 
     // Amplitude modulation for the characteristic pulsing
-	sig = sig * LFTri.ar(55+ LFNoise2.kr([1,2], 10), 0, MouseX.kr(1,10), 1);
+	sig = sig * LFTri.ar(55+ LFNoise2.kr([1,2], 10), 0, 5, 1);
 
     // Envelope
     env = EnvGen.kr(Env.asr(14, 1, 3.1), gate, doneAction: 2);
@@ -77,16 +77,16 @@ SynthDef(\syntheticLeaf, {
     env = EnvGen.kr(Env.asr(4.3, 1, 2.3, \welch), gate, doneAction: 2);
 
     // Output
-    Out.ar(out, Pan2.ar(sig * env * amp.lag(0.4), pan));
+    Out.ar(out, Pan2.ar(sig * env * amp.lag(0.1), pan));
 }).add;
 
 ~init = ~init <> {
-	// synth = Synth(\insects, [\gate, 1, \amp, 0.004]);
+	synth = Synth(\insects, [\gate, 1, \amp, 0.02]);
 	synth2 = Synth(\syntheticLeaf, [\gate, 1]);
 };
 
 ~deinit = ~deinit <> {
-	// synth.set(\gate, 0);
+	synth.set(\gate, 0);
 	synth2.set(\gate,0);
 };
 
