@@ -1,7 +1,7 @@
 var m = ~model;
 var isPlaying = false;
 var synth;
-var notes = [48-12,43,39,44];//23 + [9,11,2+12,9,6,11,9,2+12,11,13];
+var notes = [36,43,48];
 m.accelMassFilteredAttack = 0.6;
 m.accelMassFilteredDecay = 0.2;
 

@@ -31,7 +31,7 @@ SynthDef(\beeSynth1, { |out=0, rr=0.1, amp = 0.0, gate = 1, release = 2, af=264,
 }).add;
 
 ~init = ~init <> {
-	synth = Synth(\beeSynth1, [\af, 600.rrand(300), \bf, 50.rrand(440)]);
+	synth = Synth(\beeSynth1, [\af, 600.rrand(300), \bf, 350.rrand(440)]);
 	
 };
 
@@ -45,7 +45,7 @@ SynthDef(\beeSynth1, { |out=0, rr=0.1, amp = 0.0, gate = 1, release = 2, af=264,
 	var amp = m.accelMassFiltered.linlin(0,1,0,1.9);
 	var rate = m.accelMassFiltered.lincurve(0.0,2.5 * srr,0.3,1.2,4 * srr);
 	var rr = m.rrateMassFiltered.linlin(0,1,1,2.1);
-	synth.set(\amp, amp * 0.4);
+	synth.set(\amp, amp * 0.1);
 	synth.set(\rr, rate * rr);
 };
 

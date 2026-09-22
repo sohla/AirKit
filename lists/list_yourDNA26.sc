@@ -3,13 +3,16 @@
 
 		"silence",
 
+		"hover1",
 		"beatbell1",
 		"woiworung3",
 		"ticktockbeat2",
 		"marimbabeat1",
 		"shaker1",
+		
 		"westminsterChimes1",
 		"bells",
+		"daveBell1",
 
 		"chicken2",
 		"animalMat",
@@ -18,7 +21,8 @@
 		"quackQuack",
 		"heatherLaugh1",
 		
-		"bees",
+		"bee",
+		"hover1",
 		"magicWand",
 		"magicWand2",
 		"metal1",
@@ -42,6 +46,7 @@
 		
 		"timWind1",
 		"woiworung2",
+		"timSwing1",
 		"leaves",
 		"waves",
 		"waves2",

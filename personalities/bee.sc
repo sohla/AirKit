@@ -12,8 +12,8 @@ var beePos = 0 @ 0;
 var trail = [];
 
 //------------------------------------------------------------
-m.accelMassFilteredAttack = 0.6;
-m.accelMassFilteredDecay = 0.06;
+m.accelMassFilteredAttack = 0.7;
+m.accelMassFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 SynthDef(\beeSynth1, { |out=0, rr=0.1, amp = 0.0, gate = 1, release = 2, af=264, bf=398|
@@ -33,7 +33,7 @@ SynthDef(\beeSynth1, { |out=0, rr=0.1, amp = 0.0, gate = 1, release = 2, af=264,
 		),
 	ffrq)!2;
 
-	sig = sig * EnvGen.kr(Env.adsr(0.1, 0.1, 7, release), gate: gate, doneAction: Done.freeSelf) * ampa.lag(3);
+	sig = sig * EnvGen.kr(Env.adsr(0.1, 0.1, 7, release), gate: gate, doneAction: Done.freeSelf) * ampa.lagud(0.1,0.1);
 	Out.ar(out, sig);
 
 }).add;
@@ -170,7 +170,7 @@ SynthDef(\beeSynth1, { |out=0, rr=0.1, amp = 0.0, gate = 1, release = 2, af=264,
 		)
 	).play;
 
-	synth = Synth(\beeSynth1, [\af, 280.rrand(390), \bf, 350.rrand(440)]);
+	synth = Synth(\beeSynth1, [\af, 230.rrand(390), \bf, 350.rrand(440)]);
 };
 
 ~deinit = ~deinit <> {
@@ -181,7 +181,7 @@ SynthDef(\beeSynth1, { |out=0, rr=0.1, amp = 0.0, gate = 1, release = 2, af=264,
 ~next = {|d|
 
 	var amp = m.accelMassFiltered.linlin(0,1,0,0.4);
-	var rate = m.accelMassFiltered.lincurve(0.0,2.5 * srr,0.3,1.2,4 * srr);
+	var rate = m.accelMassFiltered.lincurve(0.0,2.5 * srr,0.3,4.2,4 * srr);
 	var rr = m.rrateMassFiltered.linlin(0,1,1,2.1);
 	synth.set(\amp, amp * 0.05);
 	synth.set(\rr, rate * rr);
@@ -191,8 +191,8 @@ SynthDef(\beeSynth1, { |out=0, rr=0.1, amp = 0.0, gate = 1, release = 2, af=264,
 ~plotMin = -1;
 ~plotMax = 1;
 ~plot = { |d,p|
-	[m.rrateMass * 0.1, m.rrateMassFiltered * 0.1];
-	// [m.accelMass * 0.3, m.accelMassFiltered * 0.5];
+	// [m.rrateMass, m.rrateMassFiltered];
+	[m.accelMass, m.accelMassFiltered];
 	// [m.rrateMassFiltered, m.rrateMassThreshold];
 	// [m.rrateMassFiltered, m.rrateMassThreshold, m.accelMassAmp];
 	// [d.sensors.gyroEvent.x, d.sensors.gyroEvent.y, d.sensors.gyroEvent.z];
