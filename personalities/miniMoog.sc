@@ -113,22 +113,24 @@ SynthDef(\miniMoog, {
 //------------------------------------------------------------
 ~next = {|d|
 
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var dur = 0.2;
 	
 	// var ff = (d.sensors.gyroEvent.x/pi).linexp(-0.5,0.5,300,10000); 
 	// var oct = (d.sensors.gyroEvent.y/pi).linlin(-0.4,0.4,3.0,8.0); //left right
 
-	var amp = m.accelMassFiltered.lincurve(0,1.5,-15,-1,-1);
-	var atk = m.accelMassFiltered.lincurve(0,1.5,0.1,0.0001,-3);
-	var rel = m.accelMassFiltered.lincurve(0,2.5,0.01,1.0,-1);
-	// var ff = m.accelMassFiltered.linexp(0,0.5,60,18000);
-	var ff = m.rrateMassFiltered.linexp(0,0.2,60,15000);
+	var amp = m.accelMassFiltered.lincurve(0, 3 * sens,-15,-1,-1);
+	var atk = m.accelMassFiltered.lincurve(0, 3 * sens,0.1,0.0001,-3);
+	var rel = m.accelMassFiltered.lincurve(0, 5 * sens,0.01,1.0,-1);
+	// var ff = m.accelMassFiltered.linexp(0, 1 * sens,60,18000);
+	var ff = m.rrateMassFiltered.linexp(0, 0.4 * sens,60,15000);
 
 	// tells the visual router which device these shapes came from
 	Pdef(m.ptn).set(\viewID, d.port);
 
 	Pdef(m.ptn).set(\dur, dur);
-	Pdef(m.ptn).set(\amp, amp.dbamp);
+	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\attack, atk);
 	Pdef(m.ptn).set(\rel, rel);
     Pdef(m.ptn).set(\filterFreq, ff);

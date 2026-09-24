@@ -200,6 +200,7 @@ SynthDef(\nicbb, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, pan = 0,
 
 //------------------------------------------------------------
 ~next = { |d|
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var e = m.accelMassFiltered;
 	var sens = d.params.sensitivity * 0.1;
 	var lowIdx = e.lincurve(0, 1.6 * sens, 0, lowDivs.size - 1, 1).round.asInteger.clip(0, lowDivs.size - 1);
@@ -218,9 +219,9 @@ SynthDef(\nicbb, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, pan = 0,
 	Pdef(m.ptn).set(\lowIdx, lowIdx);
 	Pdef(m.ptn).set(\midIdx, midIdx);
 	Pdef(m.ptn).set(\topIdx, topIdx);
-	Pdef(m.ptn).set(\lowLvl, lowLvl.dbamp);
-	Pdef(m.ptn).set(\midLvl, midLvl.dbamp);
-	Pdef(m.ptn).set(\topLvl, topLvl.dbamp);
+	Pdef(m.ptn).set(\lowLvl, lowLvl.dbamp * vol);
+	Pdef(m.ptn).set(\midLvl, midLvl.dbamp * vol);
+	Pdef(m.ptn).set(\topLvl, topLvl.dbamp * vol);
 	Pdef(m.ptn).set(\shift, shift);
 };
 

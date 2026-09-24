@@ -130,12 +130,14 @@ SynthDef(\drumkit3, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 //------------------------------------------------------------
 ~next = {|d|
 
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var ud = m.gyroYFiltered.clip(-0.5,0.5).lincurve(-0.5,0.5,1,4,1).round;
 	var rate = m.gyroYFiltered.clip(-0.5,0.5).lincurve(-0.5,0.5,-1,1,-1).floor;
 	var time = TempoClock.beats;
 
 	Pdef(m.ptn).set(\subdiv,2.pow(ud));
-	Pdef(m.ptn).set(\amp,0.4);
+	Pdef(m.ptn).set(\amp,0.4 * vol);
 	Pdef(m.ptn).set(\rate,2.pow(rate));
 
 	if(m.accelMassFiltered > 0.05,{

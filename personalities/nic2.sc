@@ -76,17 +76,19 @@ SynthDef(\drumkitNN, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 //------------------------------------------------------------
 ~next = {|d|
 
-	var rate = m.rrateMassFiltered.linlin(0,1,0.6,3);
-	var amp = m.accelMassFiltered.lincurve(0,2.5,0.4,1, -2);
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var rate = m.rrateMassFiltered.linlin(0, 2 * sens,0.6,3);
+	var amp = m.accelMassFiltered.lincurve(0, 5 * sens,0.4,1, -2);
 	var notes = [0,7,5,10] + localRoot + 5;
-	var amps = [2,1,1,1] * 0.2;
+	var amps = [2,1,1,1] * 0.8;
 	var index = m.gyroYFiltered.fold(-0.5,0.5).lincurve(-0.5,0.5,0,notes.size,-1).asInteger;
-	var attack = m.accelMassFiltered.lincurve(0.0,1.5,0.1,0.002,-1);
-	var release = m.accelMassFiltered.lincurve(0.0,1.5,4.3,0.001,-1);
+	var attack = m.accelMassFiltered.lincurve(0.0, 3 * sens,0.1,0.002,-1);
+	var release = m.accelMassFiltered.lincurve(0.0, 3 * sens,4.3,0.001,-1);
 
-	dur = m.accelMassFiltered.lincurve(0,0.6,0.2,0.06, -1);
+	dur = m.accelMassFiltered.lincurve(0, 1.2 * sens,0.2,0.06, -1);
 
-	Pdef(m.ptn).set(\amp, amp * amps[index]);
+	Pdef(m.ptn).set(\amp, amp * amps[index] * vol);
 	Pdef(m.ptn).set(\rate, (notes[index]).midiratio );
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\attack, attack);

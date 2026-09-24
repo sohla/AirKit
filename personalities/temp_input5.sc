@@ -112,7 +112,8 @@ SynthDef(\bellVoice, { |out = 0, amp = 0.3, freq = 523, vel = 1.0,
 //------------------------------------------------------------
 ~next = {|d|
 
-
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 };
 
 //------------------------------------------------------------

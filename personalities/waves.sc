@@ -39,7 +39,9 @@ SynthDef(\waves22, { |out=0, gate=1, amp = 0.0, lag=1,ff=200|
 
 //------------------------------------------------------------
 ~next = {|d|
-	var amp = m.accelMassFiltered.lincurve(0,2.5,0.0,1.0,-3);
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var amp = m.accelMassFiltered.lincurve(0, 5 * sens,0.0,1.0,-3);
   var ff = m.gyroYFiltered.linexp(-1.0,1.0,200,19000);
 
 
@@ -104,7 +106,7 @@ SynthDef(\waves22, { |out=0, gate=1, amp = 0.0, lag=1,ff=200|
   });
 
 
-  synth.set(\amp, amp);
+  synth.set(\amp, amp * vol);
   synth.set(\ff, ff);
 };
 

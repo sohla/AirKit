@@ -141,17 +141,18 @@ SynthDef(\nicPrrrLoop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1|
 //------------------------------------------------------------
 ~next = { |d|
 
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var sens = d.params.sensitivity.linexp(0, 1, 0.25, 4);
 	var drive = m.accelMassFiltered;
 	var amp = drive.lincurve(0, 0.6 * sens, 0, 1, 2);
 	var rate = drive.linlin(0, 0.6 * sens, 1, 1.22);
 
-	synth !? { synth.set(\amp, amp, \rate, rate) };
+	synth !? { synth.set(\amp, amp * vol, \rate, rate) };
 
 	if(armed and: { buffers.notNil } and: { m.accelMass > (0.55 * sens) }, {
 		armed = false;
 		bi = (bi + 1) % buffers.size;
-		noteOn.(amp, 1);
+		noteOn.(amp * vol, 1);
 
 		(
 			type: \customVisualEvent,

@@ -29,7 +29,7 @@ SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=
       \decay, 0.1,
       \sustain,0.1,
       \release,1.04,
-	  \amp,0.5,
+	//   \amp,0.5,
       \args, #[],
     )
   );
@@ -45,10 +45,14 @@ SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=
 //------------------------------------------------------------
 ~next = {|d|
 
-  var dur = m.rrateMassFiltered.lincurve(0,1.0,0.4,0.04,-3);
+  var sens = d.params.sensitivity;
+  var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+  var dur = m.rrateMassFiltered.lincurve(0, 2 * sens,0.4,0.04,-3);
 
   Pdef(m.ptn).set(\dur, dur);
- 	if(m.rrateMassFiltered > 0.2,{
+  Pdef(m.ptn).set(\amp, vol * 0.8);
+
+ 	if(m.rrateMassFiltered > 0.1,{
 		if( Pdef(m.ptn).isPlaying.not,{
 			Pdef(m.ptn).resume(quant:dur);
 		});

@@ -78,6 +78,7 @@ SynthDef(\movingBeast, { |out = 0, freq = 45, amp = 0.2, gate = 1,
 
 //------------------------------------------------------------
 ~next = {|d|
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var sens = d.params.sensitivity;
 	var dur = m.accelMassFiltered.lincurve(0, 2.5 * sens, 0.4, 0.1, -1);
 	var amp = m.accelMassFiltered.lincurve(0.0, 2.0 * sens, -40, -10, -2);
@@ -88,7 +89,7 @@ SynthDef(\movingBeast, { |out = 0, freq = 45, amp = 0.2, gate = 1,
 	var growl = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).lincurve(-0.5, 0.5, 1, 4, 2);
 
 	Pdef(m.ptn).set(\dur, dur);
-	Pdef(m.ptn).set(\amp, amp.dbamp); 
+	Pdef(m.ptn).set(\amp, amp.dbamp * vol); 
 	Pdef(m.ptn).set(\fbDepth, fb);
 	Pdef(m.ptn).set(\harm, harm);
 	Pdef(m.ptn).set(\growl, growl);

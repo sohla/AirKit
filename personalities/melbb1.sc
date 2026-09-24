@@ -190,20 +190,22 @@ SynthDef(\drumkit2, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 //------------------------------------------------------------
 ~next = {|d|
 
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var rel = m.gyroYFiltered.clip(-0.5,0.5).lincurve(-0.5,0.5,0.3,0.01,3);
-	var amp = m.accelMassFiltered.lincurve(0,0.3,0.0,0.8, -1);
+	var amp = m.accelMassFiltered.lincurve(0, 0.6 * sens,0.0,0.8, -1);
 	var roll = m.gyroXFiltered.lincurve(-0.2,0.4,1,4,-2) * 0.5;
-	var sa = m.rrateMassFiltered.lincurve(0,0.3,0.1,0.35, -1);
+	var sa = m.rrateMassFiltered.lincurve(0, 0.6 * sens,0.1,0.35, -1);
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(\shaker).set(\viewID, d.port);
 
-	Pdef(m.ptn).set(\amp, amp * 0.3);
+	Pdef(m.ptn).set(\amp, amp * 0.3 * vol);
 	Pdef(m.ptn).set(\release, rel);
 	Pdef(m.ptn).set(\rate, roll);
-	step = 2.pow(m.accelMassFiltered.lincurve(0,1.0,-1,0, -1));
+	step = 2.pow(m.accelMassFiltered.lincurve(0, 2 * sens,-1,0, -1));
 
-	Pdef(\shaker).set(\amp, sa*1);	
+	Pdef(\shaker).set(\amp, sa*1 * vol);	
 	Pdef(m.ptn).set(\dur, dur);	
 
 

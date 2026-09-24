@@ -49,7 +49,9 @@ SynthDef(\bufGrainN, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 
 //------------------------------------------------------------
 ~next = {|d|
-	var amp = m.accelMassFiltered.linlin(0.0,0.5,0.00001,1);
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var amp = m.accelMassFiltered.linlin(0.0, 2 * sens,0.00001,1);
 	var start = m.gyroYFiltered.fold(-0.5,0.5).lincurve(-0.5,0.5,0.0,1.0,0);
 	var cutoff = m.gyroZFiltered.fold(-0.5,0.5).lincurve(-0.5,0.5,1000,18000,0);
 
@@ -65,7 +67,7 @@ SynthDef(\bufGrainN, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 
 	synth.set(\cutoff, cutoff);
 	synth.set(\start, start);
-	synth.set(\amp, amp * 1.2);
+	synth.set(\amp, amp * 2 * vol);
 	synth.set(\rate, notes[0].midiratio);
 
 };

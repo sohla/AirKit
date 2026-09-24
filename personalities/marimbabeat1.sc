@@ -189,6 +189,7 @@ SynthDef(\marimbaBeat, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, p
 
 //------------------------------------------------------------
 ~next = { |d|
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var e = m.accelMassFiltered;
 	var r = m.rrateMassFiltered;
 	var sens = d.params.sensitivity;
@@ -204,8 +205,8 @@ SynthDef(\marimbaBeat, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, p
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\bassIdx, bassIdx);
 	Pdef(m.ptn).set(\topIdx, topIdx);
-	Pdef(m.ptn).set(\bassAmp, bassAmp.dbamp);
-	Pdef(m.ptn).set(\topAmp, topAmp.dbamp);
+	Pdef(m.ptn).set(\bassAmp, bassAmp.dbamp * vol);
+	Pdef(m.ptn).set(\topAmp, topAmp.dbamp * vol);
 	Pdef(m.ptn).set(\topOct, topOct);
 	Pdef(m.ptn).set(\root, (m.com.root ? 0).wrap(0, 11) + 5);
 };

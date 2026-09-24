@@ -118,7 +118,9 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 
 //------------------------------------------------------------
 ~next = {|d|
-  var amp = m.accelMassFiltered.lincurve(0,2.0,0.3,2, 2);
+  var sens = d.params.sensitivity;
+  var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+  var amp = m.accelMassFiltered.lincurve(0, 4 * sens,0.3,2, 2);
 
 	var time = TempoClock.beats;
 	var xPos = [-0.8,-0.6,-0.3,0.0,0.2,0.5,0.7,1.0].choose; // Random x position
@@ -179,7 +181,7 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 		lastTime = TempoClock.beats;
 		if(m.accelMass>0.05,{
 	    ev.play;
-			synth = Synth(\waveSampler, [\bufnum, bi, \amp, amp * 0.2]);
+			synth = Synth(\waveSampler, [\bufnum, bi, \amp, amp * 0.2 * vol]);
 			bi = bi + 1;
 			if(bi >= (buffers.size-1),{bi=0});
 		},{

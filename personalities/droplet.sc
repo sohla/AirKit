@@ -185,13 +185,15 @@ SynthDef(\dropletVerb, {
 //------------------------------------------------------------
 ~next = {|d|
 
+  var sens = d.params.sensitivity;
+  var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
   var dur = m.gyroYFiltered.lincurve(-1.0,1.0,0.5,0.075);
   var wob = ((d.sensors.gyroEvent.x / pi).fold(-0.5,0.5) * 2).lincurve(-1.0,1.0,0.01,14000.0,-2);
   var side  = ((d.sensors.accelEvent.y.abs + d.sensors.accelEvent.z.abs) * 0.1).lincurve(0,1.0,1.0,wob,-2);
   var dcy  = ((d.sensors.accelEvent.y.abs + d.sensors.accelEvent.z.abs) * 0.1).lincurve(0,1.0,0.05,3.0,-1);
-  var verb = m.accelMassFiltered.lincurve(0,2.5,0.53,0.95,2);
+  var verb = m.accelMassFiltered.lincurve(0, 5 * sens,0.53,0.95,2);
   var amp = m.gyroYFiltered.lincurve(-1.0,1.0,0.0,1,-2);
-  // var amp = m.accelMassFiltered.lincurve(0,0.1,0.0,1.0,-1);
+  // var amp = m.accelMassFiltered.lincurve(0, 0.2 * sens,0.0,1.0,-1);
 
   if(amp < 0.21, {amp = 0});
 
@@ -199,7 +201,7 @@ SynthDef(\dropletVerb, {
   Pdef(m.ptn).set(\viewID, d.port);
 
   Pdef(m.ptn).set(\dur, dur);
-  Pdef(m.ptn).set(\amp, amp);
+  Pdef(m.ptn).set(\amp, amp * vol);
   Pdef(m.ptn).set(\wobble, side);
   Pdef(m.ptn).set(\decay, dcy);
   Pdef(m.ptn).set(\reverbRoom, verb);

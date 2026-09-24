@@ -246,6 +246,7 @@ SynthDef(\versatilePerc, {
 //------------------------------------------------------------
 ~next = {|d|
 
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var sens = d.params.sensitivity;
 	var a = m.accelMassFiltered.lincurve(0,2.2 * sens,0.0,1,-1);
 	var filtSpeed = m.accelMassFiltered.lincurve(0,2.5 * sens,0.1,20,3);
@@ -256,7 +257,7 @@ SynthDef(\versatilePerc, {
 	if(a<0.02,{a=0});
 
 	Pdef(m.ptn).set(\viewID, d.port);
-	Pdef(m.ptn).set(\amp, a * 1.0);
+	Pdef(m.ptn).set(\amp, a * 1.0 * vol);
 	Pdef(m.ptn).set(\filtFreq, ff);
 	Pdef(m.ptn).set(\dist, dist);
 	Pdef(m.ptn).set(\tension, tension);

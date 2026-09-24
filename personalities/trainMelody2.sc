@@ -173,11 +173,13 @@ SynthDef(\funMelody, {
 //------------------------------------------------------------
 ~next = {|d|
 
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var oct = m.gyroYFiltered.linlin(-1,1,6,3).floor;
-  	var envRel = m.accelMassFiltered.lincurve(0,1,0.1,2.6,2);
-	var envDec = m.accelMassFiltered.lincurve(0,1,0.05,0.2,-2);
+  	var envRel = m.accelMassFiltered.lincurve(0, 2 * sens,0.1,2.6,2);
+	var envDec = m.accelMassFiltered.lincurve(0, 2 * sens,0.05,0.2,-2);
 
-	var amp = m.accelMassFiltered.lincurve(0,2.5,0.001,0.1,-2);
+	var amp = m.accelMassFiltered.lincurve(0, 5 * sens,0.001,0.1,-2);
 	var ff = ((d.sensors.gyroEvent.x / pi).fold(-0.5,0.5) * 2).linexp(-1,1,50,14000);
 	var rf = ((d.sensors.gyroEvent.x / pi).fold(-0.5,0.5) * 2).linexp(-1,1,0.9,0.2);
 
@@ -187,7 +189,7 @@ SynthDef(\funMelody, {
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\filtFreq, ff);
 	Pdef(m.ptn).set(\filtRes, rf);
-	Pdef(m.ptn).set(\amp, amp * 2);
+	Pdef(m.ptn).set(\amp, amp * 2 * vol);
 	Pdef(m.ptn).set(\octave,oct);
 	Pdef(m.ptn).set(\envRel,envRel);
 	Pdef(m.ptn).set(\envDec,envDec);

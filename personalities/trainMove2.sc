@@ -377,6 +377,7 @@ SynthDef(\warmPadMove2, {
 //------------------------------------------------------------
 ~next = {|d|
 
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var sens = d.params.sensitivity;
 
 	var dur = 0.5 * 2.pow(m.accelMassFiltered.linlin(0,3 * sens,0,2).floor).reciprocal;
@@ -396,7 +397,7 @@ SynthDef(\warmPadMove2, {
 	// aa = a;
 
     synth.set(\freq, (note + m.com.root).midicps);
-	synth.set(\amp, a * 1);
+	synth.set(\amp, a * 1 * vol);
 	synth.set(\filtSpeed, filtSpeed);
 	synth.set(\lfoFreq, lfoFreq);
 	synth.set(\filtMin, fmin);
@@ -425,7 +426,7 @@ SynthDef(\warmPadMove2, {
 
 			bsynth = Synth(\warmPadMove2, [
 				\freq, (note + m.com.root+ notes[idx]).midicps * 4, 
-				\amp, m.accelMassFiltered.lincurve(0,2.5 * sens,0.003,0.1,1),
+				\amp, m.accelMassFiltered.lincurve(0,2.5 * sens,0.003,0.1,1) * vol,
 				\gate, 1,
 				\atk, m.accelMassFiltered.lincurve(0,2.5 * sens,0.08,0.02,1),
 				\rel, m.accelMassFiltered.lincurve(0.5,2.5 * sens,0.2,8.03,-1),

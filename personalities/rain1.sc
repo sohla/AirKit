@@ -73,18 +73,20 @@ SynthDef(\rainSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 //------------------------------------------------------------
 ~next = {|d|
 
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var levels = [	
-		m.accelMassFiltered.clip2(0.4).linlin(0,0.4,0,1),
-		m.accelMassFiltered.clip2(0.8).linlin(0.4,0.8,0,1),
-		m.accelMassFiltered.clip2(1.4).linlin(0.8,1.4,0,1),
-		m.accelMassFiltered.clip2(3.0).linlin(1.4,3.0,0,1)];
+		m.accelMassFiltered.clip2(0.8 * sens).linlin(0, 0.8 * sens,0,1),
+		m.accelMassFiltered.clip2(1.6 * sens).linlin(0.8 * sens, 1.6 * sens,0,1),
+		m.accelMassFiltered.clip2(2.8 * sens).linlin(1.6 * sens, 2.8 * sens,0,1),
+		m.accelMassFiltered.clip2(6.0 * sens).linlin(2.8 * sens, 6.0 * sens,0,1)];
 
 	var mix = [0.6,1,1,1.5] * 4;
-	var cutoff = m.accelMassFiltered.lincurve(0,1.5,600,20,-2);
+	var cutoff = m.accelMassFiltered.lincurve(0, 3 * sens,600,20,-2);
 	var pan = d.sensors.gyroEvent.z.linlin(-1,1,-0.3,0.3);
 
 	synths.do({|synth, i|
-		synth.set(\amp, levels[i] * mix[i]);
+		synth.set(\amp, levels[i] * mix[i] * vol);
 		synth.set(\cutoff, cutoff);
 		synth.set(\pan, pan);
 	});

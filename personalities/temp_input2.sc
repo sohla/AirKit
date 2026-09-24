@@ -43,8 +43,10 @@ SynthDef(\help_Klank, { |out = 0, freq=250|
 
 //------------------------------------------------------------
 ~next = {|d|
-	var amp = m.accelMassFiltered.lincurve(0.0,0.3,-50,-2,-3);
-	var al = m.accelMassFiltered.lincurve(0.0,2.5,0.02,1.0,-3);
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var amp = m.accelMassFiltered.lincurve(0.0, 0.6 * sens,-50,-2,-3);
+	var al = m.accelMassFiltered.lincurve(0.0, 5 * sens,0.02,1.0,-3);
 	var notes = [0,3,5,10,12] + 60 - 24;
 	// var rt = m.gyroZFiltered.fold(-0.5,0.5).lincurve(-0.5,0.5,0.0,notes.size,0).asInteger;
 	var rt = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger;

@@ -94,13 +94,15 @@ SynthDef(\drumkit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 //------------------------------------------------------------
 ~next = {|d|
 
-	var rate = m.rrateMassFiltered.linlin(0,0.3,0.2,10.4);
-	var amp = m.accelMassFiltered.lincurve(0,0.3,0.0,2, 2);
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var rate = m.rrateMassFiltered.linlin(0, 0.6 * sens,0.2,10.4);
+	var amp = m.accelMassFiltered.lincurve(0, 0.6 * sens,0.0,2, 2);
 	var roll = ((d.sensors.gyroEvent.x / pi).fold(-0.5,0.5) * 2).lincurve(-1.0,1.0,0.5,1.0,0);
 	var thr = (d.sensors.accelEvent.y.abs).lincurve(0,0.5,0.0,1.0,-2).asInteger;
 	var ff = ((d.sensors.gyroEvent.z / pi).fold(-0.5,0.5) * 2).lincurve(-1.0,1.0,500,50.0,1);
 
-	Pdef(m.ptn).set(\amp, amp*1);
+	Pdef(m.ptn).set(\amp, amp*1 * vol);
 	Pdef(m.ptn).set(\rate, roll);
 	Pdef(m.ptn).set(\cutoff, ff);
 

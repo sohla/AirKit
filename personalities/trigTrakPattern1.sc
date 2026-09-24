@@ -146,6 +146,8 @@ SynthDef(\trigTone, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 //------------------------------------------------------------
 ~next = {|d|
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var since = SystemClock.seconds - lastHit;
 
 	if (since > (avgIoi * 3), {
@@ -154,7 +156,7 @@ SynthDef(\trigTone, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 	});
 
 	Pdef(m.ptn).set(\dur, (avgIoi / patDiv).clip(ioiMin, ioiMax));
-	// Pdef(m.ptn).set(\amp, m.accelMassFiltered.lincurve(0.0, 1.5, -34, -4, -2).dbamp);
+	// Pdef(m.ptn).set(\amp, m.accelMassFiltered.lincurve(0.0, 3 * sens, -34, -4, -2).dbamp);
 
 	// if (since < (ioiMax * 1.5), {
 	// 	if (Pdef(m.ptn).isPlaying.not, { Pdef(m.ptn).resume(quant: 0) });

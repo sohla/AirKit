@@ -133,6 +133,8 @@ SynthDef(\alonKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 
 //------------------------------------------------------------
 ~next = {|d|
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 };
 
 //------------------------------------------------------------

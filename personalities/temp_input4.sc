@@ -51,7 +51,9 @@ SynthDef(\bellChime, { |out = 0, amp = 0.3, freq = 523, ratio = 3.0, floorDb = -
 
 //------------------------------------------------------------
 ~next = {|d|
-	// var amp = m.accelMassFiltered.lincurve(0.0,0.3,-18,-6,-3).dbamp;
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	// var amp = m.accelMassFiltered.lincurve(0.0, 0.6 * sens,-18,-6,-3).dbamp;
 	var notes = [0,7,12,16] + 52;
 	var rt = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger;
 

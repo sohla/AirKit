@@ -47,15 +47,17 @@ SynthDef(\sheet4, {
 //------------------------------------------------------------
 ~next = {|d|
 
-	var a = m.accelMassFiltered.lincurve(0,3,0,5,-6);
-	var b = m.accelMassFiltered.linexp(0,3,0.1,1);
-	var r = m.rrateMassFiltered.linlin(0,1.5,0.8,1.0);
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var a = m.accelMassFiltered.lincurve(0, 6 * sens,0,5,-6);
+	var b = m.accelMassFiltered.linexp(0, 6 * sens,0.1,1);
+	var r = m.rrateMassFiltered.linlin(0, 3 * sens,0.8,1.0);
 	var e = (d.sensors.gyroEvent.y / 2pi) + 0.5;
 	e = e.fold(0,0.5) * 2;
 	e = e.linexp(0,1,600,1600);
 	if(a<0.03,{a=0});
 	if(a>0.9,{a=0.9});
-	synth.set(\amp, a * 4);
+	synth.set(\amp, a * 4 * vol);
 	synth.set(\my, b);
 	synth.set(\mx, r);
 	synth.set(\filterFreq, e);

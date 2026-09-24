@@ -48,7 +48,9 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 };
 
 //------------------------------------------------------------
-~next = {|d| 
+~next = {|d|
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+ 
 	var sens = d.params.sensitivity;
 	var amp    = m.accelMassFiltered.lincurve(0.0, 0.8 * sens, -50, -5, -2);
 	var freq   = (d.sensors.gyroEvent.y / pi.half).linexp(-1.0, 1.0, 80, 130);
@@ -56,7 +58,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 	var cutoff = m.accelMassFiltered.linexp(0.0, 2.0, 700, 9000);
 
 	synth !? { |x|
-		x.set(\amp, amp.dbamp);
+		x.set(\amp, amp.dbamp * vol);
 		x.set(\freq, freq);
 		x.set(\detune, detune);
 		x.set(\cutoff, cutoff);

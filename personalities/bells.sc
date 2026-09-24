@@ -176,11 +176,13 @@ SynthDef(\bambooComplex, {
 //------------------------------------------------------------
 ~next = {|d|
 
-	var move = m.accelMassFiltered.linlin(0,1,0,1);
-	var att = m.accelMassFiltered.lincurve(0,2.5,0.1,0.001,-8);
-	var amp = m.accelMassFiltered.linexp(0,2.5,0.08,1);
-	var noteIndex = m.accelMassFiltered.linlin(0,2,0.0001,notes.size).floor;
-	var space = m.accelMassFiltered.lincurve(0,0.3,0.25,0.02,-1);
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var move = m.accelMassFiltered.linlin(0, 3 * sens,0,1);
+	var att = m.accelMassFiltered.lincurve(0, 5 * sens,0.1,0.001,-8);
+	var amp = m.accelMassFiltered.linexp(0, 5 * sens,0.08,1);
+	var noteIndex = m.accelMassFiltered.linlin(0, 4 * sens,0.0001,notes.size).floor;
+	var space = m.accelMassFiltered.lincurve(0, 0.6 * sens,0.25,0.02,-1);
 	if(noteIndex>=notes.size,{noteIndex=notes.size-1});
 	if(move > 0.02, {
 		if(TempoClock.beats > (lastTime + space),{
@@ -194,7 +196,7 @@ SynthDef(\bambooComplex, {
 				\freq, (2 + notes[noteIndex] + currentRoot).midicps,
 				\gate, 1,
 				\att, 0.03,
-				\amp, 0.2 * amp,
+				\amp, 0.2 * amp * vol,
 				\pan, rrand(-0.9, 0.9),
 				\strikePos, 1.0.rand, // Position of strike (affects resonance)
 				\resonance, 0.06, // Amount of resonant body sound
@@ -226,7 +228,7 @@ SynthDef(\bambooComplex, {
 				startColor: Color.hsv(noteIndex / notes.size, 0.45, 1.0, 1),
 				endColor: Color.hsv(noteIndex / notes.size, 0.9, 0.6, 0.0),
 				rotation: 2pi.rand,
-				duration: m.accelMassFiltered.lincurve(0,2.5,1.0,3,-1),
+				duration: m.accelMassFiltered.lincurve(0, 5 * sens,1.0,3,-1),
 				modulation: (
 					spread: rrand(7.0, 7.0) * 0.3,
 					spin: rrand(0.5, 2.0) * 0.1,

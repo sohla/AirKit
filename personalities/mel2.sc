@@ -45,16 +45,18 @@ SynthDef(\pullstretchMonoQm2, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0
 
 //------------------------------------------------------------
 ~next = {|d|
-	var amp = m.accelMass.linlin(0,2,0.00001,1);
-	var speed= m.accelMassFiltered.lincurve(0.5,2.5,0.01,1,-2);
-	var rate = m.accelMassFiltered.linlin(0,1,0.9,1.4);
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var amp = m.accelMass.linlin(0, 4 * sens,0.00001,1);
+	var speed= m.accelMassFiltered.lincurve(0.5, 5 * sens,0.01,1,-2);
+	var rate = m.accelMassFiltered.linlin(0, 2 * sens,0.9,1.4);
 	var pch = m.gyroZFiltered.linlin(-1,1,0,1).round * 12;
 
 	if(amp < 0.01, {amp = 0});
 
 	synth.set(\pch, (pch + -4).midiratio);
 	synth.set(\speed, speed);
-	synth.set(\amp, amp * 0.8);
+	synth.set(\amp, amp * 0.8 * vol);
 };
 //------------------------------------------------------------
 ~plotMin = -1;

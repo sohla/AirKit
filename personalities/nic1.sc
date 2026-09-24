@@ -58,8 +58,10 @@ SynthDef(\pullstretchMonoQN, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1, d
 //------------------------------------------------------------
 ~next = {|d|
 
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var delta = m.gyroYFiltered.linlin(-1,1,10,-10).lcurve;
-	var amp = m.rrateMassFiltered.lincurve(0,0.5,0.0,1,1);
+	var amp = m.rrateMassFiltered.lincurve(0, 1 * sens,0.0,1,1);
 	var speed= m.gyroXFiltered.fold(-0.5,0.5).lincurve(-0.5,0.5,0.1,0.001,-1);
 
 
@@ -84,7 +86,7 @@ SynthDef(\pullstretchMonoQN, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1, d
 	});
 
 	// synth.set(\speed, speed);
-	synth.set(\amp, amp * 1);
+	synth.set(\amp, amp * 1 * vol);
 	synth.set(\delta, delta);
 };
 //------------------------------------------------------------

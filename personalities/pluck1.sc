@@ -128,6 +128,7 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 //------------------------------------------------------------
 ~next = {|d|
 
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var sens = d.params.sensitivity;
 	var amp = m.accelMassFiltered.linlin(0,2.5 * sens,0.07,1);
 
@@ -139,7 +140,7 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 	if(m.accelMass < 0.1,{
 		synth.set(\amp,0);
 	},{
-		synth.set(\amp,amp);
+		synth.set(\amp,amp * vol);
 	});
 
 };

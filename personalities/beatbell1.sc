@@ -2,8 +2,8 @@ var m = ~model;
 var group;
 
 var beat = 1.0;
-var divs = [4, 8,16];
-var pool = [11, 9, 7, 2, 7, 11, 9, 2] + 5 + 12;
+var divs = [4, 8, 16];
+var pool = [11, 9, 7, 2, 7, 11, 9, 2] + 5;
 // var pool = [0];
 
 var partials       = [0.5, 1, 2.76, 5.4, 8.93, 13.34];
@@ -84,7 +84,7 @@ SynthDef(\beatBell, { |out = 0, freq = 440, amp = 0.2, pan = 0,
 			\octave, Pwhite(5, 7),
 			\root, Pseq([0,-2,3].stutter(32), inf),
 			\dur, Pkey(\div).reciprocal * beat,
-			\pan, Pwhite(-0.25, 0.25),
+			\pan, Pwhite(-0.35, 0.35),
 			\warble, Pwhite(0.0008, 0.0022),
 			\sendGate, false,
 			\func, Pfunc({ |e| ~onEvent.(e) }),
@@ -150,6 +150,7 @@ SynthDef(\beatBell, { |out = 0, freq = 440, amp = 0.2, pan = 0,
 ~next = { |d|
 
 	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var idx = m.accelMassFiltered.lincurve(0, 2.8 * sens, 0, divs.size - 1, -1).round.asInteger.clip(0, divs.size - 1);
 	var amp = m.accelMassFiltered.lincurve(0, 1.4 * sens, -26, -10, 1);
 	var ring = m.accelMassFiltered.lincurve(0, 1.5 * sens, 5.5, 0.9, 2);
@@ -158,7 +159,7 @@ SynthDef(\beatBell, { |out = 0, freq = 440, amp = 0.2, pan = 0,
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);
-	Pdef(m.ptn).set(\amp, amp.dbamp);
+	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\ring, ring);
 	Pdef(m.ptn).set(\hard, hard);
 	Pdef(m.ptn).set(\inharm, inharm);

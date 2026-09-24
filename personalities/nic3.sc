@@ -60,9 +60,11 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1, di
 
 //------------------------------------------------------------
 ~next = {|d|
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	// var amp = d.sensors.velocity.sum.abs.lincurve(0,0.03,0.0,1.0,-2);
-	var amp = m.accelMassFiltered.lincurve(0,0.5,0.0,1,-3);
-	var rfo = m.accelMassFiltered.lincurve(0,1.5,0.0,1,-3);
+	var amp = m.accelMassFiltered.lincurve(0, 2 * sens,0.0,1,-3);
+	var rfo = m.accelMassFiltered.lincurve(0, 3 * sens,0.0,1,-3);
   // var ffo = m.gyroYFiltered.lincurve(-1.0,1,1,18,-3);
   var pos = m.gyroZFiltered.lincurve(-1.0,1,0.0,1.0,0);
     
@@ -83,7 +85,7 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1, di
         synth.set(\lag,0.1);
     });
 
-    synth.set(\amp, amp * 0.1);
+    synth.set(\amp, amp * vol);
     // synth.set(\ffo, ffo);
     synth.set(\rfo, rfo);
     synth.set(\pos, pos);

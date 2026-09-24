@@ -5,10 +5,10 @@ var frame = 0;
 
 var synth, bassSynth;
 var dur = 0.11;
-// var notes = [0,2,5,7,9,11,12,14,12,11] + 1;
-// var bass = [2,9,5,12,5,9,2].stutter(2) + 1;
-var notes = [4,0,2,-5] + 12;
-var bass = [0].stutter(2) + 12;
+var notes = [0,2,5,7,9,11,12,14,12,11] + 1;
+var bass = [2,9,5,12,5,9,2].stutter(2) + 1;
+// var notes = [4,0,2,-5] + 12;
+// var bass = [0].stutter(2) + 12;
 var root = [0];
 var offset = 0;
 var bassCount = 0;
@@ -199,10 +199,12 @@ SynthDef(\funBass, {
 //------------------------------------------------------------
 ~next = {|d|
 
-	var move = m.accelMassFiltered.lincurve(0,0.04,1,notes.size,1);
-	var amp = m.accelMassFiltered.lincurve(0,0.4,-90, -20,-1);
-	var ff = m.rrateMassFiltered.lincurve(0.0,2.0,200,2000,-3); 
-	var wd = m.rrateMassFiltered.lincurve(0.0,2.0,10,0.1,-3); 
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var move = m.accelMassFiltered.lincurve(0, 0.08 * sens,1,notes.size,1);
+	var amp = m.accelMassFiltered.lincurve(0, 0.8 * sens,-90, -12,-1);
+	var ff = m.rrateMassFiltered.lincurve(0.0, 4 * sens,200,2000,-3); 
+	var wd = m.rrateMassFiltered.lincurve(0.0, 4 * sens,10,0.1,-3); 
 	var step = m.gyroXFiltered.linlin(-0.8,0.8,0,3).floor; //up down
 	
 	var n = bass[0] + root[0];
@@ -235,7 +237,7 @@ SynthDef(\funBass, {
 			
 
 	Pdef(m.ptn).set(\range, move.floor);
-	Pdef(m.ptn).set(\amp, amp.dbamp);
+	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\root, root[0]);
 
 	Pdef(m.ptn).set(\viewID, d.port);
@@ -270,9 +272,9 @@ SynthDef(\funBass, {
 	if(m.accelMassFiltered > 0.8, {
 		if(TempoClock.beats > (lastTime + (dur*4)),{
 			lastTime = TempoClock.beats;
-			~playNote.(n + 12,0, 3,amp.dbamp * 0.8);
+			~playNote.(n + 12,0, 3,amp.dbamp * 0.5 * vol);
 			m.com.root = n;
-			bassSynth = Synth(\funBass, [\freq, (n + 24).midicps, \gate,1, \amp, amp.dbamp * 0.3]);
+			bassSynth = Synth(\funBass, [\freq, (n + 24).midicps, \gate,1, \amp, amp.dbamp * 0.5 * vol]);
 			NodeWatcher.register(bassSynth);
 			bassSynth.server.sendBundle(0.3,[\n_set, bassSynth.nodeID, \gate, 0]);
 			bass = bass.rotate(-1);

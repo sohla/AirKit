@@ -34,7 +34,7 @@ SynthDef(\scale1, {
     
     // Single tanh operation after mixing
     filt = RLPF.ar(osc.tanh, filterFreq, fq).tanh;
-    sig = filt * env * amp * 0.25;  // Combined scaling factors
+    sig = filt * env * amp ;  // Combined scaling factors
     sig = Pan2.ar(sig, pan);
     
     Out.ar(0, sig.tanh);
@@ -82,16 +82,18 @@ SynthDef(\scale1, {
 //------------------------------------------------------------
 ~next = {|d|
 
-	var amp = m.rrateMassFiltered.lincurve(0.0,0.01,-70,-1,-10);
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var amp = m.rrateMassFiltered.lincurve(0.0, 2.0 * sens,-70,-1,-10);
 	var notes = [10];
 	var index = ((((d.sensors.gyroEvent.z/pi) + 1).half) * notes.size).asInteger;
 	var note = notes[index];
-	var dur = m.accelMassFiltered.lincurve(0,0.5,4,12,-10).reciprocal;
+	var dur = m.accelMassFiltered.lincurve(0, 1 * sens,4,12,-10).reciprocal;
 	// dur.postln;
 	if(dur<0.06,{dur=0.06});
-Pdef(m.ptn).set(\dur, dur);
+	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\note, note - 24);
-	Pdef(m.ptn).set(\amp, amp.dbamp );
+	Pdef(m.ptn).set(\amp, amp.dbamp  * vol);
 	if(amp.dbamp > 0.009,{
 		if( Pdef(m.ptn).isPlaying.not,{
 			Pdef(m.ptn).resume(quant:0.2);

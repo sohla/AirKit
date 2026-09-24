@@ -26,6 +26,8 @@ SynthDef(\treeWind, { |out, frq=111, gate=0, amp = 0, pchx=0|
 //------------------------------------------------------------
 ~next = {|d|
 
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var a = m.accelMass * 1;
 	var f = 50 + (m.accelMassFiltered * 100);
 	var pchs = [0,5,10,15,20];
@@ -36,7 +38,7 @@ SynthDef(\treeWind, { |out, frq=111, gate=0, amp = 0, pchx=0|
 	// pchs[i.floor].postln;
 	if(a<0.02,{a=0});
 	if(a>0.9,{a=0.9});
-	synth.set(\amp, a * 0.5);
+	synth.set(\amp, a * 0.5 * vol);
 	synth.set(\pchx,pchs[pidx]);
   // synth.set(\pchx, m.com.root);
 };

@@ -56,17 +56,19 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 //------------------------------------------------------------
 ~next = {|d|
 
-	var dur = m.accelMassFiltered.linlin(0,1,0.5,0.03);
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var dur = m.accelMassFiltered.linlin(0, 2 * sens,0.5,0.03);
 	var start = m.gyroXFiltered.lincurve(0.0,1.0,0.02,0.4,-2);
-	var amp = m.accelMassFiltered.lincurve(0,0.3,0,1,-2);
-	var rate= m.accelMass.linlin(0,1,0,2);
+	var amp = m.accelMassFiltered.lincurve(0, 0.6 * sens,0,1,-2);
+	var rate= m.accelMass.linlin(0, 2 * sens,0,2);
 	var oct = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,2,7,3).floor;
 
 	if(amp < 0.03, {amp = 0});
 
 	Pdef(m.ptn).set(\octave, 2 + oct);
 	Pdef(m.ptn).set(\dur, dur);
-	Pdef(m.ptn).set(\amp, amp * 15);
+	Pdef(m.ptn).set(\amp, amp * 15 * vol);
  	Pdef(m.ptn).set(\start, start.linlin(0,1,0.02,0.09));
 
 };

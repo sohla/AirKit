@@ -143,6 +143,7 @@ SynthDef(\buchlaInspired, {
 
 //------------------------------------------------------------
 ~next = {|d|
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var sens = d.params.sensitivity;
 	var e = m.accelMassFiltered;	
 	var idx = e.lincurve(0, 2.0 * sens, 0, divs.size - 1, 1).round.asInteger.clip(0, divs.size - 1);
@@ -157,7 +158,7 @@ SynthDef(\buchlaInspired, {
 	Pdef(m.ptn).set(\divIdx, idx);
 	Pdef(m.ptn).set(\pal, pal);
 	// Pdef(m.ptn).set(\roll, roll);
-	Pdef(m.ptn).set(\gestAmp, amp.dbamp);
+	Pdef(m.ptn).set(\gestAmp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\lowpassCutoff, cut);
 	Pdef(m.ptn).set(\lpgDecay, ring);
 };

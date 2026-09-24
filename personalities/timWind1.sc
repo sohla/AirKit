@@ -36,10 +36,12 @@ SynthDef(\timWind1, { |out, freq=111, gate=0, amp = 0.3, pchx=0|
 //------------------------------------------------------------
 ~next = {|d|
 
-	var move = m.accelMassFiltered.linlin(0,3,0,1.5);
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var move = m.accelMassFiltered.linlin(0, 6 * sens,0,1.5);
   var a = m.accelMassFiltered * 0.5;
-  var amp = m.accelMassFiltered.lincurve(0,1.5,0.02,0.7,-5);
-  var gap = m.accelMassFiltered.lincurve(0,1.5,0.8,0.1,-5);
+  var amp = m.accelMassFiltered.lincurve(0, 3 * sens,0.02,0.7,-5);
+  var gap = m.accelMassFiltered.lincurve(0, 3 * sens,0.8,0.1,-5);
 	var oct = d.sensors.gyroEvent.y.linlin(-1,1,1,5).floor * 12;
 	var av = d.sensors.gyroEvent.y.lincurve(-1,1,1,0.1,-2);
 	if(a<0.02,{a=0});
@@ -58,7 +60,7 @@ SynthDef(\timWind1, { |out, freq=111, gate=0, amp = 0.3, pchx=0|
 			synth = Synth(\timWind1, [
 				\freq, (36 + currentNote + currentRoot + oct).midicps,
 				\gate, 1,
-				\amp, amp * 0.4 * av,
+				\amp, amp * 0.4 * av * vol,
 			]);
 			synth.server.sendBundle(0.3,[\n_set, synth.nodeID, \gate, 0]);
 		});

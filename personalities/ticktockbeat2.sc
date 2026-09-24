@@ -130,8 +130,10 @@ SynthDef(\tickTockPulse, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0,
 
 //------------------------------------------------------------
 ~next = { |d|
-	var idx = m.accelMassFiltered.lincurve(0, 2.8, 0, divs.size - 1, -1).round.asInteger.clip(0, divs.size - 1);
-	var amp = m.accelMassFiltered.lincurve(0, 1.2, -46, -2, -1);
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var idx = m.accelMassFiltered.lincurve(0, 5.6 * sens, 0, divs.size - 1, -1).round.asInteger.clip(0, divs.size - 1);
+	var amp = m.accelMassFiltered.lincurve(0, 2.4 * sens, -46, -2, -1);
 	var clock = (d.sensors.gyroEvent.y / pi.half).linlin(-1, 1, 1, 3.99).asInteger;
 	var rate = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.85, 1.2);
 
@@ -139,7 +141,7 @@ SynthDef(\tickTockPulse, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0,
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);
-	Pdef(m.ptn).set(\energy, amp.dbamp);
+	Pdef(m.ptn).set(\energy, amp.dbamp * vol);
 	Pdef(m.ptn).set(\clock, clock);
 	Pdef(m.ptn).set(\rate, rate);
 };

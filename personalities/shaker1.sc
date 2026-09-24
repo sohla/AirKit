@@ -114,6 +114,7 @@ SynthDef(\shakerVoice, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, p
 //------------------------------------------------------------
 ~next = { |d|
 
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var sens = d.params.sensitivity;
 	var idx = m.accelMassFiltered.lincurve(0, 2 * sens, 0, divs.size - 1, 1).round.asInteger.clip(0, divs.size - 1);
 	var amp = m.accelMassFiltered.lincurve(0, 2 * sens, -24, -1, -1);
@@ -121,7 +122,7 @@ SynthDef(\shakerVoice, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, p
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);
-	Pdef(m.ptn).set(\energy, amp.dbamp);
+	Pdef(m.ptn).set(\energy, amp.dbamp * vol);
 	Pdef(m.ptn).set(\cutoff, cutoff);
 
 	if(amp > 23.neg, {

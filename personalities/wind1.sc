@@ -40,10 +40,12 @@ SynthDef(\sheet3, {
 //------------------------------------------------------------
 ~next = {|d|
 
-	// var a = (d.sensors.accelEvent.y+d.sensors.accelEvent.z).abs;//m.accelMass.lincurve(0,2.5,0,1,-6);
-	var a = m.accelMassFiltered.lincurve(0,2.2,0,3,-2);
-	var b = m.accelMassFiltered.linexp(0,3,0.1,1);
-	var r = m.rrateMassFiltered.linlin(0,1.5,0.8,1.0);
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	// var a = (d.sensors.accelEvent.y+d.sensors.accelEvent.z).abs;//m.accelMass.lincurve(0, 5 * sens,0,1,-6);
+	var a = m.accelMassFiltered.lincurve(0, 4.4 * sens,0,3,-2);
+	var b = m.accelMassFiltered.linexp(0, 6 * sens,0.1,1);
+	var r = m.rrateMassFiltered.linlin(0, 3 * sens,0.8,1.0);
 	var e = (d.sensors.gyroEvent.y / 2pi) + 0.5;
 	var pan = d.sensors.gyroEvent.z.linlin(-1,1,-1,1);
 
@@ -52,7 +54,7 @@ SynthDef(\sheet3, {
 	// if(a<0.03,{a=0});
 	if(a>0.9,{a=0.9});
 	
-	synth.set(\amp, a * 13);
+	synth.set(\amp, a * 13 * vol);
 	synth.set(\my, b);
 	synth.set(\mx, r);
 	synth.set(\filterFreq, e);

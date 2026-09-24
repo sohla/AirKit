@@ -52,7 +52,9 @@ SynthDef(\bufGrain, {|bufnum=0, out=0, amp=0.0, rate=1, start=0, pan=0, freq=440
 
 //------------------------------------------------------------
 ~next = {|d|
-	var amp = m.accelMassFiltered.linlin(0,2,0.00001,1);
+	var sens = d.params.sensitivity;
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var amp = m.accelMassFiltered.linlin(0, 4 * sens,0.00001,1);
 	var start = m.gyroYFiltered.lincurve(-1.0,1.0,0.0,1.0,0);
 	// var rezf = m.gyroZFiltered.lincurve(-1.0,1.0,100,1200,0);
 	//(d.sensors.gyroEvent.z / pi).fold(-0.5,0.5) * 2
@@ -70,7 +72,7 @@ SynthDef(\bufGrain, {|bufnum=0, out=0, amp=0.0, rate=1, start=0, pan=0, freq=440
 
 	synth.set(\rezf, rezf);
 	synth.set(\start, start);
-	synth.set(\amp, amp * 0.4);
+	synth.set(\amp, amp * 0.4 * vol);
 	synth.set(\rate, 0.5 * ((roots[0]).midiratio));
 
 };

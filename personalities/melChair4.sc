@@ -25,7 +25,6 @@ SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=
       \octave, Pseq([4,5], inf),
 	  \root, Pseq([0,3,-2,2].stutter(22), inf),
       \note, Pseq([11,4,7,0,4,7,11,12,11,7,4], inf),
-	  \amp,0.1,
       \attack,0.1,
       \decay, 0.1,
       \sustain,0.1,
@@ -45,11 +44,13 @@ SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=
 //------------------------------------------------------------
 ~next = {|d|
 
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var sens = d.params.sensitivity;
 //   var dur = m.rrateMassFiltered.lincurve(0,0.1,0.4,0.04,-1);
 	var dur = m.accelMassFiltered.lincurve(0,2.5 * sens,4,12,-10).reciprocal;
 
   Pdef(m.ptn).set(\dur, dur);
+  Pdef(m.ptn).set(\amp, vol * 0.2);
  	if(m.rrateMassFiltered > (0.01 + (0.2 * sens)),{
 		if( Pdef(m.ptn).isPlaying.not,{
 			Pdef(m.ptn).resume(quant:dur);
