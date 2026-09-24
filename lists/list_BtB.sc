@@ -22,15 +22,7 @@
 		"nic3",
 		"nic4",
 
-		"nicTwoNote",
-		"nicbb1",
-		"nicPrrr1",
-		"nicMouth1",
-
 		"beatbell1",
-		"ticktockbeat2",
-		"marimbabeat1",
-		"shaker1",
 
 		"violin1",
 		"violin2",
@@ -45,7 +37,6 @@
 		"droplet",
 		"cymbals1",
 		
-
 		"trigTrakPattern1",
 		"hollowWood",
 		"hollowWood1b",
