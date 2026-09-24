@@ -12,7 +12,7 @@ SynthDef(\miniMoog, {
 
     var env, osc, filt, sig;
     env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
-	osc = Saw.ar([freq, freq * 1.004],1) + SinOsc.ar([freq-1, freq -1 * 0.005],0,1) + LFTri.ar([freq+1, freq * 1.004],0,1);
+	osc = Saw.ar([freq, freq * 1.004],1) + SinOsc.ar([freq-1, freq -1 * 1.005] * 1,0,1) + LFTri.ar([freq+1, freq * 1.004],0,1);
     filt = RLPF.ar(osc.tanh, filterFreq, fq).tanh;
     sig = filt * env * amp * 0.5;
     sig = Pan2.ar(sig, pan);
@@ -104,7 +104,6 @@ SynthDef(\miniMoog, {
 };
 
 //------------------------------------------------------------
-//------------------------------------------------------------
 ~onEvent = {|e|
 	m.com.root = e.root;
 };
@@ -122,7 +121,7 @@ SynthDef(\miniMoog, {
 
 	var amp = m.accelMassFiltered.lincurve(0, 3 * sens,-15,-1,-1);
 	var atk = m.accelMassFiltered.lincurve(0, 3 * sens,0.1,0.0001,-3);
-	var rel = m.accelMassFiltered.lincurve(0, 5 * sens,0.01,1.0,-1);
+	var rel = m.accelMassFiltered.lincurve(0, 2 * sens,0.01, 3.0,-1);
 	// var ff = m.accelMassFiltered.linexp(0, 1 * sens,60,18000);
 	var ff = m.rrateMassFiltered.linexp(0, 0.4 * sens,60,15000);
 

@@ -1,9 +1,9 @@
 var m = ~model;
 var group;
 
-var beat = 0.5;
-var divs = [1, 3, 6];
-var notes = [0];
+var beat = 0.4;
+var divs = [1, 2, 4];
+var notes = [2,4,0,-1,-3].stutter(4);
 
 m.accelMassFilteredAttack = 0.9;
 m.accelMassFilteredDecay = 0.2;
@@ -93,10 +93,10 @@ SynthDef(\buchlaInspired, {
 			\legato, Pfunc({ |e| if(e[\step] == 0, { 0.5 }, { 0.3 }) }),
 
 			\scale, Scale.minor,
-			\root, 2,
+			// \root, 0,
 			\pick, Pfunc({ |e| if(e[\step] == 0, { 0 }, { (e[\pal] ? 1).rand }) }),
 			\note, Pfunc({ |e| notes[e[\pick].clip(0, notes.size - 1)] }),
-			\octave, Pfunc({ |e| if(e[\step] == 0, { 3 }, { [2, 3,4,5].choose }) }),
+			\octave, Pfunc({ |e| if(e[\step] == 0, { 3 }, { [3,4,5].choose }) }),
 
 			\osc1Waveform, 1, \osc1Index, 0.8,
 			\osc2Waveform, 2, \osc2Index, 0.6,
@@ -122,7 +122,7 @@ SynthDef(\buchlaInspired, {
 	Pdef(m.ptn).set(\lowpassCutoff, 5000);
 	Pdef(m.ptn).set(\pan, 0);
 
-	Pdef(m.ptn).play(quant: 0.5);
+	Pdef(m.ptn).play(quant: beat);
 };
 
 //------------------------------------------------------------
@@ -161,6 +161,7 @@ SynthDef(\buchlaInspired, {
 	Pdef(m.ptn).set(\gestAmp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\lowpassCutoff, cut);
 	Pdef(m.ptn).set(\lpgDecay, ring);
+	Pdef(m.ptn).set(\root, m.com.root);
 };
 
 //------------------------------------------------------------

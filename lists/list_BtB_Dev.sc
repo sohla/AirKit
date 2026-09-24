@@ -41,9 +41,11 @@
 		"metal1",
 		"pluck1",
 		"miniMoog",
+		"miniDroplet",
+		"cymbals1",
+		"cymbals2",
 		"buchlaMetallic",
 		"droplet",
-		"cymbals1",
 		
 
 		"trigTrakPattern1",
