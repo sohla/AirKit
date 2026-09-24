@@ -382,15 +382,53 @@ all-nil array — because `plotterView.scd` calls a nil `~plot` 33×/sec. It
 points nowhere near the actual mistake. If you see that error, suspect a
 compile failure in the loaded personality first.
 
-### Rests reach the visual type
+### Rests never reach the visual type
 
-`\dur, Rest(0.25)` still fires `\customVisualEvent`; only the `\note` play is
-skipped. Unguarded, marks appear in the silences. `e.isRest` is true during
-`Pbind` evaluation, so pass it through and skip drawing:
+`Event:play` tests `currentEnvironment.isRest.not` **before** it dispatches to
+the event type at all, and the `_Event_IsRest` primitive is true when **any**
+value in the event is a `Rest` — not only `\dur`. So a rest never reaches
+`\customVisualEvent`. Nothing is drawn, nothing is played, and the step still
+occupies its place in the pattern's timing.
+
+That is almost always what you want: the silence protects itself. It also means
+the guard this section used to prescribe is dead code —
 
 ```supercollider
-\modulation, Pfunc({ |e| (rest: e.isRest, ...) }),
+\modulation, Pfunc({ |e| (rest: e.isRest, ...) }),   // never reaches the vdef
 ```
+
+— because the vdef is not called for a rest in the first place. `bongo1`,
+`marimbabeat1` and `_TEMPLATE_ak_pfile.sc` all carry it. It is harmless, so
+leave it where it is; a new file does not need it.
+
+(Checked against the standalone's SuperCollider 3.13.0. This entry previously
+said the opposite.)
+
+### A `nil` Pbind value ends the whole pattern
+
+`Pbind:embedInStream` returns the moment any key's stream yields nil. So an
+off-step written as a bare `nil` does not produce a rest — it **terminates the
+layer**, silently, on the first one:
+
+```supercollider
+\cell, Pfunc({ |e| lines[e[\seq]][e[\step]] }),                 // WRONG - one
+                                                                 // event, then
+                                                                 // the layer stops
+\cell, Pfunc({ |e| lines[e[\seq]][e[\step]] ?? { Rest(0) } }),   // right
+```
+
+`Rest(0)` makes the whole event a rest, per the entry above, so the step goes
+silent and undrawn but keeps its time. Read the value back with `.value` —
+itself for a Float, `0` for a `Rest(0)` — so the arithmetic downstream is safe:
+
+```supercollider
+\note, Pfunc({ |e| e[\cell].value + (e[\shift] ? 0) + trans }),
+```
+
+The symptom is a layer that plays exactly one note and stops, with no error.
+The same goes for any key holding something that might be nil — `\group`
+before `Group.new` has run, `\bufnum` before the buffer exists.
+`marimbabeat1` and `nicbb1` both use the `?? { Rest() }` form.
 
 ### `Pkey` and `Pdef.set`
 

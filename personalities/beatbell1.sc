@@ -148,10 +148,12 @@ SynthDef(\beatBell, { |out = 0, freq = 440, amp = 0.2, pan = 0,
 
 //------------------------------------------------------------
 ~next = { |d|
-	var idx = m.accelMassFiltered.lincurve(0, 2.8, 0, divs.size - 1, -1).round.asInteger.clip(0, divs.size - 1);
-	var amp = m.accelMassFiltered.lincurve(0, 0.4, -26, -10, 1);
-	var ring = m.accelMassFiltered.lincurve(0, 0.5, 5.5, 0.9, 2);
-	var hard = m.rrateMassFiltered.lincurve(0, 0.8, 0.05, 1.0, -1);
+
+	var sens = d.params.sensitivity;
+	var idx = m.accelMassFiltered.lincurve(0, 2.8 * sens, 0, divs.size - 1, -1).round.asInteger.clip(0, divs.size - 1);
+	var amp = m.accelMassFiltered.lincurve(0, 1.4 * sens, -26, -10, 1);
+	var ring = m.accelMassFiltered.lincurve(0, 1.5 * sens, 5.5, 0.9, 2);
+	var hard = m.rrateMassFiltered.lincurve(0, 1.8 * sens, 0.05, 1.0, -1);
 	var inharm = (d.sensors.gyroEvent.y / pi.half).linlin(-1, 1, 0.0, 1.0);
 
 	Pdef(m.ptn).set(\viewID, d.port);

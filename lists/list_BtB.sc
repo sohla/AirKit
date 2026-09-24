@@ -2,6 +2,15 @@
 	[
 		"silence",
 
+		"nicbb1",
+		"nicPrrr1",
+		"nicMouth1",
+
+		"beatbell1",
+		"ticktockbeat2",
+		"marimbabeat1",
+		"shaker1",
+
 		"trigTrakPattern1",
 		"hollowWood",
 		"hollowWood1b",

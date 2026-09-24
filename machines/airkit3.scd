@@ -16,7 +16,7 @@
 	// list: "list_alon26.sc",
 	// list: "list_ITR_Nic.sc",
 	// list: "list_yourDNA26.sc",
-	// list: "list_BtB.sc",
+	list: "list_BtB.sc",
 	// list: "list_glenroy.sc",
 
 	secs: 0.01,
