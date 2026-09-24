@@ -86,12 +86,14 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
+			var sens = dev.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+			var vol = dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 			var vel = msg[3];
 			var now = SystemClock.seconds;
 			var ioi = (now - lastHit).clip(ioiMin, ioiMax);
 			var rate, dec, cf, bod, rt, note;
 			// var ang = (dev.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1);
-			var ang = m.accelMassFiltered.lincurve(0.0, 0.5, 0.0, 1.0, -1);
+			var ang = m.accelMassFiltered.lincurve(0.0, 0.5 * sens, 0.0, 1.0, -1);
 
 			if (hitCount > 0, {
 				var drift = ((ioi - avgIoi).abs / avgIoi).clip(0.0, 1.0);
@@ -122,7 +124,7 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			Synth(\hollowWood, [
 				\freq, note.midicps,
 				\vel, vel,
-				\amp, 0.5 * ang,
+				\amp, 0.5 * ang * vol,
 				\decay, ang * 3,
 				\coef, cf,
 				\body, ang * 3,
@@ -153,8 +155,6 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 //------------------------------------------------------------
 ~next = {|d|
-	var sens = d.params.sensitivity;
-	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var since = SystemClock.seconds - lastHit;
 
 	if (since > (avgIoi * 3), {

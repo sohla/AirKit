@@ -86,15 +86,17 @@ SynthDef(\multiBeatVoice, {|out=0, freq=440, amp=0.2, pan=0,
 
 //------------------------------------------------------------
 ~next = {|d|
-	var idx = m.accelMassFiltered.lincurve(0, 2.5, 0, divs.size - 1, 1)
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var idx = m.accelMassFiltered.lincurve(0, 2.5 * sens, 0, divs.size - 1, 1)
 		.round.asInteger.clip(0, divs.size - 1);
-	var amp = m.accelMassFiltered.lincurve(0, 0.2, -60, -16, -1);
-	var ffreq = m.accelMassFiltered.lincurve(0, 1.0, 700, 6000, 2);
-	var rel = m.accelMassFiltered.lincurve(0, 1.0, 3.1,0.2, 2);
+	var amp = m.accelMassFiltered.lincurve(0, 0.2 * sens, -60, -16, -1);
+	var ffreq = m.accelMassFiltered.lincurve(0, 1.0 * sens, 700, 6000, 2);
+	var rel = m.accelMassFiltered.lincurve(0, 1.0 * sens, 3.1,0.2, 2);
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);
-	Pdef(m.ptn).set(\amp, amp.dbamp);
+	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\ffreq, ffreq);
 	Pdef(m.ptn).set(\attack, 0.0003);
 	Pdef(m.ptn).set(\release, rel * 0.5);

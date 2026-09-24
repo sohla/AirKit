@@ -76,7 +76,7 @@ SynthDef(\drumkitNN, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 //------------------------------------------------------------
 ~next = {|d|
 
-	var sens = d.params.sensitivity;
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var rate = m.rrateMassFiltered.linlin(0, 2 * sens,0.6,3);
 	var amp = m.accelMassFiltered.lincurve(0, 5 * sens,0.4,1, -2);

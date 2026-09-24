@@ -161,13 +161,15 @@ SynthDef(\celesteVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 
 //------------------------------------------------------------
 ~next = {|d|
-	var amp = m.accelMassFiltered.lincurve(0, 1.4, -30, -4, -1);
-	var release = m.accelMassFiltered.lincurve(0, 1.4, 2.6, 0.5, 2);
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var amp = m.accelMassFiltered.lincurve(0, 1.4 * sens, -30, -4, -1);
+	var release = m.accelMassFiltered.lincurve(0, 1.4 * sens, 2.6, 0.5, 2);
 
 	if(amp < 29.neg, { amp = 90.neg });
 
 	Pdef(m.ptn).set(\viewID, d.port);
-	Pdef(m.ptn).set(\amp, amp.dbamp);
+	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\release, release);
 	Pdef(m.ptn).set(\root, m.com.root ? 0);
 

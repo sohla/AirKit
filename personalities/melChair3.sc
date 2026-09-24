@@ -45,7 +45,7 @@ SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=
 //------------------------------------------------------------
 ~next = {|d|
 
-  var sens = d.params.sensitivity;
+  var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
   var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
   var dur = m.rrateMassFiltered.lincurve(0, 2 * sens,0.4,0.04,-3);
 

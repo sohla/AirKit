@@ -130,7 +130,7 @@ SynthDef(\tickTockPulse, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0,
 
 //------------------------------------------------------------
 ~next = { |d|
-	var sens = d.params.sensitivity;
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var idx = m.accelMassFiltered.lincurve(0, 5.6 * sens, 0, divs.size - 1, -1).round.asInteger.clip(0, divs.size - 1);
 	var amp = m.accelMassFiltered.lincurve(0, 2.4 * sens, -46, -2, -1);

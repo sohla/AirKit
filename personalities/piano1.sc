@@ -176,13 +176,15 @@ SynthDef(\pianoVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 // Shake sets the level, with a floor — a test bench has to keep sounding
 // when the stick is put down.
 ~next = {|d|
-	var amp = m.accelMassFiltered.lincurve(0, 0.2, -34, -6, -1);
-	var dur = m.accelMassFiltered.lincurve(0, 1.0, 0.5, 0.05, -1);
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var amp = m.accelMassFiltered.lincurve(0, 0.2 * sens, -34, -6, -1);
+	var dur = m.accelMassFiltered.lincurve(0, 1.0 * sens, 0.5, 0.05, -1);
 
 	if(amp < 29.neg, { amp = 120.neg});
 
 	Pdef(m.ptn).set(\viewID, d.port);
-	Pdef(m.ptn).set(\amp, amp.dbamp);
+	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\root, m.com.root ? 0);
 

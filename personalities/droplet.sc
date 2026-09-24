@@ -185,7 +185,7 @@ SynthDef(\dropletVerb, {
 //------------------------------------------------------------
 ~next = {|d|
 
-  var sens = d.params.sensitivity;
+  var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
   var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
   var dur = m.gyroYFiltered.lincurve(-1.0,1.0,0.5,0.075);
   var wob = ((d.sensors.gyroEvent.x / pi).fold(-0.5,0.5) * 2).lincurve(-1.0,1.0,0.01,14000.0,-2);

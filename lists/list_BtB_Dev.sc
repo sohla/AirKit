@@ -2,6 +2,27 @@
 	[
 		"silence",
 
+		"celeste1",
+		"harpsichord1",
+		"dulcimer1",
+		"piano1",
+		"multiBeat1",
+		"multiBeat4",
+		"multiBeat5",
+		"multiBeatSynth1",
+
+		"nicTwoNote",
+		"nicbb1",
+		"nicPrrr1",
+		"nicMouth1",
+
+		"nic1",
+		"nic2",
+		"nic3",
+		"nic4",
+
+
+
 		"melbb1",
 		"melbb2",
 
@@ -17,15 +38,12 @@
 		"melChair4",
 		"melChest1",
 
-		"nic1",
-		"nic2",
-		"nic3",
-		"nic4",
+		"miniMoog",
+		"miniDroplet",
+		"cymbals1",
+		"cymbals2",
+		"buchlaMetallic",
 
-		"nicTwoNote",
-		"nicbb1",
-		"nicPrrr1",
-		"nicMouth1",
 
 		"beatbell1",
 		"ticktockbeat2",
@@ -40,11 +58,6 @@
 		"bells",
 		"metal1",
 		"pluck1",
-		"miniMoog",
-		"miniDroplet",
-		"cymbals1",
-		"cymbals2",
-		"buchlaMetallic",
 		"droplet",
 		
 

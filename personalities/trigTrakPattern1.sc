@@ -74,6 +74,7 @@ SynthDef(\trigTone, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
+			var vol = dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 			var vel = msg[3];
 			var now = SystemClock.seconds;
 			var ioi = (now - lastHit).clip(ioiMin, ioiMax);
@@ -95,7 +96,7 @@ SynthDef(\trigTone, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			Synth(\trigTone, [
 				\freq, note.midicps,
 				\vel, vel,
-				\amp, 0.35,
+				\amp, 0.35 * vol,
 				\atk, 0.003,
 				\rel, relTime,
 				\pan, (dev.sensors.gyroEvent.z / pi).clip(-1, 1) * 0.4
@@ -111,7 +112,7 @@ SynthDef(\trigTone, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			\vel, Pseq([1.0, 0.55, 0.7, 0.55], inf),
 			\atk, 0.002,
 			\rel, 0.25,
-			\amp, 0.7,
+			\amp, Pfunc({ 0.7 * dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1) }),
 			\pan, Pseq([-0.3, 0.3], inf),
 			\args, #[]
 		);
@@ -146,8 +147,6 @@ SynthDef(\trigTone, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 //------------------------------------------------------------
 ~next = {|d|
-	var sens = d.params.sensitivity;
-	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var since = SystemClock.seconds - lastHit;
 
 	if (since > (avgIoi * 3), {

@@ -140,10 +140,12 @@ SynthDef(\multiBeatKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 
 //------------------------------------------------------------
 ~next = {|d|
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var e = m.accelMassFiltered;
-	var idx = e.lincurve(0, 1.3, 0, divs.size - 1, 1).round.asInteger.clip(0, divs.size - 1);
-	var pal = e.lincurve(0, 1.2, 1, buffers.size, 1).round.asInteger.clip(1, buffers.size);
-	var amp = e.lincurve(0, 0.5, -10, -5, -1);
+	var idx = e.lincurve(0, 1.3 * sens, 0, divs.size - 1, 1).round.asInteger.clip(0, divs.size - 1);
+	var pal = e.lincurve(0, 1.2 * sens, 1, buffers.size, 1).round.asInteger.clip(1, buffers.size);
+	var amp = e.lincurve(0, 0.5 * sens, -10, -5, -1);
 	var roll = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.75, 1.25);
 	var cutoff = ((d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5) * 2).lincurve(-1.0, 1.0, 40, 900, 1);
 
@@ -152,7 +154,7 @@ SynthDef(\multiBeatKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);
 	Pdef(m.ptn).set(\pal, pal);
-	Pdef(m.ptn).set(\energy, amp.dbamp);
+	Pdef(m.ptn).set(\energy, amp.dbamp * vol);
 	Pdef(m.ptn).set(\roll, roll);
 	Pdef(m.ptn).set(\cutoff, cutoff);
 };

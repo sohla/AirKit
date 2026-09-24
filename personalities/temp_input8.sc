@@ -89,7 +89,7 @@ SynthDef(\simpleHit, {|out=0, amp=0.0, freq=120, attack=0.001, decay=0.03, susta
 
 //------------------------------------------------------------
 ~next = {|d|
-	var sens = d.params.sensitivity;
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var amp = m.accelMassFiltered.lincurve(0.0, 4.6 * sens,-50,-8,-1);
 

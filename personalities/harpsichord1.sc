@@ -152,18 +152,20 @@ SynthDef(\harpsiVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 
 //------------------------------------------------------------
 ~next = {|d|
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var chordIdx = (d.sensors.gyroEvent.y / pi.half).linlin(-1, 1, 0, chordPool.size - 1).round.asInteger;
 	var strum = (d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5).abs.linlin(0, 0.5, 0.2, 0.01);
-	var amp = m.accelMassFiltered.lincurve(0, 0.3, -70, -15, -1).dbamp;
+	var amp = m.accelMassFiltered.lincurve(0, 0.3 * sens, -70, -15, -1).dbamp;
 	// var oct = m.accelMassFiltered.lincurve(0, 1.6, 5, 6, 1).round.asInteger;
 	var hue = chordIdx / chordPool.size;
-	var dur = m.accelMassFiltered.lincurve(0, 1.6, 0.4, 0.1, -1);
+	var dur = m.accelMassFiltered.lincurve(0, 1.6 * sens, 0.4, 0.1, -1);
 
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\chordIdx, chordIdx);
 	// Pdef(m.ptn).set(\strum, dur/2);
-	Pdef(m.ptn).set(\amp, amp);
+	Pdef(m.ptn).set(\amp, amp * vol);
 	Pdef(m.ptn).set(\root, m.com.root ? 0);
 
 	// Pdef(m.ptn).set(\octave, oct);

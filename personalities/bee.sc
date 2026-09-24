@@ -180,7 +180,7 @@ SynthDef(\beeSynth1, { |out=0, rr=0.1, amp = 0.0, gate = 1, release = 2, af=264,
 //------------------------------------`------------------------
 ~next = {|d|
 
-	var sens = d.params.sensitivity;
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var amp = m.accelMassFiltered.linlin(0, 2 * sens,0,0.4);
 	var rate = m.accelMassFiltered.lincurve(0.0,2.5 * srr,0.3,4.2,4 * srr);

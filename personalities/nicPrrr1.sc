@@ -142,7 +142,7 @@ SynthDef(\nicPrrrLoop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1|
 ~next = { |d|
 
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var sens = d.params.sensitivity.linexp(0, 1, 0.25, 4);
+	var sens = d.params.sensitivity.linexp(0, 1, 4, 0.25);
 	var drive = m.accelMassFiltered;
 	var amp = drive.lincurve(0, 0.6 * sens, 0, 1, 2);
 	var rate = drive.linlin(0, 0.6 * sens, 1, 1.22);

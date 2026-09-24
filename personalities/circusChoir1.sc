@@ -79,13 +79,13 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 //------------------------------------------------------------
 ~next = {|d|
 
-	var sens = d.params.sensitivity;
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var dur = m.accelMassFiltered.lincurve(0,3.0 * d.params.sensitivity,0.4,0.06,-3);
-	var start = m.gyroXFiltered.lincurve(0.0,1.0 * d.params.sensitivity ,0.1,0.9,0);
-	var amp = m.accelMassFiltered.lincurve(0,2.5 * d.params.sensitivity,0,1,-6);
+	var dur = m.accelMassFiltered.lincurve(0,3.0 * d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0),0.4,0.06,-3);
+	var start = m.gyroXFiltered.lincurve(0.0,1.0 * d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0) ,0.1,0.9,0);
+	var amp = m.accelMassFiltered.lincurve(0,2.5 * d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0),0,1,-6);
 	var rate= m.accelMass.linlin(0, 2 * sens,0,2);
-	var range = m.accelMassFiltered.lincurve(0,2.0 * d.params.sensitivity,1,notes.size,-2).asInteger;
+	var range = m.accelMassFiltered.lincurve(0,2.0 * d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0),1,notes.size,-2).asInteger;
 	var octave = m.gyroYFiltered.lincurve(-1.0,1.0,2,4,0).asInteger;
 	var bal = m.gyroYFiltered.lincurve(-1.0,1.0,1,1,0).asInteger;
 	var roots = [-2,0,3];

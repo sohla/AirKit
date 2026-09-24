@@ -44,7 +44,7 @@ SynthDef(\warmBass, { |out = 0, amp = 0.3, freq = 65, thresh = -26, full = 0.25,
 
 //------------------------------------------------------------
 ~next = {|d|
-	var sens = d.params.sensitivity;
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var notes = [0,3,5,10,12] + 36;
 	var rt = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger;

@@ -104,13 +104,14 @@ SynthDef(\warmPadVoice, {
 			// var roots = [60].stutter(16) - 12;
 			// var ri = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,roots.size,0).asInteger;
 			var note = roots.wrapAt(step) + notes.wrapAt(step);
+			var vol = dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 
 			step = step + 1;
 
 			Synth(\warmPadVoice, [
 				\freq, note.midicps,
 				\vel, msg[3],
-				\amp, 0.9,
+				\amp, 0.9 * vol,
 				\dur, 0.25,
 				\atk, 0.02,
 				\dec, 0.1,
@@ -148,8 +149,6 @@ SynthDef(\warmPadVoice, {
 
 //------------------------------------------------------------
 ~next = {|d|
-	var sens = d.params.sensitivity;
-	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 };
 
 //------------------------------------------------------------

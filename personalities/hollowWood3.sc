@@ -104,6 +104,7 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
+			var vol = dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 			var vel = msg[3];
 			var now = SystemClock.seconds;
 			var ioi = (now - lastHit).clip(ioiMin, ioiMax);
@@ -138,7 +139,7 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			Synth(\hollowWood, [
 				\freq, rt,
 				\vel, vel,
-				\amp, 0.35,
+				\amp, 0.35 * vol,
 				\decay, dec,
 				\coef, cf,
 				\body, bod,
@@ -208,8 +209,6 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 //------------------------------------------------------------
 ~next = {|d|
-	var sens = d.params.sensitivity;
-	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var since = SystemClock.seconds - lastHit;
 
 	if (since > (avgIoi * 3), {

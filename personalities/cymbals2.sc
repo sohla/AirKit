@@ -121,7 +121,7 @@ SynthDef(\cymbals2, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 //------------------------------------------------------------
 ~next = {|d|
 
-	var sens = d.params.sensitivity;
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var rate = m.rrateMassFiltered.linlin(0, 0.6 * sens,0.2,10.4);
 	var amp = m.accelMassFiltered.lincurve(0, 0.6 * sens,0.0,1, 2);
@@ -172,7 +172,7 @@ SynthDef(\cymbals2, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	// [d.sensors.gyroEvent.y / pi.half, (d.sensors.gyroEvent.x / pi).fold(-0.5,0.5) * 2,d.sensors.accelEvent.y.abs,(d.sensors.gyroEvent.z / pi).fold(-0.5,0.5) * 2];
 	[(d.sensors.gyroEvent.y / pi.half)];
 	// [m.accelMassFiltered.lincurve(0, 0.6, 0, layers.size - 1, 1).round / (layers.size - 1)];//layer
-	// [m.accelMassFiltered / d.params.sensitivity] ++ layerFloors;//energy against the layer floors
+	// [m.accelMassFiltered / d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0)] ++ layerFloors;//energy against the layer floors
 	// [m.accelMass * 0.3, m.accelMassFiltered * 0.5];
 	// [m.rrateMassFiltered, m.rrateMassThreshold];
 	// [m.rrateMassFiltered, m.rrateMassThreshold, m.accelMassAmp];

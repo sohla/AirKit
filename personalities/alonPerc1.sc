@@ -78,8 +78,10 @@ SynthDef(\alonKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
+			var sens = dev.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+			var vol = dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 			var vel = msg[3];
-			var ff = m.accelMassFiltered.lincurve(0.0, 1.0, 0.35, 1.6, -2);
+			var ff = m.accelMassFiltered.lincurve(0.0, 1.0 * sens, 0.35, 1.6, -2);
 			var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0, 1.0, 0.1, 4, 0);
 
 			if (buffers.notNil, {
@@ -89,7 +91,7 @@ SynthDef(\alonKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 				if (b.notNil, {
 					Synth(\alonKit, [
 						\bufnum, b,
-						\amp, lay[\lvl] * vel.linlin(lay[\lo], lay[\hi], 0.6, 1.0),
+						\amp, lay[\lvl] * vel.linlin(lay[\lo], lay[\hi], 0.6, 1.0) * vol,
 						\rate,1,
 						\cutoff, lay[\cut] * ff,
 						\rq, 1,
@@ -133,8 +135,6 @@ SynthDef(\alonKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 
 //------------------------------------------------------------
 ~next = {|d|
-	var sens = d.params.sensitivity;
-	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 };
 
 //------------------------------------------------------------

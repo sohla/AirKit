@@ -56,7 +56,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 //------------------------------------------------------------
 ~next = {|d|
 
-	var sens = d.params.sensitivity;
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var dur = m.accelMassFiltered.linlin(0, 2 * sens,0.5,0.03);
 	var start = m.gyroXFiltered.lincurve(0.0,1.0,0.02,0.4,-2);

@@ -185,10 +185,12 @@ SynthDef(\multiBeatSampler, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, p
 
 //------------------------------------------------------------
 ~next = {|d|
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var e = m.accelMassFiltered;
-	var idx = e.lincurve(0, 1.5, 0, divs.size - 1, 1)
+	var idx = e.lincurve(0, 1.5 * sens, 0, divs.size - 1, 1)
 		.round.asInteger.clip(0, divs.size - 1);
-	var amp = e.lincurve(0, 0.4, -41, -10, -1);
+	var amp = e.lincurve(0, 0.4 * sens, -41, -10, -1);
 	var oct = (d.sensors.gyroEvent.y / pi.half).lincurve(-1, 1, 4, 6, 1).asInteger;
 	var ptch = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.94, 1.06);
 	var panBias = (d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, -0.5, 0.5);
@@ -197,7 +199,7 @@ SynthDef(\multiBeatSampler, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, p
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);
-	Pdef(m.ptn).set(\energy, amp.dbamp);
+	Pdef(m.ptn).set(\energy, amp.dbamp * vol);
 	Pdef(m.ptn).set(\root, m.com.root ? 0);
 	Pdef(m.ptn).set(\octave, oct);
 	// Pdef(m.ptn).set(\ptch, ptch);

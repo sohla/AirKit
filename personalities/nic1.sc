@@ -58,7 +58,7 @@ SynthDef(\pullstretchMonoQN, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1, d
 //------------------------------------------------------------
 ~next = {|d|
 
-	var sens = d.params.sensitivity;
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var delta = m.gyroYFiltered.linlin(-1,1,10,-10).lcurve;
 	var amp = m.rrateMassFiltered.lincurve(0, 1 * sens,0.0,1,1);

@@ -187,14 +187,16 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 
 //------------------------------------------------------------
 ~next = {|d|
-	var idx = m.accelMassFiltered.lincurve(0, 0.3, 0, divs.size - 1, 2).round.asInteger.clip(0, divs.size - 1);
-	var amp = m.accelMassFiltered.lincurve(0, 0.3, -40, -10, -2);
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var idx = m.accelMassFiltered.lincurve(0, 0.3 * sens, 0, divs.size - 1, 2).round.asInteger.clip(0, divs.size - 1);
+	var amp = m.accelMassFiltered.lincurve(0, 0.3 * sens, -40, -10, -2);
 
 	if(amp < 39.neg, { amp = 120.neg});
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);
-	Pdef(m.ptn).set(\amp, amp.dbamp);
+	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\root, m.com.root ? 0);
 
 };

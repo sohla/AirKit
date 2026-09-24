@@ -47,7 +47,7 @@ SynthDef(\sheet4, {
 //------------------------------------------------------------
 ~next = {|d|
 
-	var sens = d.params.sensitivity;
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var a = m.accelMassFiltered.lincurve(0, 6 * sens,0,5,-6);
 	var b = m.accelMassFiltered.linexp(0, 6 * sens,0.1,1);

@@ -115,7 +115,7 @@ SynthDef(\shakerVoice, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, p
 ~next = { |d|
 
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var sens = d.params.sensitivity;
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var idx = m.accelMassFiltered.lincurve(0, 2 * sens, 0, divs.size - 1, 1).round.asInteger.clip(0, divs.size - 1);
 	var amp = m.accelMassFiltered.lincurve(0, 2 * sens, -24, -1, -1);
 	var cutoff = m.accelMassFiltered.lincurve(0, 2 * sens, 180, 10400, 2);

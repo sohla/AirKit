@@ -192,7 +192,7 @@ SynthDef(\marimbaBeat, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, p
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var e = m.accelMassFiltered;
 	var r = m.rrateMassFiltered;
-	var sens = d.params.sensitivity;
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var bassIdx = e.lincurve(0, 2 * sens, 0, bassDivs.size - 1, 1).round.asInteger.clip(0, bassDivs.size - 1);
 	var topIdx = r.lincurve(0, 2 * sens, 0, topDivs.size - 1, 1).round.asInteger.clip(0, topDivs.size - 1);
 	var bassAmp = e.lincurve(0, 2 * sens, -24, -6, -1);
