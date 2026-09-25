@@ -1,6 +1,9 @@
 var m = ~model;
 var synth;
 var buffer;
+var scan = 0.5;
+var lastNow = 0;
+var level = 0;
 
 m.accelMassFilteredAttack = 0.9;
 m.accelMassFilteredDecay = 0.9;
@@ -53,12 +56,111 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, 
 	Out.ar(out,Pan2.ar(mas[0],pan.lag(1))* amp.lag(1));
 }).add;
 //------------------------------------------------------------
-~init = ~init <> {
+~init = ~init <> {|d|
 	// var path = PathName("~/Downloads/yourDNASamples/HK laughing2-glued.wav");
 	var path = PathName("~/Downloads/yourDNASamples/violin/Violin_04.wav");
 
 	// var path = PathName("~/Downloads/yourDNASamples/HK lots of teddies.wav");
 	postf("loading sample : % \n", path.fileName);
+
+	~vdef.(\grainScan, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var div = mod[\div] ? 10;
+		var winSize = mod[\windowSize] ? 0.4;
+		var overlaps = mod[\overlaps] ? 8;
+		var randRatio = mod[\randRatio] ? 0.3;
+		var voices = mod[\voices] ? 4;
+		var lo = mod[\lo] ? 0.05;
+		var hi = mod[\hi] ? 0.95;
+		var ripples = mod[\ripples] ? 3;
+		var lagTime = mod[\lag] ? 1;
+		var lane = mod[\lane] ? 36;
+		var drift = mod[\drift] ? 0.6;
+		var headReach = mod[\headReach] ? 1.8;
+		var headAlpha = mod[\headAlpha] ? 0.15;
+		var n = ev[\numPoints] ? 24;
+		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+		var amp = m.accelMass.linlin(0, 1 * sens, 0.00001, 1);
+		var speed = m.accelMassFiltered.lincurve(0.1, 1 * sens, 0.01, 2, -2);
+		var rate = m.gyroYFiltered.linlin(-1, 1, 1, 2).asInteger;
+		var pan = m.gyroZFiltered.linlin(-1, 1, -1, 1);
+		var frames = buffer !? { buffer.numFrames };
+		var bufDur = if(frames.notNil, { frames / buffer.sampleRate }, { 10 });
+		var now = c[\now];
+		var dt = (now - lastNow).clip(0, 0.25);
+		var a = c[\posStart];
+		var b = c[\posEnd];
+		var tall = c[\size];
+		var hop = winSize / overlaps;
+		var span = winSize * rate / bufDur;
+		var head, centre;
+
+		lastNow = now;
+		if(amp < 0.01, { amp = 0 });
+		level = level + (((amp * vol) - level) * (dt * 6.9 / lagTime).clip(0, 1));
+		scan = (scan + (dt * speed * div / bufDur)).wrap(0, 1);
+		head = a.blend(b, scan.linlin(0, 1, lo, hi));
+		centre = head + (0 @ (pan * tall * drift));
+
+		c[\render].([head - (0 @ (tall * headReach)), head + (0 @ (tall * headReach))], 0.5, headAlpha, false);
+
+		if(level > 0.005, {
+			voices.do { |v|
+				var gain = cos((v / (voices - 1) * 2) * 0.25pi);
+				var y = centre + (0 @ ((v - ((voices - 1) / 2)) * lane));
+				overlaps.do { |g|
+					var serial = (now / hop).floor - g;
+					var age = (now - (serial * hop)) / winSize;
+					var jitter = (sin((serial * 7.31) + (v * 101.7)) * 43758.5453).frac * 2 - 1;
+					var wide = span * (1 + (jitter * randRatio)) * (b - a).x / (hi - lo);
+					var height = tall * level * gain * sin(age.clip(0, 1) * pi).squared;
+					var pts = Array.fill(n, { |k|
+						var u = k / (n - 1);
+						y + (((u - 0.5) * wide) @ (sin(u * pi).squared * cos(2pi * ripples * rate * u) * height.neg))
+					});
+					if(height > 0.5, { c[\render].(pts, gain, gain, false) });
+				};
+			};
+		});
+		nil
+	});
+
+	(
+		type: \customVisualEvent,
+		amp: 0,
+		dur: 0.01,
+		viewID: d.port,
+		shape: \grainScan,
+		numPoints: 24,
+		closed: false,
+		fill: false,
+		sx: -1, sy: 0,
+		ex: 1, ey: 0,
+		startSize: 220,
+		endSize: 220,
+		startWidth: 2,
+		endWidth: 2,
+		startColor: Color.new(0.1, 0.66, 0.62, 0.85),
+		endColor: Color.new(0.1, 0.66, 0.62, 0.85),
+		duration: inf,
+		modulation: (
+			div: 10,
+			windowSize: 0.4,
+			overlaps: 8,
+			randRatio: 0.3,
+			voices: 4,
+			lo: 0.05,
+			hi: 0.95,
+			ripples: 3,
+			lag: 1,
+			lane: 36,
+			drift: 0.6,
+			headReach: 1.8,
+			headAlpha: 0.15,
+			amp: 0
+		)
+	).play;
 
 	buffer = Buffer.read(s, path.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);

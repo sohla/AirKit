@@ -1,6 +1,12 @@
 var m = ~model;
 var synth;
 var nvoices = 8;
+var breakpoints = Array.fill(nvoices, { Array.fill(12, { 1.0.rand2 }) });
+var durs = Array.fill(nvoices, { Array.fill(12, { 1.0.rand }) });
+var segStarts = durs.collect { |r| [0] ++ (r + 0.3).normalizeSum.integrate.drop(-1) };
+var bandPos = durs.collect { |r| r.mean };
+var phases = 0 ! nvoices;
+var lastNow = 0 ! nvoices;
 
 m.accelMassFilteredAttack = 0.95;
 m.accelMassFilteredDecay = 0.7;
@@ -37,7 +43,80 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 }).add;
 
 //------------------------------------------------------------
-~init = ~init <> {
+~init = ~init <> {|d|
+
+	~vdef.(\orrery, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var voices = mod[\voices] ? (0..(nvoices - 1));
+		var cycles = mod[\cycles] ? 2;
+		var spin = mod[\spin] ? 0.002;
+		var spike = mod[\spike] ? 0.6;
+		var fan = mod[\fan] ? 1.4;
+		var dullest = mod[\dullest] ? 0.3;
+		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+		var loud = m.accelMassFiltered.lincurve(0.0, 0.8 * sens, -50, -5, -2).linlin(-50, -5, 0, 1) * vol;
+		var freq = (d.sensors.gyroEvent.y / pi.half).linexp(-1.0, 1.0, 80, 130);
+		var detune = m.rrateMassFiltered.lincurve(0.0, 1.2, 0.10, 0.45, -1);
+		var cutoff = m.accelMassFiltered.linexp(0.0, 2.0, 700, 9000);
+		var bite = cutoff.explin(700, 9000, dullest, 1);
+		var now = c[\now];
+		var mid = c[\pos];
+		var reach = c[\size];
+
+		voices.do { |v|
+			var f = freq * (1 + (detune * bandPos[v]));
+			var dt = (now - lastNow[v]).clip(0, 0.25);
+			var ring = reach * (1 + (detune * bandPos[v] * fan));
+			var pts;
+			lastNow[v] = now;
+			phases[v] = (phases[v] + (dt * f * spin)).wrap(0, 1);
+			if(loud > 0.01, {
+				pts = Array.fill(12 * cycles, { |k|
+					var j = k % 12;
+					var ang = ((k div: 12) + segStarts[v][j]) / cycles + phases[v] * 2pi;
+					var r = ring * (1 + (breakpoints[v][j].softclip * spike * bite * loud));
+					mid + Polar(r, ang).asPoint
+				});
+				c[\render].(pts, 1, loud.sqrt, true);
+			});
+		};
+		nil
+	});
+
+	[
+		[(0..5), Color.new(1.0, 0.69, 0.0, 0.8), 2.5],
+		[[6, 7], Color.new(0.78, 1.0, 0.0, 0.9), 4]
+	].do { |group|
+		(
+			type: \customVisualEvent,
+			amp: 0,
+			dur: 0.01,
+			viewID: d.port,
+			shape: \orrery,
+			closed: true,
+			fill: false,
+			sx: 0, sy: 0,
+			ex: 0, ey: 0,
+			startSize: 300,
+			endSize: 300,
+			startWidth: group[2],
+			endWidth: group[2],
+			startColor: group[1],
+			endColor: group[1],
+			duration: inf,
+			modulation: (
+				voices: group[0],
+				cycles: 2,
+				spin: 0.002,
+				spike: 0.6,
+				fan: 1.4,
+				dullest: 0.3,
+				amp: 0
+			)
+		).play;
+	};
+
 	synth = Synth(\gendyDrone, [\gate, 1, \amp, 0]);
 };
 

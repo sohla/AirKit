@@ -19,6 +19,22 @@ SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=
 
 //------------------------------------------------------------
 ~init = ~init <> {
+
+	~vdef.(\beatRings, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var ratio = mod[\ratio] ? 1.02;
+		var beat = mod[\beat] ? 1;
+		var depth = mod[\depth] ? 0.6;
+		var sway = (mod[\swing] ? 14) * (1 + (m.accelMassFiltered * (mod[\push] ? 1)));
+		var ring = c[\size];
+		var slide = sin(pi * beat * c[\elapsed]) * sway;
+		var pulse = 1 - depth + (depth * cos(pi * beat * c[\elapsed]).abs);
+
+		c[\draw].(\circle, (pos: c[\pos] - (slide @ 0), size: ring), 1, pulse);
+		c[\draw].(\circle, (pos: c[\pos] + (slide @ 0), size: ring / ratio), 1, pulse);
+		nil
+	});
+
   Pdef(m.ptn,
     Pbind(
       \instrument, \simple,
@@ -30,6 +46,40 @@ SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=
       \sustain,0.1,
       \release,2.04,
       \args, #[],
+
+      \type, \customVisualEvent,
+      \shape, \beatRings,
+      \numPoints, 48,
+      \fill, false,
+      \ringMidi, Pfunc({ |e| (e[\note] ? 0) + (e[\root] ? 0) + ((e[\octave] ? 4) * 12) }),
+      \sx, Pseq((0..10).linlin(0, 10, -0.85, 0.85), inf),
+      \ex, Pkey(\sx),
+      \sy, Pfunc({ |e| e[\ringMidi].linlin(46, 76, 0.85, -0.85) }),
+      \ey, Pfunc({ |e| e[\sy] - 0.08 }),
+      \startSize, Pfunc({ |e| e[\ringMidi].linexp(46, 76, 180, 36) }),
+      \endSize, Pfunc({ |e| e[\startSize] * 1.3 }),
+      \startWidth, 3,
+      \endWidth, 0.5,
+      \startColor, Pfunc({ |e|
+        if((e[\octave] ? 4) > 4, { Color.new255(40, 180, 160, 240) }, { Color.new255(242, 178, 38, 240) })
+      }),
+      \endColor, Pfunc({ |e| e[\startColor].copy.alpha_(0) }),
+      \colorEnv, Pfunc({ Env([0, 1], [1], -4) }),
+      \duration, Pfunc({ |e| (e[\sustain] ? 0.1) + ((e[\release] ? 2) * 0.55) }),
+      \modulation, Pfunc({ |e|
+        var beat = e.use { ~freq.value } * 0.02 * 0.1;
+        (
+          ratio: 1.02,
+          beat: beat,
+          depth: 0.6,
+          swing: 14,
+          push: 1.5,
+          type: \radial,
+          freq: beat,
+          harmonics: 4,
+          amp: (m.accelMassFiltered * 8).clip(0, 10)
+        )
+      })
     )
   );
   Pdef(m.ptn).play(quant:0.2);  
@@ -51,6 +101,7 @@ SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=
 
   Pdef(m.ptn).set(\dur, dur);
   Pdef(m.ptn).set(\amp, vol * 0.2);
+  Pdef(m.ptn).set(\viewID, d.port);
  	if(m.rrateMassFiltered > (0.01 + (0.2 * sens)),{
 		if( Pdef(m.ptn).isPlaying.not,{
 			Pdef(m.ptn).resume(quant:dur);

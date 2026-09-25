@@ -36,6 +36,22 @@ SynthDef(\movingBeast, { |out = 0, freq = 45, amp = 0.2, gate = 1,
 ~init = ~init <> {
 	group = Group.new;
 
+	~vdef.(\beast, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var n = ev[\numPoints] ? 96;
+		var h = (mod[\harm] ? 1).clip(1, 24).round;
+		var g = mod[\growl] ? 1;
+		var depth = (mod[\fbDepth] ? 1) * (mod[\index] ? 0.12);
+		var drift = c[\now] * ((mod[\detune] ? 1.003) - 1) * (mod[\beat] ? 60);
+		var tri = { |p| (4 * (p.wrap(0, 1) - 0.5).abs) - 1 };
+		var sz = c[\size];
+		Array.fill(n, { |i|
+			var ph = i / n;
+			var pm = sin((2pi * h * ph) + (g * tri.(ph))) * depth;
+			c[\pos] + ((tri.(ph + pm) * sz) @ (tri.(ph + 0.25 + drift + pm) * sz))
+		})
+	});
+
 	Pdef(m.ptn,
 		Pbind(
 			\instrument, \movingBeast,
@@ -55,6 +71,34 @@ SynthDef(\movingBeast, { |out = 0, freq = 45, amp = 0.2, gate = 1,
 			\pan, Pwhite(-0.35, 0.35),
 			\args, #[],
 
+			\type, \customVisualEvent,
+			\shape, \beast,
+			\numPoints, 96,
+			\closed, true,
+			\sx, Pfunc({ |e| (e[\pan] ? 0) * 2.4 }),
+			\ex, Pkey(\sx),
+			\sy, Pfunc({ |e| (e[\octave] ? 3).linlin(2, 5, 0.3, -0.5) }),
+			\ey, Pkey(\sy),
+			\rotation, Pfunc({ |e| (e[\note] ? 0) * 0.25pi }),
+			\startSize, Pfunc({ |e| (e[\octave] ? 3).linexp(2, 5, 560, 120) }),
+			\endSize, Pfunc({ |e| (e[\octave] ? 3).linexp(2, 5, 560, 120) * 1.12 }),
+			\startWidth, Pfunc({ |e| (e[\amp] ? 0.05).explin(0.01, 0.3, 1.5, 9) }),
+			\endWidth, 1,
+			\startColor, Pfunc({ |e|
+				[Color.new(0.30, 0.20, 1.0, 0.95), Color.new(0.62, 0.20, 1.0, 0.95), Color.new(0.72, 1.0, 0.16, 0.95)]
+					.clipAt((e[\harm] ? 1).round.asInteger - 1)
+			}),
+			\endColor, Pfunc({ |e| e[\startColor].copy.alpha_(0) }),
+			\colorEnv, Pfunc({ |e|
+				var dec = e[\dec] ? 0.2, rel = e[\rel] ? 1;
+				var hold = (e[\dur] ? 0.2) * (e[\legato] ? 0.8);
+				Env([0, 1 - (e[\sus] ? 0.1), 1 - (e[\sus] ? 0.1), 1], [dec, hold.max(dec) - dec, rel].normalizeSum, -4)
+			}),
+			\duration, Pfunc({ |e| ((e[\dur] ? 0.2) * (e[\legato] ? 0.8)).max(e[\dec] ? 0.2) + (e[\rel] ? 1) }),
+			\modulation, Pfunc({ |e| (
+				harm: e[\harm] ? 1, growl: e[\growl] ? 1, fbDepth: e[\fbDepth] ? 1,
+				detune: e[\detune] ? 1.003, index: 0.12, beat: 60, amp: 0
+			) }),
 		);
 	);
 
@@ -88,6 +132,7 @@ SynthDef(\movingBeast, { |out = 0, freq = 45, amp = 0.2, gate = 1,
 	var harm  = (d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 1, 3);
 	var growl = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).lincurve(-0.5, 0.5, 1, 4, 2);
 
+	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\amp, amp.dbamp * vol); 
 	Pdef(m.ptn).set(\fbDepth, fb);

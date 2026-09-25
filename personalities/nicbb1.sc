@@ -10,7 +10,7 @@ var lowDivs = [4, 4, 8];
 var lowLines = [
 	[ 0, nil, nil, nil ],
 	[ 0, nil, nil,   7 ],
-	[ 0, nil, nil,   7, nil, nil,  10, nil ]
+	[ 0, nil, nil,   2, nil, nil,  10, nil ]
 ];
 
 var midDivs = [6, 8, 12];
@@ -20,7 +20,7 @@ var midLines = [
 	[ 0, nil,   3,   7, nil,  10, nil,  12,  10,   7, nil,   3 ]
 ];
 
-var topDivs = [8, 12, 16];
+var topDivs = [6, 12];
 var topLines = [
 	[ nil,   0, nil, nil,   7, nil, nil,   3 ],
 	[   0, nil,   3, nil,   7, nil,   3, nil,   0, nil,  10, nil ],
@@ -37,13 +37,13 @@ m.gyroFilteredDecay       = 0.8;
 
 //------------------------------------------------------------
 SynthDef(\nicbb, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, pan = 0,
-	attack = 0.001, sustain = 0.02, release = 0.4, ffreq = 16000|
+	attack = 0.001, sustain = 0.02, release = 0.1, ffreq = 16000|
 	var lr = rate * BufRateScale.kr(bufnum);
 	var env = EnvGen.kr(Env([0, 1, 1, 0], [attack, sustain, release], [0, 0, -4]), doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum, rate: lr, loop: 0);
-	var verb = CombN.ar(sig, 0.3, 0.05, 0.1);
+	var verb = CombN.ar(sig, 0.3, 0.1, 0.8);
 	sig = HPF.ar(verb, ffreq);
-	sig = Pan2.ar(Mix(sig) * amp * env, pan);
+	sig = Pan2.ar(Mix(sig) * amp * env * 4, pan);
 	Out.ar(out, sig);
 }).add;
 
@@ -89,7 +89,7 @@ SynthDef(\nicbb, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, pan = 0,
 			\acc,  Pfunc({ |e| (e[\step] % o[\accEvery]) == 0 }),
 
 			\amp, o[\lvl] * Pfunc({ |e| if(e[\acc], { 1.0 }, { 0.42 }) }),
-			\release, o[\ring] * Pfunc({ |e| if(e[\acc], { 1.5 }, { 1.0 }) }),
+			\release, 0.3,//o[\ring] * Pfunc({ |e| if(e[\acc], { 1.5 }, { 1.0 }) }),
 			\dur, Pfunc({ |e|
 				var len = beat / e[\div];
 				if(e[\amp] < 0.003, { Rest(len) }, { len })
@@ -206,9 +206,9 @@ SynthDef(\nicbb, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, pan = 0,
 	var lowIdx = e.lincurve(0, 1.6 * sens, 0, lowDivs.size - 1, 1).round.asInteger.clip(0, lowDivs.size - 1);
 	var midIdx = e.lincurve(0, 2.4 * sens, 0, midDivs.size - 1, 1).round.asInteger.clip(0, midDivs.size - 1);
 	var topIdx = e.lincurve(0, 3.2 * sens, 0, topDivs.size - 1, 1).round.asInteger.clip(0, topDivs.size - 1);
-	var lowLvl = e.lincurve(0, 1.2 * sens, -34, -6, -1);
-	var midLvl = e.lincurve(0.05, 1.6 * sens, -40, -9, -1);
-	var topLvl = e.lincurve(0.15, 2.0 * sens, -46, -14, -1);
+	var lowLvl = e.lincurve(0, 1.2 * sens, -34, -1, -1);
+	var midLvl = e.lincurve(0.05, 1.6 * sens, -40, -6, -1);
+	var topLvl = e.lincurve(0.15, 2.0 * sens, -46, -2, -1);
 	var shift = (d.sensors.gyroEvent.y / pi.half).lincurve(-1, 1, -5, 5, 1).round.asInteger;
 
 	if(lowLvl < 32.neg, { lowLvl = 90.neg });

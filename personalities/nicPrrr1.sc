@@ -68,14 +68,14 @@ SynthDef(\nicPrrrLoop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1|
 		head = (phase * 2pi) - 0.5pi;
 		tail = amp.linlin(0, 1, tailMin, tailMax) * 2pi;
 
-		c[\draw].(\circle, (pos: mid, size: ring), 0.25, ringAlpha);
+		// c[\draw].(\circle, (pos: mid, size: ring), 0.25, ringAlpha);
 
-		c[\render].(
-			Array.fill(n, { |i|
-				mid + Polar(ring, head - (tail * (1 - (i / (n - 1))))).asPoint
-			}),
-			1, amp.linlin(0, 1, 0.12, 1), false
-		);
+		// c[\render].(
+		// 	Array.fill(n, { |i|
+		// 		mid + Polar(ring, head - (tail * (1 - (i / (n - 1))))).asPoint
+		// 	}),
+		// 	1, amp.linlin(0, 1, 0.12, 1), false
+		// );
 
 		flies = amp.linlin(0, 1, 1, swarm).round.asInteger.max(1);
 		flies.do { |i|

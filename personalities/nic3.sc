@@ -6,6 +6,11 @@ var index =0;
 var trig = false;
 var notes = [0,-12] + 4 + 12;
 var note = notes[0];
+var tremHz = 10;
+var warpDiv = 10;
+var warpSpeed = 0.008;
+var bornAt;
+var level;
 m.accelMassFilteredAttack = 0.99;
 m.accelMassFilteredDecay = 0.8;
 m.rrateMassFilteredAttack = 0.3;
@@ -37,13 +42,70 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1, di
 	Out.ar(out, ((0)!0 ++ sig));
 }).add;
 //------------------------------------------------------------
-~init = ~init <> {
+~init = ~init <> { |d|
 	var path = PathName("~/Downloads/nicSamples/1_Phrases/Actual/1.wav");
 	postf("loading sample : % \n", path.fileName);
 	buffer = Buffer.read(s, path.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
 		synth = Synth(\pullstretchMonoQ,[\buffer,buf,\pch,-12.midiratio, \amp,0.0, \div, 10]);
 	});
+
+	~vdef.(\tide, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var n = ev[\numPoints] ? 96;
+		var pxPerSemi = mod[\pxPerSemi] ? 22;
+		var ripples = mod[\ripples] ? 5;
+		var slow = mod[\slow] ? 0.06;
+		var glide = mod[\glide] ? 0.06;
+		var rest = mod[\restAlpha] ? 0.12;
+		var dashes = mod[\dashes] ? 24;
+		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+		var amp = m.accelMassFiltered.lincurve(0, 2 * sens, 0.0, 1, -3);
+		var rfo = m.accelMassFiltered.lincurve(0, 3 * sens, 0.0, 1, -3).clip(0, 1);
+		var len = if(buffer.notNil and: { buffer.numFrames.notNil }, { buffer.duration }, { 10 });
+		var a = c[\posStart];
+		var b = c[\posEnd];
+		var now = c[\now];
+		var depth = rfo * c[\size];
+		var other = notes.detect({ |x| x != note }) ? note;
+		var head, surface, ghostY;
+
+		if(amp < 0.035, { amp = 0 });
+		amp = amp.clip(0, 1);
+		level = level ? note;
+		level = level + ((note - level) * glide);
+		bornAt = bornAt ? now;
+		head = ((now - bornAt) * warpSpeed * warpDiv / len.max(0.1)).frac.linlin(0, 1, 0.01, 0.89);
+
+		surface = { |t|
+			var trem = sin(2pi * ((t * ripples) - (now * tremHz * slow)));
+			a.blend(b, t) + (0 @ (((level - notes.mean) * pxPerSemi.neg) + (trem * depth * sin(pi * t))))
+		};
+
+		ghostY = a.y + ((other - notes.mean) * pxPerSemi.neg);
+		dashes.do { |k|
+			var x0 = a.x.blend(b.x, k / dashes);
+			var x1 = a.x.blend(b.x, (k + 0.4) / dashes);
+			c[\render].([ x0 @ ghostY, x1 @ ghostY ], 0.5, rest, false);
+		};
+
+		c[\render].(Array.fill(n, { |i| surface.(i / (n - 1)) }), 0.3 + amp, rest + ((1 - rest) * amp), false);
+		c[\draw].(\circle, (pos: surface.(head), size: 4 + (amp * (mod[\beadPx] ? 16))), 1, rest + amp);
+		nil
+	});
+
+	(
+		type: \customVisualEvent, amp: 0, dur: 0.01, viewID: d.port,
+		shape: \tide,
+		sx: -1, ex: 1, sy: 0, ey: 0,
+		startSize: 180, endSize: 180,
+		startWidth: 4, endWidth: 4,
+		startColor: Color.new(0.35, 0.62, 1.0, 0.9),
+		endColor: Color.new(0.35, 0.62, 1.0, 0.9),
+		numPoints: 96, fill: false, closed: false,
+		duration: inf,
+		modulation: (amp: 0, pxPerSemi: 22, ripples: 5, slow: 0.06, glide: 0.06, restAlpha: 0.12, dashes: 24, beadPx: 16)
+	).play;
 };
 //------------------------------------------------------------
 ~deinit = ~deinit <> {

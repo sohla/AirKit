@@ -42,6 +42,28 @@ SynthDef(\dropletVerb, {
 //------------------------------------------------------------
 ~init = ~init <> {
 	group = Group.new;
+
+	~vdef.(\bead, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var n = ev[\numPoints] ? 72;
+		var wob = mod[\wobble] ? 10;
+		var depth = mod[\depth] ? 0.2;
+		var maxLobes = mod[\maxLobes] ? 24;
+		var breathe = mod[\breathe] ? 6;
+		var taper = mod[\taper] ? 1.4;
+		var lobes = wob.explin(1, 14000, 0, maxLobes).round;
+		var ph = c[\now] * wob.min(breathe);
+		var par = { |p|
+			var s = p.wrap(0, 1);
+			if(s < 0.5, { 1 - (16 * (s - 0.25).squared) }, { (16 * (s - 0.75).squared) - 1 })
+		};
+		var sz = c[\size];
+		Array.fill(n, { |i|
+			var a = i / n * 2pi;
+			var r = sz * (1 + (depth * par.((lobes * i / n) + ph)));
+			c[\pos] + ((cos(a) * r.neg) @ (sin(a) * sin(a * 0.5).abs.pow(taper) * r))
+		})
+	});
 	fxBus = Bus.audio(s, 2);
 	verbSynth = Synth.tail(group, \dropletVerb, [\in, fxBus, \out, 0, \mix, 0.2, \room, 0.3, \damp, 0.5]);
 
@@ -71,7 +93,42 @@ SynthDef(\dropletVerb, {
 			\filterRQ, Pwhite(0.5, 1.5),
 			\pan, Pwhite(-0.8, 0.8),
 
-			\amp, Pfunc({ |e| (e[\gestAmp] ? 0.12) * (e[\accent] ? 1.0) })
+			\amp, Pfunc({ |e| (e[\gestAmp] ? 0.12) * (e[\accent] ? 1.0) }),
+
+			\type, \customVisualEvent,
+			\shape, \bead,
+			\numPoints, 72,
+			\fill, Pfunc({ |e| e[\step] == 0 }),
+			\rim, Pfunc({ |e| ((e[\step] ? 0) / (e[\div] ? 1) * 4 + 0.5).wrap(0, 4) }),
+			\sx, Pfunc({ |e| var f = e[\rim].frac; [f * 2 - 1, 1, 1 - (f * 2), -1][e[\rim].floor.asInteger] * 0.86 }),
+			\sy, Pfunc({ |e| var f = e[\rim].frac; [-1, f * 2 - 1, 1, 1 - (f * 2)][e[\rim].floor.asInteger] * 0.86 }),
+			\ex, Pfunc({ |e| e[\sx] * (e[\decay] ? 0.3).explin(0.05, 1.9, 0.9, 0.35) }),
+			\ey, Pfunc({ |e| e[\sy] * (e[\decay] ? 0.3).explin(0.05, 1.9, 0.9, 0.35) }),
+			\xEnv, Pfunc({ Env([0, 1], [1], 3) }),
+			\yEnv, Pfunc({ Env([0, 1], [1], 3) }),
+			\rotation, Pfunc({ |e| (e[\rim].floor + 1) * 0.5pi }),
+			\startSize, Pfunc({ |e| (e.use { ~freq.value }).explin(120, 1800, 150, 26) }),
+			\endSize, Pfunc({ |e| e[\startSize] * 0.35 }),
+			\sizeEnv, Pfunc({ Env([0, 1], [1], -4) }),
+			\startWidth, Pfunc({ |e| (e[\filterRQ] ? 1) * 4 }),
+			\endWidth, 0.5,
+			\startColor, Pfunc({ |e|
+				var f = e.use { ~freq.value };
+				var fc = e[\filterFreq] ? 1500;
+				var band = 1 / (1 + (((f / fc) - (fc / f)).squared / (e[\filterRQ] ? 1).squared)).sqrt;
+				var lit = (e[\amp] ? 0.1).explin(0.003, 0.5, 0, 0.95) * band.linlin(0, 1, 0.35, 1);
+				if(e[\step] == 0, {
+					Color.new(1.0, 0.18, 0.62, lit)
+				}, {
+					Color.hsv(fc.explin(180, 4000, 0.56, 0.49), fc.explin(180, 4000, 0.95, 0.25), 1.0, lit)
+				})
+			}),
+			\endColor, Pfunc({ |e| e[\startColor].copy.alpha_(0) }),
+			\colorEnv, Pfunc({ Env([0, 1], [1], -4) }),
+			\duration, Pfunc({ |e| (e[\attack] ? 0.001) + (e[\decay] ? 0.3) }),
+			\modulation, Pfunc({ |e| (
+				wobble: e[\wobble] ? 10, depth: 0.2, maxLobes: 24, breathe: 6, taper: 1.4, amp: 0
+			) })
 		);
 	);
 
@@ -120,6 +177,7 @@ SynthDef(\dropletVerb, {
 
 	if(amp < 49.neg, { amp = 120.neg });
 
+	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);
 	Pdef(m.ptn).set(\pal, pal);
 	Pdef(m.ptn).set(\gestAmp, amp.dbamp * vol);

@@ -3,6 +3,7 @@ var dev = ~device;
 var group, trig, buffers;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
 var relTime = 0.4;
+var step = 0;
 
 var kitFolder = "~/Downloads/cotf_samples/drums";
 var kitNames = ["HH11X05", "SD02X05", "BD02X07"];
@@ -66,6 +67,29 @@ SynthDef(\alonKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	var folder = kitFolder.standardizePath;
 
 	group = Group.new;
+	step = 0;
+
+	~vdef.(\slab, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var n = ev[\numPoints] ? 24;
+		var breadth = mod[\breadth] ? 30;
+		var bow = mod[\bow] ? 0;
+		var thump = mod[\thump] ? 3;
+		var ring = mod[\ring] ? 0.15;
+		var sway = m.rrateMassFiltered * (mod[\sway] ? 0);
+		var mid = c[\pos];
+		var len = c[\size];
+		var t = c[\elapsed];
+		var flex = bow * len * exp(t.neg / ring) * sin(t * thump * 2pi);
+
+		[ mid + (breadth.neg @ 0) ]
+		++ Array.fill(n, { |i|
+			var u = i / (n - 1);
+			var x = (u - 0.5) * 2 * breadth;
+			mid + ((x + (sway * u)) @ (len + (flex * (u * pi).sin)).neg)
+		})
+		++ [ mid + (breadth @ 0) ]
+	});
 
 	buffers = kitNames.collect({ |n|
 		Buffer.read(s, folder +/+ (n ++ ".wav"), action: { |b|
@@ -98,6 +122,45 @@ SynthDef(\alonKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 						\attack, 0.001,
 						\release, 0.02
 					], group);
+
+					step = step + 1;
+
+					(
+						type: \customVisualEvent,
+						amp: 0,
+						dur: 0.01,
+						viewID: dev.port,
+
+						shape: \slab,
+						fill: true,
+						numPoints: 24,
+
+						sx: (((step - 1) % 16) + 0.5) / 8 - 1,
+						ex: (((step - 1) % 16) + 0.5) / 8 - 1,
+						sy: if(lay[\idx] == 0, -1, 1),
+						ey: if(lay[\idx] == 0, -1, 1),
+						rotation: if(lay[\idx] == 0, pi, 0),
+
+						startSize: vel.linlin(0, 1, 60, if(lay[\idx] == 0, 320, 620)),
+						endSize: 0,
+						sizeEnv: Env([0, 1], [1], if(lay[\idx] == 0, -6, -3)),
+
+						startColor: if(vel > 0.9, { Color.white }, {
+							Color.hsv(if(lay[\idx] == 0, 0.075, 0.015), 0.95, 1.0, 0.95) }),
+						endColor: Color.hsv(if(lay[\idx] == 0, 0.075, 0.015), 0.95, 0.8, 0.0),
+						colorEnv: Env([0, 1], [1], -2),
+
+						duration: if(lay[\idx] == 0, 0.35, 0.8),
+
+						modulation: (
+							amp: 0,
+							breadth: (lay[\cut] * ff).explin(2000, 26000, if(lay[\idx] == 0, 4, 30), if(lay[\idx] == 0, 18, 90)),
+							bow: if(lay[\idx] == 0, 0, 0.25 * vel),
+							thump: 3,
+							ring: 0.18,
+							sway: if(lay[\idx] == 0, 40, 0)
+						)
+					).play;
 				});
 			});
 		};

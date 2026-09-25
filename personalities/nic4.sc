@@ -3,6 +3,8 @@ var synth;
 var buffer;
 var lastTime = 0;
 var notes = [-2,7];
+var grainVoices = 2;
+var grainRand = 0.3;
 
 m.accelMassFilteredAttack = 0.7;
 m.accelMassFilteredDecay = 0.2;
@@ -27,7 +29,7 @@ SynthDef(\bufGrainN, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 }).add;
 
 //------------------------------------------------------------
-~init = ~init <> {
+~init = ~init <> { |d|
 	// var path = PathName("~/Downloads/yourDNASamples/brenton/BrentonVoice_09.wav");
 	// var path = PathName("~/Downloads/melSamples/mel_sing_dry-005.wav");
 	var path = PathName("~/Downloads/nicSamples/3_Bites/Bits/4.wav");
@@ -37,6 +39,52 @@ SynthDef(\bufGrainN, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 		postf("buffer alloc [%] \n", buf);
 		synth = Synth(\bufGrainN,[\bufnum,buf, \rate, 1, \gate, 1 ]);
 	});
+
+	~vdef.(\shaft, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var n = ev[\numPoints] ? 40;
+		var beamPx = mod[\beamPx] ? 70;
+		var shimmer = mod[\shimmer] ? 3;
+		var shallow = mod[\shallow] ? 0.2;
+		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+		var amp = m.accelMassFiltered.linlin(0.0, 2 * sens, 0.00001, 1);
+		var start = m.gyroYFiltered.fold(-0.5,0.5).lincurve(-0.5,0.5,0.0,1.0,0);
+		var cutoff = m.gyroZFiltered.fold(-0.5,0.5).lincurve(-0.5,0.5,1000,18000,0);
+		var rate = notes[0].midiratio;
+		var top = c[\posStart].blend(c[\posEnd], start);
+		var depth = cutoff.explin(1000, 18000, shallow, 1) * c[\size];
+		var now = c[\now];
+
+		if(amp >= 0.01, {
+			grainVoices.do { |v|
+				var half = beamPx * (1 + (v * 0.35)) * amp.sqrt / rate;
+				var edge = { |t, side|
+					var flick = sin((t * 17) + (now * shimmer * rate * (v + 1)) + (side * 2.1) + (v * 4.3));
+					var w = half * (1 - (t * 0.7)) * (1 + (grainRand * flick));
+					top + ((w * side) @ (depth * t))
+				};
+				c[\render].(
+					Array.fill(n, { |i| edge.(i / (n - 1), -1) })
+					++ Array.fill(n, { |i| edge.(1 - (i / (n - 1)), 1) }),
+					1, amp, true
+				);
+			};
+		});
+		nil
+	});
+
+	(
+		type: \customVisualEvent, amp: 0, dur: 0.01, viewID: d.port,
+		shape: \shaft,
+		sx: -1, ex: 1, sy: -1, ey: -1,
+		startSize: 1100, endSize: 1100,
+		startWidth: 1, endWidth: 1,
+		startColor: Color.new(1.0, 0.78, 0.28, 0.32),
+		endColor: Color.new(1.0, 0.78, 0.28, 0.32),
+		numPoints: 40, fill: true, closed: true,
+		duration: inf,
+		modulation: (amp: 0, beamPx: 70, shimmer: 3, shallow: 0.2)
+	).play;
 };
 
 ~deinit = ~deinit <> {

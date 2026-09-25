@@ -75,6 +75,42 @@ SynthDef(\buchlaInspired, {
 ~init = ~init <> {
 	group = Group.new;
 
+	~vdef.(\spectrumRay, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var freq = mod[\freq] ? 220;
+		var cut = mod[\cutoff] ? 5000;
+		var rq = mod[\rq] ? 0.1;
+		var sawLvl = mod[\sawLvl] ? 0.8;
+		var pulseLvl = mod[\pulseLvl] ? 0.6;
+		var foldLvl = mod[\foldLvl] ? 0.5;
+		var partials = mod[\partials] ? 16;
+		var lo = mod[\lo] ? 60;
+		var hi = mod[\hi] ? 14000;
+		var inner = mod[\inner] ? 60;
+		var reach = mod[\reach] ? 80;
+		var peakClip = mod[\peakClip] ? 3;
+		var outer = c[\size];
+		var mid = c[\pos];
+		var t = c[\normTime];
+		var lpg = 1 - ((1 - exp(-4 * t)) / (1 - exp(-4)));
+		var rad = { |f| f.explin(lo, hi, inner, outer) };
+
+		c[\render].([mid + (rad.(freq) @ 0), mid + (rad.(freq * partials) @ 0)], 0.5, 0.25 * lpg, false);
+		partials.do { |i|
+			var k = i + 1;
+			var f = freq * k;
+			var x = f / cut;
+			var gain = (1 / (((1 - x.squared).squared + (rq * x).squared).sqrt)).min(peakClip);
+			var lvl = (sawLvl + if(k.odd, pulseLvl, 0) + foldLvl) / k * gain;
+			var r = rad.(f);
+			var len = reach * lvl * lpg;
+			if(len > 0.5, {
+				c[\render].([mid + (r @ len.neg), mid + (r @ len)], 1, lpg, false);
+			});
+		};
+		nil
+	});
+
 	Pdef(m.ptn,
 		Pbind(
 			\instrument, \buchlaInspired,
@@ -110,7 +146,35 @@ SynthDef(\buchlaInspired, {
 			\pan, Pwhite(-0.2, 0.2),
 			\reverbMix, 0.2, \reverbRoom, 0.3, \reverbDamp, 0.5,
 
-			\amp, Pfunc({ |e| (e[\gestAmp] ? 0.12) * (e[\accent] ? 1.0) })
+			\amp, Pfunc({ |e| (e[\gestAmp] ? 0.12) * (e[\accent] ? 1.0) }),
+
+			\type, \customVisualEvent,
+			\shape, \spectrumRay,
+			\sx, 0, \sy, 0, \ex, 0, \ey, 0,
+			\rotation, Pfunc({ |e| ((e[\step] ? 0) / (e[\div] ? 1) * 2pi) - 0.5pi }),
+			\startSize, 760,
+			\endSize, 760,
+			\startWidth, Pfunc({ |e| (e[\accent] ? 0.45) * 7 }),
+			\endWidth, Pkey(\startWidth),
+			\startColor, Pfunc({ |e|
+				var lit = (e[\amp] ? 0.1).explin(0.003, 0.3, 0, 0.95);
+				if(e[\step] == 0, {
+					Color.new(1.0, 0.78, 0.12, lit)
+				}, {
+					Color.hsv(0.62, (e[\lowpassCutoff] ? 5000).explin(900, 12000, 0.85, 0.12), 1.0, lit)
+				})
+			}),
+			\endColor, Pkey(\startColor),
+			\duration, Pfunc({ |e| (e[\attack] ? 0.001) + (e[\lpgDecay] ? 0.5) }),
+			\modulation, Pfunc({ |e| (
+				freq: e.use { ~freq.value },
+				cutoff: (e[\lowpassCutoff] ? 5000).clip(80, 18000),
+				rq: e[\lowpassResonance] ? 0.1,
+				sawLvl: e[\osc1Index] ? 0.8, pulseLvl: e[\osc2Index] ? 0.6, foldLvl: 0.5,
+				partials: 16, lo: 60, hi: 14000, inner: 50, peakClip: 3,
+				reach: (e[\amp] ? 0.1).explin(0.003, 0.3, 20, 150),
+				amp: 0
+			) })
 		);
 	);
 
@@ -155,6 +219,7 @@ SynthDef(\buchlaInspired, {
 
 	if(amp < 49.neg, { amp = 120.neg });
 
+	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);
 	Pdef(m.ptn).set(\pal, pal);
 	// Pdef(m.ptn).set(\roll, roll);

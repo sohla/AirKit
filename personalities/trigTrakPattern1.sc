@@ -69,6 +69,31 @@ SynthDef(\trigTone, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 	steadiness = 0.5;
 	hitCount = 0;
 
+	~vdef.(\toneColumn, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var n = ev[\numPoints] ? 110;
+		var cycles = mod[\cycles] ? 6;
+		var harm = mod[\harm] ? 8;
+		var sawMix = mod[\sawMix] ? 0.25;
+		var atk = mod[\atk] ? 0.003;
+		var rel = mod[\rel] ? 0.45;
+		var reach = mod[\reach] ? 700;
+		var scroll = mod[\scroll] ? 0.5;
+		var t = c[\elapsed];
+		var x = ((t - atk) / rel).clip(0, 1);
+		var env = if(t < atk, { t / atk }, { 1 - ((1 - exp(-4 * x)) / (1 - exp(-4))) });
+		var sway = m.accelMassFiltered.clip(0, 2) * (mod[\sway] ? 0);
+		var mid = c[\pos];
+
+		Array.fill(n, { |i|
+			var u = i / (n - 1);
+			var ph = ((u * cycles) + (t * scroll)) * 2pi;
+			var saw = Array.fill(harm, { |k| sin(ph * (k + 1)) / (k + 1) }).sum;
+			var wave = sin(ph) + (saw * sawMix);
+			mid + (((wave * c[\size] * env) + (sway * sin(u * pi))) @ ((u - 0.5) * 2 * reach))
+		})
+	});
+
 	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
 		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.001], group);
 
@@ -101,6 +126,44 @@ SynthDef(\trigTone, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 				\rel, relTime,
 				\pan, (dev.sensors.gyroEvent.z / pi).clip(-1, 1) * 0.4
 			], group);
+
+			(
+				type: \customVisualEvent,
+				amp: 0,
+				dur: 0.01,
+				viewID: dev.port,
+
+				shape: \toneColumn,
+				numPoints: 110,
+				closed: false,
+
+				sx: (dev.sensors.gyroEvent.z / pi).clip(-1, 1) * 0.9,
+				ex: (dev.sensors.gyroEvent.z / pi).clip(-1, 1) * 0.9,
+
+				startSize: vel.linlin(0, 1, 30, 150),
+				endSize: vel.linlin(0, 1, 30, 150),
+
+				startWidth: vel.linlin(0, 1, 1.5, 7),
+				endWidth: vel.linlin(0, 1, 1, 3),
+
+				startColor: Color.white,
+				endColor: Color.hsv(0.88, 0.95, 1.0, 0.0),
+				colorEnv: Env([0, 1], [1], -3),
+
+				duration: 0.003 + relTime,
+
+				modulation: (
+					amp: 0,
+					cycles: note.midicps / 25,
+					harm: ((note.midicps * 8).clip(200, 9500) / note.midicps).floor.asInteger,
+					sawMix: 0.25,
+					atk: 0.003,
+					rel: relTime,
+					reach: 700,
+					scroll: 0.4,
+					sway: 120
+				)
+			).play;
 		};
 	}, '/akHit', s.addr);
 
@@ -114,7 +177,25 @@ SynthDef(\trigTone, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			\rel, 0.25,
 			\amp, Pfunc({ 0.7 * dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1) }),
 			\pan, Pseq([-0.3, 0.3], inf),
-			\args, #[]
+			\args, #[],
+
+			\type, \customVisualEvent,
+			\shape, \square,
+			\fill, true,
+			\numPoints, 8,
+			\col, Pseq((0..15), inf),
+			\lane, Pfunc({ |e| notes.indexOf(e[\midinote] - baseNote - 12) ? 0 }),
+			\sx, Pfunc({ |e| ((e[\col] + 0.5) / 8) - 1 }),
+			\ex, Pkey(\sx),
+			\sy, Pfunc({ |e| 0.93 - (e[\lane] * 0.07) }),
+			\ey, Pkey(\sy),
+			\rotation, Pfunc({ |e| e[\pan] * 0.5pi }),
+			\startSize, Pfunc({ |e| e[\vel] * 16 }),
+			\endSize, 2,
+			\sizeEnv, Pfunc({ Env([0, 1], [1], -4) }),
+			\startColor, Color.hsv(0.165, 0.9, 1.0, 0.9),
+			\endColor, Color.hsv(0.165, 0.9, 1.0, 0.0),
+			\duration, Pfunc({ |e| (e[\atk] ? 0.002) + (e[\rel] ? 0.25) })
 		);
 	);
 
@@ -154,6 +235,7 @@ SynthDef(\trigTone, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 		steadiness = steadiness * 0.995;
 	});
 
+	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\dur, (avgIoi / patDiv).clip(ioiMin, ioiMax));
 	// Pdef(m.ptn).set(\amp, m.accelMassFiltered.lincurve(0.0, 3 * sens, -34, -4, -2).dbamp);
 

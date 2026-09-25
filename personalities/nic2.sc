@@ -30,6 +30,17 @@ SynthDef(\drumkitNN, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 ~init = ~init <> {
 
 	var folder = PathName("~/Downloads/nicSamples/3_Bites/Percussive");
+	var perimeter = { |t|
+		var u = (t * 4).wrap(0, 4);
+		var k = (u.frac * 2) - 1;
+		switch(u.floor.asInteger,
+			0, { k @ -1 },
+			1, { 1 @ k },
+			2, { k.neg @ 1 },
+			{ -1 @ k.neg }
+		) * 0.8
+	};
+	var hue = { |e, alpha| if((e[\root] ? 0) == 0, { Color.new(0.69, 0.42, 1.0, alpha) }, { Color.new(1.0, 0.31, 0.85, alpha) }) };
 	postf("loading samples : % \n", folder);
 	buffers = folder.entries.collect({ |path,i|
 		Buffer.read(s, path.fullPath, action:{|buf|
@@ -38,6 +49,33 @@ SynthDef(\drumkitNN, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 				"samples loaded".postln;
 			});
 		});
+	});
+
+	~vdef.(\medusa, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var arms = mod[\arms] ? 5;
+		var reach = mod[\reach] ? 1.6;
+		var sway = mod[\sway] ? 0.25;
+		var swim = mod[\swim] ? 1.5;
+		var n = ev[\numPoints] ? 16;
+		var mid = c[\pos];
+		var r = c[\size];
+		var now = c[\now];
+		var fall = r * reach * (1 - (c[\normTime] * 0.4));
+
+		c[\draw].(\arc, (pos: mid, size: r), 1, 1, false);
+		arms.do { |k|
+			var root = mid + ((r * (((k + 0.5) / arms) * 1.6 - 0.8)) @ 0);
+			c[\render].(
+				Array.fill(n, { |j|
+					var t = j / (n - 1);
+					var bend = sin((2pi * swim * now) + (k * 0.9) - (t * 3)) * sway * r * t;
+					root + (bend @ (fall * t))
+				}),
+				0.5, 0.7, false
+			);
+		};
+		nil
 	});
 
 	Pdef(m.ptn,
@@ -53,6 +91,24 @@ SynthDef(\drumkitNN, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 			\root, Pseq([0, -2].stutter(64), inf),
 			\func, Pfunc({|e|localRoot=e.root}),
 			\args, #[],
+
+			\type, \customVisualEvent,
+			\shape, \medusa,
+			\sx, Pfunc({ perimeter.(bi / 9).x }),
+			\sy, Pfunc({ perimeter.(bi / 9).y }),
+			\ex, Pfunc({ |e| e[\sx] + (e[\pan] * 0.6) }),
+			\ey, Pfunc({ |e| e[\sy] - 0.1 }),
+			\duration, Pfunc({ |e| (((e[\dur] ? 0.2) * 0.8) + (e[\release] ? 0.3)).clip(0.15, 2.5) }),
+			\startSize, Pfunc({ |e| 90 / (e[\rate] ? 1) }),
+			\endSize, Pfunc({ |e| 320 / (e[\rate] ? 1) }),
+			\sizeEnv, Pfunc({ |e| var a = ((e[\attack] ? 0.01) / e[\duration]).clip(0.02, 0.5); Env([0, 1, 0.8], [a, 1 - a], [-4, 0]) }),
+			\startWidth, 3,
+			\endWidth, 0.5,
+			\startColor, Pfunc({ |e| hue.(e, (e[\amp] ? 0.5).linlin(0, 1.6, 0.35, 0.95)) }),
+			\endColor, Pfunc({ |e| hue.(e, 0) }),
+			\numPoints, 16,
+			\fill, false,
+			\modulation, Pfunc({ |e| (amp: 0, arcSpan: pi, arcStart: pi, arms: 3 + ((bi % 3) * 2), reach: 1.6, sway: 0.25, swim: (e[\rate] ? 1) * 1.5) }),
 		)
 	);
 
@@ -93,6 +149,7 @@ SynthDef(\drumkitNN, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\attack, attack);
 	Pdef(m.ptn).set(\release, release);
+	Pdef(m.ptn).set(\viewID, d.port);
 
 	if(m.accelMassFiltered > 0.1,{
 		if( Pdef(m.ptn).isPlaying.not,{

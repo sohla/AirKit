@@ -41,6 +41,33 @@ SynthDef(\scale1, {
 }).add;
 
 ~init = ~init <> {
+
+	~vdef.(\filterComb, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var f0 = mod[\f0] ? 110;
+		var fc = mod[\cutoff] ? 500;
+		var rq = mod[\rq] ? 0.5;
+		var fLo = mod[\fLo] ? 40;
+		var fHi = mod[\fHi] ? 1600;
+		var floorDb = mod[\floorDb] ? -36;
+		var ceilDb = mod[\ceilDb] ? 20;
+		var lift = (mod[\lift] ? 120) * (mod[\up] ? 1);
+		var span = c[\size];
+		var origin = c[\pos];
+		var count = (fHi / f0).floor.asInteger.clip(1, 40);
+		var pts = [origin];
+
+		count.do { |k|
+			var f = f0 * (k + 1);
+			var r = f / fc;
+			var gain = 1 / sqrt(((1 - r.squared).squared) + (rq * r).squared);
+			var h = (gain / (k + 1)).ampdb.linlin(floorDb, ceilDb, 0, 1) * lift;
+			var x = origin.x + (f.explin(fLo, fHi, 0, 1) * span);
+			pts = pts ++ [x @ origin.y, x @ (origin.y - h), x @ origin.y];
+		};
+		pts ++ [(origin.x + span) @ origin.y]
+	});
+
 	Pdef(m.ptn,
 		Pbind(
 			\instrument, \scale1,
@@ -57,7 +84,40 @@ SynthDef(\scale1, {
     	\pan, Pseq([-0.3, 0.3], inf),
 
 			\func, Pfunc({|e| ~onEvent.(e)}),
-			\args, #[]
+			\args, #[],
+
+			\type, \customVisualEvent,
+			\shape, \filterComb,
+			\closed, false,
+			\fill, false,
+			\sx, Pfunc({ |e| (e[\pan] ? -1).sign * 0.96 }),
+			\ex, Pkey(\sx),
+			\sy, Pfunc({ |e| (e[\octave] ? 4).linlin(4, 5, 0.1, -0.1) }),
+			\ey, Pfunc({ |e| (e[\octave] ? 4).linlin(4, 5, 0.95, -0.95) }),
+			\rotation, Pfunc({ |e| if((e[\pan] ? -1) < 0, 0, pi) }),
+			\startSize, 420,
+			\endSize, 300,
+			\startWidth, 3.5,
+			\endWidth, 0.5,
+			\startColor, Pfunc({ |e|
+				Color.new255(150, 178, 128, 235).blend(Color.new255(120, 200, 245, 255),
+					(e[\fq] ? 0.5).linlin(0.1, 0.9, 1, 0))
+			}),
+			\endColor, Pfunc({ |e| e[\startColor].copy.alpha_(0) }),
+			\colorEnv, Pfunc({ Env([0, 1], [1], -3) }),
+			\duration, Pfunc({ |e| ((e[\release] ? 0.4) + 0.1) * 1.4 }),
+			\modulation, Pfunc({ |e| (
+				f0: e.use { ~freq.value },
+				cutoff: e[\filterFreq] ? 500,
+				rq: e[\fq] ? 0.5,
+				fLo: 40,
+				fHi: 1600,
+				floorDb: -36,
+				ceilDb: 20,
+				lift: (e[\amp] ? 0.1).explin(0.001, 1, 40, 230),
+				up: if((e[\pan] ? -1) < 0, 1, -1),
+				amp: 0
+			) })
 		);
 	);
 
@@ -94,6 +154,7 @@ SynthDef(\scale1, {
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\note, note - 24);
 	Pdef(m.ptn).set(\amp, amp.dbamp  * vol);
+	Pdef(m.ptn).set(\viewID, d.port);
 	if(amp.dbamp > 0.009,{
 		if( Pdef(m.ptn).isPlaying.not,{
 			Pdef(m.ptn).resume(quant:0.2);

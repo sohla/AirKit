@@ -93,6 +93,21 @@ SynthDef(\warmPadVoice, {
 	group = Group.new;
 	step = 0;
 
+	~vdef.(\padBlock, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var n = ((ev[\numPoints] ? 64) / 2).floor.max(2);
+		var breadth = mod[\breadth] ? 60;
+		var fMin = mod[\filtMin] ? 200;
+		var fMax = mod[\filtMax] ? 2600;
+		var fSpeed = mod[\filtSpeed] ? 0.1;
+		var filt = sin(c[\elapsed] * fSpeed * 2pi).linlin(-1, 1, fMin, fMax);
+		var half = c[\size] * filt / ((fMin + fMax) * 0.5);
+		var mid = c[\pos];
+
+		Array.fill(n, { |i| mid + ((((i / (n - 1)) - 0.5) * 2 * breadth) @ half.neg) })
+		++ Array.fill(n, { |i| mid + (((0.5 - (i / (n - 1))) * 2 * breadth) @ half) })
+	});
+
 	// trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -42,
 	// 	\fullScale, 0.7, \curve, 1.5, \deadtime, 0.02], group);
 	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
@@ -125,6 +140,42 @@ SynthDef(\warmPadVoice, {
 				\detuneAmount, 0.0008,
 				\spread, 0.6
 			], group);
+
+			(
+				type: \customVisualEvent,
+				amp: 0,
+				dur: 0.01,
+				viewID: dev.port,
+
+				shape: \padBlock,
+				fill: true,
+				numPoints: 64,
+
+				sx: ((((step - 1) % 16) + 0.5) / 8) - 1,
+				ex: ((((step - 1) % 16) + 0.5) / 8) - 1 + 0.06,
+				sy: note.linlin(36, 60, 0.85, -0.85),
+				ey: note.linlin(36, 60, 0.85, -0.85),
+
+				startSize: msg[3].linlin(0, 1, 18, 110),
+				endSize: msg[3].linlin(0, 1, 18, 110),
+
+				startColor: Color.hsv([0.93, 0.015, 0.075].wrapAt((step - 1) div: 16), 0.9, 1.0, 0.0),
+				endColor: Color.hsv([0.93, 0.015, 0.075].wrapAt((step - 1) div: 16), 0.9, 1.0, 0.85),
+				colorEnv: Env([0, 1, 0.5, 0.5, 0], [0.02, 0.1, 0.13, relTime] / (0.25 + relTime)),
+
+				duration: 0.25 + relTime,
+
+				modulation: (
+					type: \radial,
+					freq: 0.6,
+					amp: m.accelMassFiltered.clip(0, 1).linlin(0, 1, 2, 30),
+					harmonics: 4,
+					breadth: 58,
+					filtMin: 200,
+					filtMax: 2600,
+					filtSpeed: 0.1
+				)
+			).play;
 		};
 	}, '/akHit', s.addr);
 };

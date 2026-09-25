@@ -4,6 +4,11 @@ var buffer;
 var notes = [-12,-8,-3,1,0];
 var note = 0;
 var trig = false;
+var warpVoices = 8;
+var warpWindow = 0.3;
+var warpDiv = 10;
+var warpSpeed = 0.01;
+var bornAt;
 
 m.accelMassFilteredAttack = 0.98;
 m.accelMassFilteredDecay = 0.3;
@@ -37,13 +42,97 @@ SynthDef(\pullstretchMonoQN, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1, d
 }).add;
 
 //------------------------------------------------------------
-~init = ~init <> {
+~init = ~init <> { |d|
 	var path = PathName("~/Downloads/nicSamples/4_Dreams/2.wav");
+	var pointerAt = { |now|
+		var len = if(buffer.notNil and: { buffer.numFrames.notNil }, { buffer.duration }, { 10 });
+		bornAt = bornAt ? now;
+		((now - bornAt) * warpSpeed * warpDiv / len.max(0.1)).frac.linlin(0, 1, 0.01, 0.99)
+	};
+	var drive = {
+		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+		var amp = m.rrateMassFiltered.lincurve(0, 1 * sens, 0.0, 1, 1);
+		if(amp < 0.002, { 0 }, { amp.clip(0, 1) })
+	};
+
 	postf("loading sample : % \n", path.fileName);
 	buffer = Buffer.read(s, path.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
 		synth = Synth(\pullstretchMonoQN,[\buffer,buf, \amp,0.4, \div, 10]);
 	});
+
+	~vdef.(\subFan, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var n = ev[\numPoints] ? 24;
+		var zoom = mod[\zoom] ? 6;
+		var jitterPx = mod[\jitterPx] ? 18;
+		var shimmer = mod[\shimmer] ? 7;
+		var octavePx = c[\size];
+		var a = c[\posStart];
+		var b = c[\posEnd];
+		var now = c[\now];
+		var len = if(buffer.notNil and: { buffer.numFrames.notNil }, { buffer.duration }, { 10 });
+		var head = a.blend(b, pointerAt.(now));
+		var amp = drive.();
+		var delta = m.gyroYFiltered.linlin(-1,1,10,-10).lcurve;
+
+		if(amp > 0, {
+			warpVoices.do { |i|
+				var ratio = 1 / ((i * delta) + 1);
+				var reach = (b.x - a.x) * warpWindow * ratio / len.max(0.1) * zoom;
+				var drop = ratio.log2.neg * octavePx;
+				var rand = 0.1 * (i + 1);
+				c[\render].(
+					Array.fill(n, { |j|
+						var t = j / (n - 1);
+						var wob = sin((j * 12.9898) + (now * shimmer * (i + 1))) * jitterPx * rand * t;
+						(head.x - (reach * t)) @ (head.y + drop + wob)
+					}),
+					1 + ((1 - ratio) * 2), amp, false
+				);
+			};
+		});
+		nil
+	});
+
+	~vdef.(\readHead, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var rest = mod[\restAlpha] ? 0.15;
+		var a = c[\posStart];
+		var b = c[\posEnd];
+		var reach = c[\size];
+		var amp = drive.();
+		var x = a.blend(b, pointerAt.(c[\now])).x;
+		c[\render].([ x @ (a.y - reach), x @ (a.y + reach) ], 1, rest + ((1 - rest) * amp), false);
+		c[\draw].(\circle, (pos: x @ a.y, size: 3 + (amp * (mod[\beadPx] ? 12))), 1, rest + amp);
+		nil
+	});
+
+	(
+		type: \customVisualEvent, amp: 0, dur: 0.01, viewID: d.port,
+		shape: \subFan,
+		sx: -1, ex: 1, sy: -0.6, ey: -0.6,
+		startSize: 150, endSize: 150,
+		startWidth: 2.5, endWidth: 2.5,
+		startColor: Color.new(0.21, 0.95, 0.9, 0.85),
+		endColor: Color.new(0.21, 0.95, 0.9, 0.85),
+		numPoints: 24, fill: false, closed: false,
+		duration: inf,
+		modulation: (amp: 0, zoom: 6, jitterPx: 18, shimmer: 7)
+	).play;
+
+	(
+		type: \customVisualEvent, amp: 0, dur: 0.01, viewID: d.port,
+		shape: \readHead,
+		sx: -1, ex: 1, sy: -0.6, ey: -0.6,
+		startSize: 2000, endSize: 2000,
+		startWidth: 1, endWidth: 1,
+		startColor: Color.new(0.92, 0.97, 1.0, 0.7),
+		endColor: Color.new(0.92, 0.97, 1.0, 0.7),
+		numPoints: 24, fill: false, closed: false,
+		duration: inf,
+		modulation: (amp: 0, restAlpha: 0.15, beadPx: 12)
+	).play;
 };
 
 ~deinit = ~deinit <> {

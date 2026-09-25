@@ -16,6 +16,10 @@ var smooth = 0.99;
 
 var notes = [0, 7, 10, 12, 15,19,24] - 32;
 
+var bodyRatios = [1, 1.34, 2.71];
+var bodyAmps = [0.5, 0.25, 0.12];
+var bodyRings = [0.30, 0.18, 0.10];
+
 m.accelMassFilteredAttack = 0.9;
 m.accelMassFilteredDecay = 0.3;
 m.rrateMassFilteredAttack = 0.9;
@@ -81,6 +85,34 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 	steadiness = 0.5;
 	hitCount = 0;
 
+	~vdef.(\soundhole, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var n = ev[\numPoints] ? 90;
+		var ratios = mod[\ratios] ? [1];
+		var amps = mod[\amps] ? [1];
+		var rings = mod[\rings] ? [1];
+		var lobes = mod[\lobes] ? 5;
+		var ripple = mod[\ripple] ? 0.1;
+		var spin = mod[\spin] ? 1;
+		var hold = mod[\hold] ? 1;
+		var t = c[\elapsed];
+		var mid = c[\pos];
+		var turn = t * spin * (0.2 + m.rrateMassFiltered);
+
+		ratios.do { |ratio, i|
+			var a = amps[i] * exp(t.neg * 6.9 / (rings[i] * hold).max(0.01));
+			var r = c[\size] / ratio;
+			var k = (lobes * ratio).round.max(2);
+			if(a > 0.01, {
+				c[\render].(Array.fill(n, { |j|
+					var th = j / n * 2pi;
+					mid + Polar(r * (1 + (ripple * a * sin((k * th) + (turn * ratio)))), th).asPoint
+				}), a.sqrt, a.sqrt);
+			});
+		};
+		nil
+	});
+
 	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
 		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.001], group);
 
@@ -131,6 +163,50 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 				\rel, ang * 3,
 				\pan, (dev.sensors.gyroEvent.z / pi).clip(-1, 1) * 0.5
 			], group);
+
+			if(ang > 0.02, {
+				[
+					[Color.hsv(0.165, 0.9, 1.0, 0.9), [1], [1], [ang * 3], 1, 2.5],
+					[Color.hsv(0.87, 0.85, 1.0, 0.8), bodyRatios, bodyAmps * 2, bodyRings * ang * 3, 3, 1.2]
+				].do { |layer|
+					(
+						type: \customVisualEvent,
+						amp: 0,
+						dur: 0.01,
+						viewID: dev.port,
+
+						shape: \soundhole,
+						numPoints: 90,
+
+						sx: if(dev.sensors.gyroEvent.z < 0, -1, 1),
+						ex: if(dev.sensors.gyroEvent.z < 0, -1, 1),
+						sy: rt.linlin(0, notes.size - 1, 0.8, -0.8),
+						ey: rt.linlin(0, notes.size - 1, 0.8, -0.8),
+
+						startSize: ang.linlin(0, 1, 160, 520) * vel.linlin(0, 1, 0.8, 1.1),
+						endSize: ang.linlin(0, 1, 170, 560) * vel.linlin(0, 1, 0.8, 1.1),
+
+						startWidth: vel.linlin(0, 1, 1.5, 9) * layer[5],
+						endWidth: vel.linlin(0, 1, 1.5, 9) * layer[5],
+
+						startColor: layer[0],
+						endColor: layer[0],
+
+						duration: (ang * 3).clip(0.3, 3.5),
+
+						modulation: (
+							amp: 0,
+							ratios: layer[1],
+							amps: layer[2],
+							rings: layer[3],
+							hold: layer[4],
+							lobes: 7 - rt,
+							ripple: cf.linlin(0.25, 0.82, 0.12, 0.03) * vel.linlin(0, 1, 0.5, 1.5),
+							spin: 1.5
+						)
+					).play;
+				};
+			});
 		};
 	}, '/akHit', s.addr);
 };
