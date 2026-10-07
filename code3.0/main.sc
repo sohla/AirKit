@@ -2,6 +2,10 @@
 
 var staker;
 var machine = Require("machine.scd");
+// Resolved here, where nowExecutingPath is this file, rather than inside
+// waitForBoot - the tool is loaded after the server is up, and a relative
+// Require from a deferred function has no file to be relative to.
+var drumInputPath = thisProcess.nowExecutingPath.dirname.dirname +/+ "utils/drumInput.scd";
 var personalityController = Require("personalityController.scd");
 var oscController = Require("oscController.scd");
 var visualCore = Require("visualCore.scd");
@@ -140,7 +144,7 @@ machine[\hardwareBufferSize] !? { |v| s.options.hardwareBufferSize = v };
 s.options.numBuffers = 2048;
 s.options.memSize = 65536;   
 s.options.numOutputBusChannels = 2; 
-s.options.numInputBusChannels = 1;
+s.options.numInputBusChannels = machine[\numInputs];
 s.latency = machine[\latency]; 
 
 
@@ -219,6 +223,11 @@ s.waitForBoot({
 	};
 
 	initGUI.();
+
+	// Opens its own window and puts a group ahead of the default group, so
+	// the SoundIn-triggered personalities hear it. Needs the server up, so it
+	// loads here rather than with the Requires at the top.
+	if(machine[\drumInput], { Require(drumInputPath) });
 
 	// OSCdef, not OSCFunc : re-running main.sc replaces this rather than
 	// stacking a second responder on the same address.

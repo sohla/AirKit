@@ -159,7 +159,7 @@ Synth(\jupiter8, [
 
 
 (
-s.record;
+// s.record;
 
 Pdef(\a,
 Pbind(

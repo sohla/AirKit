@@ -20,7 +20,10 @@
 
 	blockSize: 64,
 	hardwareBufferSize: 64,
+	numInputs: 2,
 
 	border: true,
-	fullScreen: false
+	fullScreen: false,
+
+	drumInput: true
 )

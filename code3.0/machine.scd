@@ -80,8 +80,18 @@ var defaults = (
 	blockSize: 128,
 	hardwareBufferSize: nil,
 
+	// Hardware input channels. A kit only needs more than one if something
+	// feeds the extra channels - utils/drumInput.scd puts kick on 0 and snare
+	// on 1. Declaring them also reserves the bus, so Bus.audio cannot hand
+	// channel 1 out as a private bus.
+	numInputs: 1,
+
 	border: isOSX,
 	fullScreen: isOSX.not,
+
+	// utils/drumInput.scd - a virtual drummer on the input buses, for the
+	// personalities that trigger off SoundIn. Off unless a kit asks for it.
+	drumInput: false,
 
 	listsDir: root +/+ "lists/",
 	personalityDir: root +/+ "personalities/",
