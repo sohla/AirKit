@@ -11,6 +11,19 @@ m.rrateMassFilteredDecay = 0.4;
 //------------------------------------------------------------
 ~init = ~init <> {|d|
 
+// m.com.bgColor = Color.green(1);
+m.com.bgColor = Color.yellow(0.5);
+// m.com.bgColor = Color.black(0.3);
+// m.com.bgColor = Color.blue(1);
+
+
+
+// m.com.bgColor = Color.black(0.5);
+
+
+
+
+
 
 };
 //------------------------------------------------------------

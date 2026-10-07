@@ -52,7 +52,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 				\bufnum, buf,
 				// \octave, Pxrand([3], inf),
 				// \note, Pxrand([33,35,37], inf),
-				\note, Pxrand([33,38,45,52].stutter(4), inf),
+				\note, Pxrand([33,38,45,52].stutter(4) - 2, inf),
 				\decay, 0.2,
 				\sustain,0.1,
 				\release,3.2,
@@ -70,9 +70,9 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 				}),
 				\sx, Pfunc({ |e| (e[\start] ? 0.02).linlin(0.02, 0.09, -1, -0.6) }),
 				\ex, 1,
-				\sy, Pfunc({ |e| ((e[\note] ? 33) + (((e[\octave] ? 5) - 5) * 12) + 60).linlin(81, 160, 0.85, -0.85) }),
+				\sy, Pfunc({ |e| ((e[\note] ? 33) + (((e[\octave] ? 5) - 5) * 12) + 60).linlin(81, 160, 0.95, -0.95) }),
 				\ey, Pkey(\sy),
-				\startSize, Pfunc({ |e| (e[\amp] ? 0).clip(0, 15).lincurve(0, 15, 8, 110, -2) }),
+				\startSize, Pfunc({ |e| (e[\amp] ? 0).clip(0, 15).lincurve(0, 15, 8, 10, -2) }),
 				\endSize, Pkey(\startSize),
 				\startWidth, 1,
 				\endWidth, 1,
@@ -112,7 +112,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 	if(amp < 0.03, {amp = 0});
 
 	Pdef(m.ptn).set(\viewID, d.port);
-	Pdef(m.ptn).set(\octave, 2 + oct);
+	Pdef(m.ptn).set(\octave, 0 + oct);
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\amp, amp * 15 * vol);
  	Pdef(m.ptn).set(\start, start.linlin(0,1,0.02,0.09));

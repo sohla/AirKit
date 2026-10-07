@@ -31,7 +31,7 @@ SynthDef(\drumkitNN, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 
 	var folder = PathName("~/Downloads/nicSamples/3_Bites/Percussive");
 	var perimeter = { |t|
-		var u = (t * 4).wrap(0, 4);
+		var u = (t * 8).wrap(0, 4);
 		var k = (u.frac * 2) - 1;
 		switch(u.floor.asInteger,
 			0, { k @ -1 },
@@ -100,7 +100,7 @@ SynthDef(\drumkitNN, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 			\ey, Pfunc({ |e| e[\sy] - 0.1 }),
 			\duration, Pfunc({ |e| (((e[\dur] ? 0.2) * 0.8) + (e[\release] ? 0.3)).clip(0.15, 2.5) }),
 			\startSize, Pfunc({ |e| 90 / (e[\rate] ? 1) }),
-			\endSize, Pfunc({ |e| 320 / (e[\rate] ? 1) }),
+			\endSize, Pfunc({ |e| 40 / (e[\rate] ? 1) }),
 			\sizeEnv, Pfunc({ |e| var a = ((e[\attack] ? 0.01) / e[\duration]).clip(0.02, 0.5); Env([0, 1, 0.8], [a, 1 - a], [-4, 0]) }),
 			\startWidth, 3,
 			\endWidth, 0.5,

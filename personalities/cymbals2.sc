@@ -3,12 +3,12 @@ var bi = 0;
 var buffers;
 var group;
 
-var beat = 0.8;
+var beat = 1.0;//(6.4 * 0.18/3);
 var layers = [
 	[1] / 2,
 	[1, 2, 1] / 4,
 	[2, 1, 1, 3, 2, 1] / 8
-];
+] * 1.2;
 
 var layerFloors = [0.5, 0.7];
 
@@ -80,14 +80,17 @@ SynthDef(\cymbals2, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 			\args, #[],
 
   		\type, \customVisualEvent,
-			\shape, \square,
+			\shape, \circle,
 			\sx, Pwhite(-0.02,0.02),
 			\sy, Pwhite(-0.02,0.02),
 			\ex, 0,
 			\ey, 0,
 			\rotation, pi / Pwhite(1.7,2.3),
-			\fill, true,
-			\endWidth, 0.1,
+			\fill, false,
+			\startWidth, 50,
+			\startColor, Color.black,
+			\endColor, Color.black,
+			\endWidth,1,
       \duration, 0.3,
 		)
 	);
@@ -147,7 +150,7 @@ SynthDef(\cymbals2, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 			harmonics: 2
 	));
 
-	bi = (d.sensors.gyroEvent.y / pi.half).linlin(-1.0,1.0,0,buffers.size-1);
+	bi = (d.sensors.gyroEvent.y / pi.half).linlin(-0.1,0.1,0,buffers.size-1);
 	bi = bi.asInteger;
 
 	Pdef(m.ptn).set(\startColor, Color.hsv(bi/buffers.size,1,1.0,0.5));

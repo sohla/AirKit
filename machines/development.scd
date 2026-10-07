@@ -6,6 +6,8 @@
 	user: "Steph",
 
 	apAddr: "192.168.70.1",
+	outAddr: ["192.168.50.53", 5005],
+
 	macs: [],
 	platform: \linux,
 

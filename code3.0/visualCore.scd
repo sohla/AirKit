@@ -8,6 +8,8 @@
 // shapes end up. One event can fan out to several canvases.
 //
 //   ~visuals.canvases  \name -> (view:, events:, bg:)
+//   ~visuals.com       the personalities' shared m.com - its \bgColor is
+//                      the ground of every canvas (see core.ground)
 //   ~visuals.routes    devicePort -> [\canvasName, ...]
 //   ~visuals.vdefs     devicePort -> (\shapeName -> drawFunc)
 //
@@ -272,16 +274,24 @@ var drawCanvas = { |name, view|
 //------------------------------------------------------------
 // canvas factory
 //------------------------------------------------------------
+// The ground every canvas is painted : m.com.bgColor, shared by all
+// personalities, black until one sets it. Applied by the cull routine, not
+// here in the draw loop, so a p-file assignment lands within 0.1s.
+core.ground = { |self|
+	(core.com !? { core.com[\bgColor] }) ? Color.black
+};
+
 core.makeCanvas = { |self, name, frameRate = 60, action|
+	var ground = core.ground;
 	var view = UserView()
 		.animate_(true)
 		.frameRate_(frameRate)
-		.background_(Color.black);
+		.background_(ground);
 
 	view.drawFunc_({ drawCanvas.(name, view) });
 
 	if(action.notNil, {
-		view.mouseUpAction_({ view.background_(Color.black) });
+		view.mouseUpAction_({ view.background_(core.ground) });
 		view.mouseDownAction_({
 			view.background_(Color.white.alpha_(0.1));
 			action.();
@@ -291,7 +301,7 @@ core.makeCanvas = { |self, name, frameRate = 60, action|
 		view.mouseUpAction_({false});
 	});
 
-	core.canvases[name] = (view: view, events: List.new(32));
+	core.canvases[name] = (view: view, events: List.new(32), bg: ground);
 	view
 };
 
@@ -464,11 +474,16 @@ core.startCull = { |self|
 		core.cullRout = Routine {
 			loop {
 				var now = thisThread.seconds;
+				var ground = core.ground;
 				// iterate a snapshot - makeCanvas may insert keys
 				core.canvases.values.do { |c|
 					c[\events] = c[\events].select { |e|
 						(now - e[\startTime]) < (e[\duration] ? 1)
 					};
+					if(c[\bg] != ground and: { c[\view].notNil }, {
+						c[\view].background_(ground);
+						c[\bg] = ground;
+					});
 				};
 				0.1.yield;
 			}
@@ -486,9 +501,10 @@ Event.addEventType(\customVisualEvent, {
 
 	var event = (
 		\src: src,
-		// NOTE: ~bgColor is deliberately NOT carried. Canvas backgrounds are
-		// fixed black, set once in makeCanvas. Personalities may still pass
-		// bgColor: - it is silently ignored, not an error.
+		// NOTE: ~bgColor is deliberately NOT carried. The ground is shared by
+		// every device on a canvas, so it is set on m.com.bgColor, not per
+		// event. Personalities may still pass bgColor: - it is silently
+		// ignored, not an error.
 		\shape: ~shape ? \circle,
 		\points: ~points,
 		\numPoints: ~numPoints,

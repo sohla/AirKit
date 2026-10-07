@@ -8,7 +8,7 @@ var notes = [0,-12] + 4 + 12;
 var note = notes[0];
 var tremHz = 10;
 var warpDiv = 10;
-var warpSpeed = 0.008;
+var warpSpeed = 0.2;
 var bornAt;
 var level;
 m.accelMassFilteredAttack = 0.99;
@@ -18,7 +18,7 @@ m.rrateMassFilteredDecay = 0.2;
 m.gyroFilteredAttack = 0.7;
 m.gyroFilteredDecay = 0.7;
 
-SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1, div=1, speed = 0.008, splay = 0.3,pan=0, gate=1, delta=0, lag=0.05, ffo=10 rfo=1,pos=0|
+SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 0.25, div=1, speed = 0.008, splay = 0.3,pan=0, gate=1, delta=0, lag=0.05, ffo=10 rfo=1,pos=0|
 	var len = BufDur.kr(buffer) / div;
 	var lfo = LFSaw.kr( (1.0/len) * speed ,1).range(0.0,0.99);
   var afo = LFCub.ar(ffo,0,rfo).range(1.0 - rfo,2.0 - rfo);
@@ -47,12 +47,12 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1, di
 	postf("loading sample : % \n", path.fileName);
 	buffer = Buffer.read(s, path.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		synth = Synth(\pullstretchMonoQ,[\buffer,buf,\pch,-12.midiratio, \amp,0.0, \div, 10]);
+		synth = Synth(\pullstretchMonoQ,[\buffer,buf,\pch,-36.midiratio, \amp,0.0, \div, 10]);
 	});
 
 	~vdef.(\tide, { |ev, c|
 		var mod = ev[\modulation] ? ();
-		var n = ev[\numPoints] ? 96;
+		var n = ev[\numPoints] ? 36;
 		var pxPerSemi = mod[\pxPerSemi] ? 22;
 		var ripples = mod[\ripples] ? 5;
 		var slow = mod[\slow] ? 0.06;
@@ -90,7 +90,7 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1, di
 		};
 
 		c[\render].(Array.fill(n, { |i| surface.(i / (n - 1)) }), 0.3 + amp, rest + ((1 - rest) * amp), false);
-		c[\draw].(\circle, (pos: surface.(head), size: 4 + (amp * (mod[\beadPx] ? 16))), 1, rest + amp);
+		c[\draw].(\circle, (pos: surface.(head), size: 100 + (amp * (mod[\beadPx] ? 16))), 1, rest + amp);
 		nil
 	});
 
@@ -99,12 +99,12 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1, di
 		shape: \tide,
 		sx: -1, ex: 1, sy: 0, ey: 0,
 		startSize: 180, endSize: 180,
-		startWidth: 4, endWidth: 4,
+		startWidth: 10, endWidth: 4,
 		startColor: Color.new(0.35, 0.62, 1.0, 0.9),
 		endColor: Color.new(0.35, 0.62, 1.0, 0.9),
-		numPoints: 96, fill: false, closed: false,
+		numPoints: 18, fill: false, closed: false,
 		duration: inf,
-		modulation: (amp: 0, pxPerSemi: 22, ripples: 5, slow: 0.06, glide: 0.06, restAlpha: 0.12, dashes: 24, beadPx: 16)
+		modulation: (amp: 0, pxPerSemi: 22, ripples: 15, slow: 0.06, glide: 0.06, restAlpha: 0.12, dashes: 4, beadPx: 16)
 	).play;
 };
 //------------------------------------------------------------

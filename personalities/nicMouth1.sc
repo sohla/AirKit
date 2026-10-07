@@ -50,9 +50,9 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 		var lipPx = mod[\lipPx] ? 14;
 		var ripples = mod[\ripples] ? 3;
 		var chewHz = mod[\chewHz] ? 1.5;
-		var rest = mod[\restAlpha] ? 0.15;
+		var rest = mod[\restAlpha] ? 0.05;
 		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
-		var amp = m.accelMassFiltered.linlin(0,2.3 * sens,0.00001,1);
+		var amp = m.accelMassFiltered.linlin(0,4.3 * sens,0.00001,1);
 		var rate = m.gyroYFiltered.lincurve(-1.0,1.0,0.1,2.0,0);
 		var start = m.gyroZFiltered.lincurve(-1.0,1.0,0.0,1.0,0);
 		var a = c[\posStart];
@@ -87,12 +87,12 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 	(
 		type: \customVisualEvent, amp: 0, dur: 0.01, viewID: d.port,
 		shape: \mouth,
-		sx: -1, ex: 1, sy: 0.1, ey: 0.1,
+		sx: -1, ex: 1, sy: -0.9, ey: -0.9,
 		startSize: 420, endSize: 420,
-		startWidth: 3, endWidth: 3,
+		startWidth: 2, endWidth: 2,
 		startColor: Color.new(1.0, 0.42, 0.68, 0.9),
 		endColor: Color.new(1.0, 0.42, 0.68, 0.9),
-		numPoints: 40, fill: false, closed: true,
+		numPoints: 8, fill: false, closed: true,
 		duration: inf,
 		modulation: (amp: 0, peakWidth: 0.18, lipPx: 14, ripples: 3, chewHz: 1.5, restAlpha: 0.15)
 	).play;
@@ -118,7 +118,7 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 
 	synth.set(\start, start);
 	synth.set(\rate, rate);
-	synth.set(\amp, amp * 2 * vol);
+	synth.set(\amp, amp * 4 * vol);
 
 };
 //------------------------------------------------------------

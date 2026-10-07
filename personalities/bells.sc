@@ -178,10 +178,10 @@ SynthDef(\bambooComplex, {
 
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var move = m.accelMassFiltered.linlin(0, 3 * sens,0,1);
-	var att = m.accelMassFiltered.lincurve(0, 5 * sens,0.1,0.001,-8);
-	var amp = m.accelMassFiltered.linexp(0, 5 * sens,0.08,1);
-	var noteIndex = m.accelMassFiltered.linlin(0, 4 * sens,0.0001,notes.size).floor;
+	var move = m.accelMassFiltered.linlin(0, 2 * sens,0,1);
+	var att = m.accelMassFiltered.lincurve(0, 2 * sens,0.1,0.001,-8);
+	var amp = m.accelMassFiltered.linexp(0, 2 * sens,0.08,1);
+	var noteIndex = m.accelMassFiltered.linlin(0, 2 * sens,0.0001,notes.size).floor;
 	var space = m.accelMassFiltered.lincurve(0, 0.6 * sens,0.25,0.02,-1);
 	if(noteIndex>=notes.size,{noteIndex=notes.size-1});
 	if(move > 0.02, {

@@ -42,8 +42,15 @@ var parseDulcimerNote = { |fileStem|
 };
 
 //------------------------------------------------------------
+
+//------------------------------------------------------------
+// harp1's filter tuning, unchanged
 m.accelMassFilteredAttack = 0.99;
-m.accelMassFilteredDecay = 0.6;
+m.accelMassFilteredDecay = 0.8;
+m.rrateMassFilteredAttack = 0.7;
+m.rrateMassFilteredDecay = 0.3;
+m.gyroFilteredAttack = 0.7;
+m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 SynthDef(\dulcimerVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
@@ -126,11 +133,11 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 			\ex, Pkey(\sx),
 			\sy, Pfunc({ |e| ((e[\note] ? 0) + (e[\root] ? 0)).linlin(-4, 14, 0.6, -0.6) }),
 			\ey, Pkey(\sy).neg,
-			\startSize, Pkey(\amp) * 490,
-			\endSize, Pkey(\amp) * 90,
+			\startSize, Pkey(\amp) * 990,
+			\endSize, Pkey(\amp) * 990,
 			\startColor, Color.new(1.0, 0.0, 0.0, 0.9),
 			\endColor, Color.new(0.0, 1.0, 0.0, 0.0),
-			\startWidth, Pfunc({ |e| ((e[\amp] ? 0.2) * 22) + 1 }),
+			\startWidth, Pfunc({ |e| ((e[\amp] ? 0.2) * 802) + 1 }),
 			\endWidth, 0.4,
 			\duration, Pkey(\dur) * 6,
 			// \func, Pfunc({ |e| ~onEvent.(e) }),
@@ -190,9 +197,9 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var idx = m.accelMassFiltered.lincurve(0, 0.3 * sens, 0, divs.size - 1, 2).round.asInteger.clip(0, divs.size - 1);
-	var amp = m.accelMassFiltered.lincurve(0, 0.3 * sens, -40, -10, -2);
+	var amp = m.accelMassFiltered.lincurve(0, 0.3 * sens, -30, -10, -2);
 
-	if(amp < 39.neg, { amp = 120.neg});
+	if(amp < 25.neg, { amp = 140.neg});
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);

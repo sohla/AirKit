@@ -55,7 +55,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 		var dullest = mod[\dullest] ? 0.3;
 		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-		var loud = m.accelMassFiltered.lincurve(0.0, 0.8 * sens, -50, -5, -2).linlin(-50, -5, 0, 1) * vol;
+		var loud = m.accelMassFiltered.lincurve(0.0, 0.8 * sens, -50, -5, -2).linlin(-50, -5, 0, 1) * vol * 0.1;
 		var freq = (d.sensors.gyroEvent.y / pi.half).linexp(-1.0, 1.0, 80, 130);
 		var detune = m.rrateMassFiltered.lincurve(0.0, 1.2, 0.10, 0.45, -1);
 		var cutoff = m.accelMassFiltered.linexp(0.0, 2.0, 700, 9000);
@@ -132,7 +132,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
  
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var amp    = m.accelMassFiltered.lincurve(0.0, 0.8 * sens, -50, -5, -2);
-	var freq   = (d.sensors.gyroEvent.y / pi.half).linexp(-1.0, 1.0, 80, 130);
+	var freq   = (d.sensors.gyroEvent.y / pi.half).linexp(-1.0, 1.0, 60, 90);
 	var detune = m.rrateMassFiltered.lincurve(0.0, 1.2, 0.10, 0.45, -1);
 	var cutoff = m.accelMassFiltered.linexp(0.0, 2.0, 700, 9000);
 

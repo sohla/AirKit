@@ -79,7 +79,7 @@ SynthDef(\bufGrainN, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 		sx: -1, ex: 1, sy: -1, ey: -1,
 		startSize: 1100, endSize: 1100,
 		startWidth: 1, endWidth: 1,
-		startColor: Color.new(1.0, 0.78, 0.28, 0.32),
+		startColor: Color.new(0.5, 0.78, 0.28, 0.32),
 		endColor: Color.new(1.0, 0.78, 0.28, 0.32),
 		numPoints: 40, fill: true, closed: true,
 		duration: inf,

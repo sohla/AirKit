@@ -1,6 +1,6 @@
 var m = ~model;
 var bi = 0;
-var dur = 0.1;
+var dur = 0.12;
 var buffers;
 var lastTime = 0;
 
@@ -35,6 +35,7 @@ SynthDef(\drumkit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 ~init = ~init <> {
 
 	var folder  = PathName("~/Downloads/openLabSamples/kit");
+	m.com.bgColor = Color.grey(0.2);
 
 	postf("loading samples : % \n", folder);
 
@@ -63,13 +64,13 @@ SynthDef(\drumkit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 			\args, #[],
 
   		\type, \customVisualEvent,
-			\shape, \square,
+			\shape, \circle,
 			\sx, Pwhite(-0.02,0.02),
 			\sy, Pwhite(-0.02,0.02),
 			\ex, 0,
 			\ey, 0,
 			\rotation, pi / Pwhite(1.7,2.3),
-			\fill, true,
+			\fill, false,
 			\endWidth, 0.1,
       \duration, 0.3,
 		)

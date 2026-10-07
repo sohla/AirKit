@@ -42,6 +42,8 @@ SynthDef(\dropletVerb, {
 //------------------------------------------------------------
 ~init = ~init <> {
 	group = Group.new;
+	m.com.bgColor = Color.black(0.3);
+
 
 	~vdef.(\bead, { |ev, c|
 		var mod = ev[\modulation] ? ();
@@ -98,36 +100,38 @@ SynthDef(\dropletVerb, {
 			\type, \customVisualEvent,
 			\shape, \bead,
 			\numPoints, 72,
-			\fill, Pfunc({ |e| e[\step] == 0 }),
+			\fill, true,//Pfunc({ |e| e[\step] == 0 }),
 			\rim, Pfunc({ |e| ((e[\step] ? 0) / (e[\div] ? 1) * 4 + 0.5).wrap(0, 4) }),
-			\sx, Pfunc({ |e| var f = e[\rim].frac; [f * 2 - 1, 1, 1 - (f * 2), -1][e[\rim].floor.asInteger] * 0.86 }),
-			\sy, Pfunc({ |e| var f = e[\rim].frac; [-1, f * 2 - 1, 1, 1 - (f * 2)][e[\rim].floor.asInteger] * 0.86 }),
+			\sx, Pfunc({ |e| var f = e[\rim].frac; [f * 2 - 1, 1, 1 - (f * 2), -1][e[\rim].floor.asInteger] * 0.56 }),
+			\sy, Pfunc({ |e| var f = e[\rim].frac; [-1, f * 2 - 1, 1, 1 - (f * 2)][e[\rim].floor.asInteger] * 0.16 }),
 			\ex, Pfunc({ |e| e[\sx] * (e[\decay] ? 0.3).explin(0.05, 1.9, 0.9, 0.35) }),
 			\ey, Pfunc({ |e| e[\sy] * (e[\decay] ? 0.3).explin(0.05, 1.9, 0.9, 0.35) }),
 			\xEnv, Pfunc({ Env([0, 1], [1], 3) }),
 			\yEnv, Pfunc({ Env([0, 1], [1], 3) }),
-			\rotation, Pfunc({ |e| (e[\rim].floor + 1) * 0.5pi }),
-			\startSize, Pfunc({ |e| (e.use { ~freq.value }).explin(120, 1800, 150, 26) }),
+			\rotation, Pfunc({ |e| (e[\rim].floor + 1) * 0.5pi * 0.3}),
+			\startSize, Pfunc({ |e| (e.use { ~freq.value }).explin(120, 1800, 250, 26) }),
 			\endSize, Pfunc({ |e| e[\startSize] * 0.35 }),
 			\sizeEnv, Pfunc({ Env([0, 1], [1], -4) }),
 			\startWidth, Pfunc({ |e| (e[\filterRQ] ? 1) * 4 }),
 			\endWidth, 0.5,
-			\startColor, Pfunc({ |e|
-				var f = e.use { ~freq.value };
-				var fc = e[\filterFreq] ? 1500;
-				var band = 1 / (1 + (((f / fc) - (fc / f)).squared / (e[\filterRQ] ? 1).squared)).sqrt;
-				var lit = (e[\amp] ? 0.1).explin(0.003, 0.5, 0, 0.95) * band.linlin(0, 1, 0.35, 1);
-				if(e[\step] == 0, {
-					Color.new(1.0, 0.18, 0.62, lit)
-				}, {
-					Color.hsv(fc.explin(180, 4000, 0.56, 0.49), fc.explin(180, 4000, 0.95, 0.25), 1.0, lit)
-				})
-			}),
+			\startColor, Color.red,
+
+			// \startColor, Pfunc({ |e|
+			// 	var f = e.use { ~freq.value };
+			// 	var fc = e[\filterFreq] ? 1500;
+			// 	var band = 1 / (1 + (((f / fc) - (fc / f)).squared / (e[\filterRQ] ? 1).squared)).sqrt;
+			// 	var lit = (e[\amp] ? 0.1).explin(0.003, 0.5, 0, 0.95) * band.linlin(0, 1, 0.35, 1);
+			// 	if(e[\step] == 0, {
+			// 		Color.new(1.0, 0.18, 0.62, lit)
+			// 	}, {
+			// 		Color.hsv(fc.explin(180, 4000, 0.56, 0.49), fc.explin(180, 4000, 0.95, 0.25), 1.0, lit)
+			// 	})
+			// }),
 			\endColor, Pfunc({ |e| e[\startColor].copy.alpha_(0) }),
 			\colorEnv, Pfunc({ Env([0, 1], [1], -4) }),
-			\duration, Pfunc({ |e| (e[\attack] ? 0.001) + (e[\decay] ? 0.3) }),
+			\duration, Pfunc({ |e| (e[\attack] ? 0.001) + (e[\decay] ? 0.3) * 4 }),
 			\modulation, Pfunc({ |e| (
-				wobble: e[\wobble] ? 10, depth: 0.2, maxLobes: 24, breathe: 6, taper: 1.4, amp: 0
+				wobble: e[\wobble] ? 10, depth: 0.2, maxLobes: 4, breathe: 6, taper: 1.4, amp: 0
 			) })
 		);
 	);

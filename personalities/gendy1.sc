@@ -45,6 +45,9 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 //------------------------------------------------------------
 ~init = ~init <> {|d|
 
+	m.com.bgColor = Color.green(0.2);
+
+
 	~vdef.(\scope, { |ev, c|
 		var mod = ev[\modulation] ? ();
 		var n = ev[\numPoints] ? 96;
@@ -63,7 +66,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 		var dt = (now - lastNow).clip(0, 0.25);
 		var a = c[\posStart];
 		var b = c[\posEnd];
-		var height = c[\size] * loud;
+		var height = c[\size] * loud * 0.2;
 		var wave = { |v, x|
 			var ends = segEnds[v];
 			var j = ends.indexOfGreaterThan(x) ? 11;
@@ -99,7 +102,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 		dur: 0.01,
 		viewID: d.port,
 		shape: \scope,
-		numPoints: 96,
+		numPoints: 16,
 		closed: false,
 		fill: false,
 		sx: -1, sy: 0,
@@ -135,7 +138,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
  
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var amp    = m.accelMassFiltered.lincurve(0.0, 1.0 * sens, -50, -5, -2);
-	var freq   = (d.sensors.gyroEvent.y / pi.half).linexp(-1.0, 1.0, 20, 90);
+	var freq   = (d.sensors.gyroEvent.y / pi.half).linexp(-1.0, 1.0, 10, 50);
 	var detune = m.rrateMassFiltered.lincurve(0.0, 1.2, 0.10, 0.45, -1);
 	var cutoff = m.accelMassFiltered.linexp(0.0, 2.0, 700, 9000);
 

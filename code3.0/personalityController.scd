@@ -56,6 +56,7 @@ var com = (
     \dur: 1,
     \accelMass: 0,
     \rrateMass: 0,
+    \bgColor: Color.black,
 );
 
 //------------------------------------------------------------
@@ -271,6 +272,9 @@ var interpretPersonality = {|d|
             history - input
         };
     };
+
+    // the canvases read their ground from the same com the personalities write
+    if(visuals.notNil, { visuals.com = com });
 
     env
 };

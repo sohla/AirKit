@@ -45,6 +45,7 @@ SynthDef(\multiBeatKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 	var folder = PathName(kitFolder);
 
 	group = Group.new;
+m.com.bgColor = Color.yellow(0.5);
 
 	postf("loading samples : % \n", kitFolder);
 
@@ -95,15 +96,17 @@ SynthDef(\multiBeatKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 			\sy, Pfunc({ |e| e[\pick].linlin(0, (buffers.size - 1).max(1), 0.65, -0.65) }),
 			\ey, Pkey(\sy),
 			\rotation, Pfunc({ |e| e[\rate].abs.log2 * 0.25 }),
-			\startSize, Pkey(\amp) * 90 + 10,
-			\endSize, Pkey(\amp) * 20 + 4,
-			\startColor, Pfunc({ |e|
-				Color.hsv(e[\pick] / (buffers.size.max(1)), 1, 1, 0.85)
-			}),
-			\endColor, Pfunc({ |e|
-				Color.hsv(e[\pick] / (buffers.size.max(1)), 1, 0.4, 0.0)
-			}),
-			\startWidth, (Pkey(\amp) * 8) + 1,
+			\startSize, Pkey(\amp) * 200 + 10,
+			\endSize, Pkey(\amp) * 200 + 4,
+			// \startColor, Pfunc({ |e|
+			// 	Color.hsv(e[\pick] / (buffers.size.max(1)), 1, 1, 0.85)
+			// }),
+			// \endColor, Pfunc({ |e|
+			// 	Color.hsv(e[\pick] / (buffers.size.max(1)), 1, 0.4, 0.0)
+			// }),
+			\startColor, Color.black,
+			\endColor, Color.black,
+			\startWidth, (Pkey(\amp) * 18) + 1,
 			\endWidth, 0.3,
 			\duration, Pkey(\dur) * 2.5,
 

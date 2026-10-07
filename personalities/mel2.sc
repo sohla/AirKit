@@ -62,7 +62,7 @@ SynthDef(\pullstretchMonoQm2, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0
 		if(dt > 0, {
 			lastNow = c[\now];
 			sweep = (sweep + (dt * speed * stretchDiv / bufDur)).wrap(0, 1);
-			ampSmooth = ampSmooth + (((amp * vol) - ampSmooth) * (1 - exp(dt.neg / ampLag)));
+			ampSmooth = ampSmooth + (((amp * vol) - ampSmooth) * (1 - exp(dt.neg / ampLag)) * 20);
 		});
 
 		head = sweep.linlin(0, 1, 0, sweepRange).linlin(0, 1, sweepLo, sweepHi) * 2pi;
@@ -97,8 +97,8 @@ SynthDef(\pullstretchMonoQm2, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0
 			startWidth: 34 - (i * 6),
 			endWidth: 34 - (i * 6),
 			rotation: -0.5pi,
-			startColor: col.alpha_(0.9),
-			endColor: col.alpha_(0.9),
+			startColor: col.alpha_(1.0),
+			endColor: col.alpha_(1.0),
 			modulation: (
 				voice: i,
 				ampLag: 1,

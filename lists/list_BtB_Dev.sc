@@ -9,6 +9,9 @@
 		"multiBeat1",
 		"multiBeat4",
 		"multiBeat5",
+				"violin1",
+		"violin2",
+
 		"multiBeatSynth1",
 
 		"nicTwoNote",
@@ -30,6 +33,12 @@
 		"mel2",
 		"mel3",
 		"mel4",
+		"gendy1",
+		"violin1",
+		"gendy3",
+		"violin2",
+
+
 		"mel5",
 
 		"melChair1",
@@ -37,6 +46,7 @@
 		"melChair3",
 		"melChair4",
 		"melChest1",
+		"circusChoir1",
 
 		"miniMoog",
 		"miniDroplet",
@@ -54,12 +64,25 @@
 		"violin2",
 		"gendy1",
 		"gendy3",
+		"nicMouth1",
+
+
+
 		"movingBeast",
 		"bells",
+
+
+		"miniMoog",
+		"miniDroplet",
+		"cymbals1",
+		"cymbals2",
+		"buchlaMetallic",
+
 		"metal1",
 		"pluck1",
 		"droplet",
 		
+
 
 		"trigTrakPattern1",
 		"hollowWood",

@@ -38,9 +38,10 @@ SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=
   Pdef(m.ptn,
     Pbind(
       \instrument, \simple,
-      \octave, Pseq([4,5], inf),
-	  \root, Pseq([0,3,-2,2].stutter(22), inf),
-      \note, Pseq([11,4,7,0,4,7,11,12,11,7,4], inf),
+      \octave, Pseq([3], inf),
+	    \root, m.com.root,//Pseq([0,3,-2,2].stutter(22), inf),
+      // \note, Pseq([11,4,7,0,4,7,11,12,11,7,4], inf),
+      \note, Pseq([0,7,9,2] + 2, inf),
       \attack,0.1,
       \decay, 0.1,
       \sustain,0.1,
@@ -97,12 +98,12 @@ SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 //   var dur = m.rrateMassFiltered.lincurve(0,0.1,0.4,0.04,-1);
-	var dur = m.accelMassFiltered.lincurve(0,2.5 * sens,4,12,-10).reciprocal;
+	var dur = m.accelMassFiltered.lincurve(0,2.0 * sens,4,12,-10).reciprocal;
 
   Pdef(m.ptn).set(\dur, dur);
   Pdef(m.ptn).set(\amp, vol * 0.2);
   Pdef(m.ptn).set(\viewID, d.port);
- 	if(m.rrateMassFiltered > (0.01 + (0.2 * sens)),{
+ 	if(m.rrateMassFiltered > (0.01 + (0.1 * (1-sens))),{
 		if( Pdef(m.ptn).isPlaying.not,{
 			Pdef(m.ptn).resume(quant:dur);
 		});

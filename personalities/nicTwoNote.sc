@@ -150,11 +150,11 @@ SynthDef(\nicTwoNoteSampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, f
 
 			\type, \customVisualEvent,
 			\shape, \circle,
-			\startSize, 330,
-			\endSize, 600,
+			\startSize, 30,
+			\endSize, 300,
 			\startWidth, 3,
-			\endWidth, 100,
-			\duration, 1.2,
+			\endWidth, 10,
+			\duration, 0.7,
 			\fill, false,
 			\sx, 0,
 			\sy, 0,
@@ -162,6 +162,8 @@ SynthDef(\nicTwoNoteSampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, f
 			\ey, 0,
 			// \startColor, Color.hsv(0.55, 0.85, 1.0, 0.8),
 			// \endColor, Color.hsv(0.55, 0.85, 1.0, 0.0),
+			\startColor, Color.hsv(0.55, 0.85, 1.0, 0.8),
+			\endColor, Color.hsv(0.55, 0.85, 1.0, 0.0),
 
 			// \func, Pfunc({|e| ~onEvent.(e)}),
 			\args, #[]

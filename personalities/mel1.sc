@@ -1,8 +1,8 @@
 var m = ~model;
 var buffer;
 // var notes = [0,1,4,5,7,8,7,5,4,5,4,1,4,1,0,0];
-var notes = [0,4,5,7,9,10,16,17,19];
-
+// var notes = [0,4,5,7,9,10,16,17,19];
+var notes = [0,2,5,-2] + 2;
 m.accelMassFilteredAttack = 0.99;
 m.accelMassFilteredDecay = 0.8;
 m.rrateMassFilteredAttack = 0.99;
@@ -49,13 +49,14 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 
 
 			\type, \customVisualEvent,
-			\shape, \line,
-			\duration, 0.6,
-			\sx, 0.25.neg + Pfunc({|e| e.octave * 0.25}),
+			\shape, \circle,
+			\duration, 3.6,
+			\sx, 1.neg + Pfunc({|e| e.octave * 0.02}),
 			\sy, 1.5 - Pfunc({|e| e.rate * 0.75}),
+			\startSize, 10,
 			\ex, Pkey(\sx),
 			\ey, Pkey(\sy),
-			\startWidth, 100,
+			\startWidth, 80,
 			\endWidth, 30,
 			\rotation, pi.half,
 
@@ -91,7 +92,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 	if(amp < 0.02, {amp = 0});
 
 	Pdef(m.ptn).set(\viewID, d.port);
-	Pdef(m.ptn).set(\startSize, amp * 850);
+	Pdef(m.ptn).set(\startSize, amp * 50);
 	Pdef(m.ptn).set(\endSize, amp * 1.4);
 
 

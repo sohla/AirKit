@@ -70,7 +70,7 @@ SynthDef(\miniMoog, {
 			\numPoints, 64,
 			\fill, true,
 			\duration, Pkey(\release),
-			\sx, 0,
+			\sx, 0.8,
 			\ex, 0.0 - (Pkey(\release) * 0.5),
 			\sy, (Pkey(\note) + (Pkey(\octave) * 12)).linlin(36, 69, 0.55, -0.55),
 			\ey, (Pkey(\note) + (Pkey(\octave) * 12)).linlin(36, 69, 0.55, -0.55),

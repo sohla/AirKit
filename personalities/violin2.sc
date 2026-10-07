@@ -179,13 +179,13 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, 
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var amp = m.accelMass.linlin(0, 1 * sens,0.00001,1);
-	var speed= m.accelMassFiltered.lincurve(0.1, 1 * sens,0.01,2,-2);
+	var speed= m.accelMassFiltered.lincurve(0.1, 1 * sens,0.001,0.1,-2);
 	var rate = m.gyroYFiltered.linlin(-1,1,1,2).asInteger;
 	var pan = m.gyroZFiltered.linlin(-1,1,-1,1);
 
 	if(amp < 0.01, {amp = 0});
 
-	synth.set(\rate, rate);
+	synth.set(\rate, rate/2);
 	synth.set(\speed, speed);
 	synth.set(\amp, amp * 12 * vol);
 	synth.set(\pan, pan);

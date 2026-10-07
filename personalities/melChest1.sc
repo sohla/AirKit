@@ -111,12 +111,12 @@ SynthDef(\treeWind, { |out, frq=111, gate=0, amp = 0, pchx=0|
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var a = m.accelMass * 1;
 	var f = 50 + (m.accelMassFiltered * 100);
-	var pchs = [0,2,4,5,7,9,10,12] - 7;
+	var pchs = [0,2,4,5,7,9,10,12] - 7 + 12;
 	var i = (d.sensors.gyroEvent.x.abs / pi).lincurve(0.0,1.0,0.0, pchs.size);
 	// pchs[i.floor].postln;
 	if(a<0.02,{a=0});
 	if(a>0.9,{a=0.9});
-	synth.set(\amp, a * 1 * vol);
+	synth.set(\amp, a * 10 * vol);
 	synth.set(\pchx,pchs[i.floor]);
   // synth.set(\pchx, m.com.root);
 };

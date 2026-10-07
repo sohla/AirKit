@@ -168,8 +168,13 @@ Three things to know about that table:
   vdef receives per-note data — see the tightness rule in §C.
 - **`\envelope` and `\alphaEnv` are dead.** They are carried into the event
   but never read by `drawCanvas`. Setting them does nothing.
-- **`\bgColor` is deliberately ignored.** Canvas grounds are fixed black, set
-  once in `makeCanvas`.
+- **`\bgColor` on an event is deliberately ignored.** The ground is shared by
+  every device on a canvas, so it is not per-event. Set it on the model
+  instead — `m.com.bgColor = Color(...)`, usually in `~init`. `m.com` is shared
+  by every personality, so the last one to set it wins, and it stays set
+  until someone changes it (a personality that wants black must set black).
+  Every canvas follows it within 0.1s (`core.ground`, applied by the cull
+  routine in `visualCore.scd`).
 
 ### What the core does for you
 
@@ -547,8 +552,9 @@ there before designing a mark.
   fill. `bongo1` leaves its five rests as gaps in the ring, and that is the
   piece.
 - **Derive the palette from a substrate** (atlas §0.5), not from UI defaults.
-  Canvas grounds are fixed black, so the phosphor/ANS and saturated-primary
-  rows work; ink-on-vellum and graph-paper do not.
+  Grounds are black unless a personality sets `m.com.bgColor`. On black the
+  phosphor/ANS and saturated-primary rows work; a light ground opens up
+  ink-on-vellum and graph-paper, but it is shared by every device on the canvas.
 
 ### Comments: the code tells the story
 

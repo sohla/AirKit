@@ -4,8 +4,6 @@ var buffer;
 var grainWindow = 0.3;
 var grainOverlaps = 8;
 var grainRand = 0.3;
-var compThresh = 0.01;
-var compSlope = 0.1;
 var ampSmooth = 0;
 var lastNow = 0;
 
@@ -52,6 +50,7 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 		var halfWidth = mod[\halfWidth] ? 16;
 		var twin = mod[\twin] ? 0.25;
 		var ampLag = mod[\ampLag] ? 0.1;
+		var floor = mod[\floor] ? 0.05;
 		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 		var amp = m.accelMassFiltered.linlin(0, 0.6 * sens, 0, 1);
@@ -65,30 +64,27 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 		var a = c[\posStart];
 		var b = c[\posEnd];
 		var dt = (c[\now] - lastNow).clip(0, 0.25);
-		var squash, bar;
+		var level, bar;
 
-		if(amp < 0.01, { amp = 0 });
+		if(amp < floor, { amp = 0 });
 		if(dt > 0, {
 			lastNow = c[\now];
 			ampSmooth = ampSmooth + (((amp * vol) - ampSmooth) * (1 - exp(dt.neg / ampLag)));
 		});
-		squash = if(ampSmooth > compThresh, {
-			compThresh * ((ampSmooth / compThresh) ** compSlope)
-		},{
-			ampSmooth
-		}) / (compThresh * (compThresh.reciprocal ** compSlope));
+		if(amp == 0, { ampSmooth = 0 });
+		level = ampSmooth.clip(0, 1);
 
 		bar = { |voice, edge, reach, alpha|
 			var travel = phase * window * rate * (voice + 1) / bufDur;
 			var x = a.x.blend(b.x, (start + travel).wrap(0, 1));
-			var tip = edge + (reach * hann * squash);
-			if(hann * squash > 0.01, {
+			var tip = edge + (reach * hann * level);
+			if(hann * level > 0.01, {
 				c[\render].([
 					(x - halfWidth) @ edge,
 					(x + halfWidth) @ edge,
 					(x + halfWidth) @ tip,
 					(x - halfWidth) @ tip
-				], 1, alpha, true);
+				], 1, alpha * level.sqrt, true);
 			});
 		};
 		bar.(0, a.y, c[\size].neg, 1);
@@ -105,25 +101,30 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 			viewID: d.port,
 			shape: \mouthGrain,
 			duration: inf,
-			fill: true,
+			fill: false,
 			closed: true,
 			sx: -1, sy: 1, ex: 1, ey: -1,
-			startSize: 260,
-			endSize: 260,
-			startWidth: 1,
+			startSize: 1860,
+			endSize: 860,
+			startWidth: 3,
 			endWidth: 1,
-			startColor: col.alpha_(0.85),
-			endColor: col.alpha_(0.85),
+			// startColor: col.alpha_(0.85),
+			// endColor: col.alpha_(0.85),
+			startColor: Color.black,
+			endColor: Color.black,
 			modulation: (
 				slot: i,
-				stretch: 1 + grainRand.rand2,
-				halfWidth: 16,
-				twin: 0.25,
+				stretch: 1 ,
+				halfWidth: 10,
+				twin: 0.85,
 				ampLag: 0.1,
+				floor: 0.05,
 				amp: 0
 			)
 		).play;
 	};
+	m.com.bgColor = Color.red(1);
+
 };
 
 //------------------------------------------------------------
@@ -138,7 +139,7 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var amp = m.accelMassFiltered.linlin(0, 0.6 * sens,0.00001,1);
+	var amp = m.accelMassFiltered.linlin(0, 2.5 * sens,0.00001,1);
 	var rate =  m.gyroYFiltered.lincurve(-1.0,1.0,0.1,2.0,0);
 	var start = m.gyroZFiltered.lincurve(-1.0,1.0,0.0,1.0,0);
 
@@ -146,7 +147,7 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 
 	synth.set(\start, start);
 	synth.set(\rate, rate);
-	synth.set(\amp, amp * 3s0 * vol);
+	synth.set(\amp, amp * 20 * vol);
 
 };
 //------------------------------------------------------------

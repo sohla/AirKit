@@ -99,13 +99,16 @@ SynthDef(\harpsiVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 			\legato, 1.6,
 			\pan, Pwhite(-0.25, 0.25),
 
-			\shape, \triangle,
+			
+			\shape, \square,
+			\startColor, Color.black,
+			\endColor, Color.black,
 			\fill, false,
 			\sx, Pwhite(-0.05, 0.05),
 			\sy, Pwhite(-0.05, 0.05),
 			\ex, Pkey(\sx),
 			\ey, Pkey(\sy),
-			\duration, 2.1,
+			\duration, 1.1,
 
 			\args, #[],
 		);
@@ -174,8 +177,8 @@ SynthDef(\harpsiVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 	Pdef(m.ptn).set(\startSize, 20 + (amp * 160));
 	Pdef(m.ptn).set(\endSize, 90 + (amp * 500));
 	Pdef(m.ptn).set(\startWidth, 2 + (amp * 14));
-	Pdef(m.ptn).set(\startColor, Color.hsv(hue, 0.85, 1.0, 0.8));
-	Pdef(m.ptn).set(\endColor, Color.hsv(hue, 0.85, 0.35, 0.0));
+	// Pdef(m.ptn).set(\startColor, Color.hsv(hue, 0.85, 1.0, 0.8));
+	// Pdef(m.ptn).set(\endColor, Color.hsv(hue, 0.85, 0.35, 0.0));
 
 	if(m.accelMassFiltered > 0.02, {
 		if(Pdef(m.ptn).isPlaying.not, {

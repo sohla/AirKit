@@ -127,7 +127,8 @@ SynthDef(\multiBeatSampler, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, p
 
 			\shape, \bar,
 			\fill, true,
-			\sx, (Pkey(\step) / Pkey(\div) * 1.5) - 0.75,
+			// \sx, (Pkey(\step) / Pkey(\div) * 1.5) - 0.75,
+			\sx,0,
 			\ex, Pkey(\sx),
 			\sy, Pfunc({ |e|
 				(e[\note] + (e[\root] ? 0) + (12 * (e[\octave] ? 5)))
@@ -135,17 +136,20 @@ SynthDef(\multiBeatSampler, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, p
 			}),
 			\ey, Pkey(\sy),
 			\rotation, Pfunc({ |e| (e[\ptch] ? 1).log2 * 2 }),
-			\startSize, Pkey(\dur) * 380,
-			\endSize, Pkey(\dur) * 380,
-			\startWidth, (Pkey(\amp) * 22) + 3,
-			\endWidth, 1,
-			\startColor, Pfunc({ |e|
-				Color.hsv(((e[\octave] ? 5) - 4).linlin(0, 2, 0.055, 0.15), 0.85, 1.0, 0.9)
-			}),
-			\endColor, Pfunc({ |e|
-				Color.hsv(((e[\octave] ? 5) - 4).linlin(0, 2, 0.055, 0.15), 1.0, 0.35, 0.0)
-			}),
-			\duration, (Pkey(\dur) * 4) + 0.2,
+			\startSize, Pkey(\dur) * 800 * Pkey(\amp),
+			\endSize, Pkey(\dur) * 280,
+			\startWidth, (Pkey(\amp) * 202) + 3,
+			\endWidth, 30,
+			// \startColor, Pfunc({ |e|
+			// 	Color.hsv(((e[\octave] ? 5) - 4).linlin(0, 2, 0.055, 0.15), 0.85, 1.0, 0.9)
+			// }),
+			// \endColor, Pfunc({ |e|
+			// 	Color.hsv(((e[\octave] ? 5) - 4).linlin(0, 2, 0.055, 0.15), 1.0, 0.35, 0.0)
+			// }),
+			\startColor, Color.black,
+			\endColor, Color.black,
+
+			\duration, (Pkey(\dur) * 0.2) + 0.2,
 			\modulation, Pfunc({ |e| (lane: 15, ghost: 0.3, amp: 0) }),
 		);
 	);
@@ -190,12 +194,12 @@ SynthDef(\multiBeatSampler, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, p
 	var e = m.accelMassFiltered;
 	var idx = e.lincurve(0, 1.5 * sens, 0, divs.size - 1, 1)
 		.round.asInteger.clip(0, divs.size - 1);
-	var amp = e.lincurve(0, 0.4 * sens, -41, -10, -1);
+	var amp = e.lincurve(0, 0.4 * sens, -20, -10, -1);
 	var oct = (d.sensors.gyroEvent.y / pi.half).lincurve(-1, 1, 4, 6, 1).asInteger;
 	var ptch = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.94, 1.06);
 	var panBias = (d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, -0.5, 0.5);
 
-	if(amp < 40.neg, { amp = 90.neg });
+	if(amp < 19.neg, { amp = 90.neg });
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);

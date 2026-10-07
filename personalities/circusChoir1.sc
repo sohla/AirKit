@@ -89,7 +89,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 	var octave = m.gyroYFiltered.lincurve(-1.0,1.0,2,4,0).asInteger;
 	var bal = m.gyroYFiltered.lincurve(-1.0,1.0,1,1,0).asInteger;
 	var roots = [-2,0,3];
-	var ri = ((m.gyroYFiltered.fold(-0.5,0.5) * 2)).linlin(-1.0,1.0,0,roots.size,-1).asInteger;
+	var ri = ((m.gyroYFiltered.fold(-0.5,0.5) * 2)).linlin(-0.1,0.1,0,roots.size,-1).asInteger;
 
 	if(amp < 0.02, {amp = 0});
 
@@ -101,7 +101,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 	Pdef(m.ptn).set(\range, range);
 	Pdef(m.ptn).set(\octave, 3);
 
-	Pdef(m.ptn).set(\root, 0);
+	Pdef(m.ptn).set(\root, 2);
 
 };
 
