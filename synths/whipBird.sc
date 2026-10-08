@@ -48,7 +48,7 @@ SynthDef(\whipbird, {
     // Rising whistle with more character
     whistleOsc = SinOsc.ar(
         freq: Env(
-			[2000, 2000, 4000, 3800] * pitchRand,
+			1000 + [2000, 2000, 4000, 3800] * pitchRand,
             [swoopDelay, 0.15, 0.15],
             [\step, \sine, -3]
         ).kr
@@ -102,7 +102,7 @@ Pbindef(\whipPattern).play;
 Pbindef(\whipPattern).stop;
 
 // For a single test:
-Synth(\whipbird, [\amp, 0.9, \swoopDelay, 0.01, \gliss, 0.15, \pitchRand, 0.6.rrand(0.9),\reverbMix, 0.3, \gate,1]);
+Synth(\whipbird, [\amp, 0.9, \swoopDelay, 0.5, \gliss, 0.34, \pitchRand, 0.6.rrand(0.8),\reverbMix, 0.3, \gate,1]);
 s.meter
 
 

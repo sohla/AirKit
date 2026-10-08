@@ -126,8 +126,8 @@ SynthDef(\houseflyWing, { |out=0|
 	sig = (sig - OnePole.ar(sig, exp(-2pi * (700 * SampleDur.ir)))).dup * 0.05;
 	Out.ar(out, sig);
 }).add;
-x = Synth(\houseflyWing);
 )
+x = Synth(\houseflyWing);
 
 
 
@@ -144,8 +144,8 @@ SynthDef(\buzzingHousefly, {
 	resonanceMod = OnePole.ar(WhiteNoise.ar, exp(-2pi * (5 * SampleDur.ir)));
 	resonanceMod = OnePole.ar(resonanceMod, exp(-2pi * (5 * SampleDur.ir)));
 
-	Out.ar(10, [beatingFreq, (resonanceMod * 3) + beatingFreq]);
-	Out.ar(20, (resonanceMod * 40 + 5)!2 );
+	Out.ar(0, [beatingFreq, (resonanceMod * 3) + beatingFreq]);
+	Out.ar(0, (resonanceMod * 40 + 5)!2 );
 }).add;
 y = Synth(\buzzingHousefly);
 )

@@ -67,7 +67,7 @@ SynthDef(\funMelody, {
 
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\filtFreq, m.accelMassFiltered.linexp(0,1.5,180,800));
-	Pdef(m.ptn).set(\amp, amp*0.7));
+	Pdef(m.ptn).set(\amp, amp*0.7);
 	Pdef(m.ptn).set(\octave,oct);
 	Pdef(m.ptn).set(\envRel,envRel);
 

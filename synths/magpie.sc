@@ -36,10 +36,10 @@ SynthDef(\magpie, {
 (
 Pbindef(\magpiePattern,
     \instrument, \magpie,
-    \dur, 1,
+    \dur, 0.2,
     \freq, Pexprand(740, 900, inf),
     \amp, Pexprand(0.05, 0.15, inf),  // Random amplitude
     \pan, Pwhite(-1.0, 1.0, inf),    // Random panning
-	\chirpRate, 0.1
+	\chirpRate, 0.9
 ).play;
 )
