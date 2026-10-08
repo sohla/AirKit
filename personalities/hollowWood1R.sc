@@ -115,7 +115,7 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 		nil
 	});
 
-	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -17,
+	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -37,
 		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.001], group);
 
 	OSCdef(hitKey, { |msg|

@@ -42,7 +42,8 @@
 
 		"trigTrakPattern1",
 		"hollowWood",
-		"hollowWood1b",
+		"hollowWood1L",
+		"hollowWood1R",
 		"hollowWood3",
 		"alonPerc1",
 		"temp_input7",

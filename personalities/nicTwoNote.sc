@@ -55,7 +55,7 @@ var folder = PathName("~/Downloads/nicSamples/twoNote");
 
 var cellBase = 63;					
 var cell = [2,0,-2,-12,-24] - 3 + 12;
-var octaves = [0,-1];			
+var octaves = [-2,-1,0,1];			
 
 
 //------------------------------------------------------------
@@ -69,13 +69,13 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 SynthDef(\nicTwoNoteSampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, freq=440,
-	attack=0.01, decay=0.1, sustain=0.3, release=1.2, gate=1|
+	attack=0.01, decay=0.1, sustain=0.3, release=3.2, gate=1|
 	var lr = rate * BufRateScale.kr(bufnum);
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate,doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum, rate: [lr, lr * 1.0017], startPos: start * BufFrames.kr(bufnum), loop: 0);
 	var penv = EnvGen.kr(Env.new([0, 2], [0.27], '\hold'), gate);
 	var li = LocalIn.ar(2);
-	var tone = LFTri.ar((freq.cpsmidi+penv).midicps + 0.5, 0, 0.1) + li;
+	var tone = LFTri.ar((freq.cpsmidi+penv).midicps + 1.5, 0, 0.1) + li;
 	var fil = RLPF.ar(sig, freq, 0.1) + tone; 
 	var verb = FreeVerb.ar(fil + sig, mix: 0.4, room: 0.9, damp: 0.2);
 	LocalOut.ar(PitchShift.ar(verb,0.3,7.midiratio,0,0.3,1));
@@ -146,7 +146,7 @@ SynthDef(\nicTwoNoteSampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, f
 			\attack, 0.02,
 			\decay, 0.1,
 			\sustain, 0.01,
-			\release, 1.8,
+			// \release, 1.8,
 
 			\type, \customVisualEvent,
 			\shape, \circle,
@@ -212,9 +212,11 @@ SynthDef(\nicTwoNoteSampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, f
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var move = m.accelMassFiltered.lincurve(0, 2 * sens, 1, cell.size, 1);
 	var amp = m.accelMassFiltered.lincurve(0, 2 * sens, -60, -6, -1);
-	var step = m.gyroXFiltered.linlin(-0.8, 0.8, 0, octaves.size - 0.001).floor;
+	var step = m.gyroXFiltered.fold(-0.5,0.5).linlin(-0.5, 0.5, 0, octaves.size-1).floor;
+	var rel = m.accelMassFiltered.lincurve(0, 3 * sens, 9.1, 0.4, -2);
+
 	var start = m.accelMassFiltered.lincurve(0, 2 * sens, 0.0, 0.1,0);
-	var dur = m.accelMassFiltered.lincurve(0, 3 * sens, 0.4, 0.1,0);
+	var dur = m.accelMassFiltered.lincurve(0, 3 * sens, 0.6, 0.1,-2);
 
 	if(amp < -58, { amp = -90; });
 
@@ -223,6 +225,7 @@ SynthDef(\nicTwoNoteSampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, f
 	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\octave, octaves[step.asInteger]);
 	Pdef(m.ptn).set(\start, start);
+	Pdef(m.ptn).set(\release, rel);
 	
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\startColor, Color.hsv(0.55, 0.85, 1.0, amp.linlin(-60, 1, 0.0, 0.8)));
@@ -243,5 +246,5 @@ SynthDef(\nicTwoNoteSampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, f
 ~plotMin = -1;
 ~plotMax = 1;
 ~plot = { |d,p|
-	[m.accelMassFiltered.linlin(0, 2, 0, 1), (d.sensors.gyroEvent.x / pi)];
+	[m.accelMassFiltered.linlin(0, 2, 0, 1), m.gyroXFiltered.fold(-0.5,0.5).linlin(-0.5, 0.5, 0, 1)];
 };

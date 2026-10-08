@@ -6,7 +6,7 @@ var samplePath = "~/Downloads/nicSamples/bb/nic_18.wav";
 
 var beat = 2.0;
 
-var lowDivs = [4, 4, 8];
+var lowDivs = [2, 4, 8];
 var lowLines = [
 	[ 0, nil, nil, nil ],
 	[ 0, nil, nil,   7 ],
