@@ -153,6 +153,7 @@ SynthDef(\harpsiVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 	};
 };
 
+
 //------------------------------------------------------------
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
@@ -164,6 +165,7 @@ SynthDef(\harpsiVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 	var hue = chordIdx / chordPool.size;
 	var dur = m.accelMassFiltered.lincurve(0, 1.6 * sens, 0.4, 0.1, -1);
 
+	m.com.chord = chordIdx;
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\chordIdx, chordIdx);
