@@ -205,7 +205,6 @@ SynthDef(\dropletVerb, {
   Pdef(m.ptn).set(\wobble, side);
   Pdef(m.ptn).set(\decay, dcy);
   Pdef(m.ptn).set(\reverbRoom, verb);
-  if (verbSynth.notNil) { verbSynth.set(\room, verb) };
 
   // Pdef(m.ptn).set(\startSize, amp.linlin(0, 1, 45, 200));
 

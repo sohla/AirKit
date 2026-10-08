@@ -9,13 +9,15 @@ instruments: [Template]
 
 var m = ~model;
 var group;
+var fxBus;
+var verbSynth;
 var samplesLib;
 
 var eventTypeName = (\customEvent_ ++ m.ptn).asSymbol;
 
 var folder = PathName("~/Downloads/cotf_samples/chronicPiano");
 
-var scale = [0,4,7,11];
+var scale = [0,9,4,11,19,14,28,24];
 var octaves = [3, 4, 5, 6];
 
 //------------------------------------------------------------
@@ -44,6 +46,15 @@ SynthDef(\pianoVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 		rate: rate * BufRateScale.kr(bufnum),
 		startPos: start * BufFrames.kr(bufnum), loop: 0);
 	Out.ar(out, Balance2.ar(sig[0], sig[1], pan, amp * env));
+}).add;
+
+SynthDef(\pianoVerb, {
+    |in=0, out=0, mix=0.3, room=2.83, damp=0.2, amp=1, gate=1, release=0.5|
+	var sig = In.ar(in, 2);
+	var env = EnvGen.kr(Env.asr(0.01, 1, release), gate, doneAction: 2);
+	sig = FreeVerb2.ar(sig[0], sig[1], mix, room.clip(0, 0.95), damp);
+	sig = LeakDC.ar(sig);
+	Out.ar(out, sig * env * amp);
 }).add;
 
 //------------------------------------------------------------
@@ -103,7 +114,10 @@ SynthDef(\pianoVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 	});
 
 	group = Group.new;
+	fxBus = Bus.audio(s, 2);
+	verbSynth = Synth.tail(group, \pianoVerb, [\in, fxBus, \out, 0]);
 
+	
 	// The zero line, held for the life of the personality, so the shift
 	// axis has something to be read against.
 	(
@@ -123,10 +137,11 @@ SynthDef(\pianoVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 		Pbind(
 			\instrument, \pianoVoice,
 			\group, group,
+			\out, fxBus,
 			\type, eventTypeName,
 
 			\note, Pseq(scale, inf),
-			\octave, Pseq(octaves.stutter(scale.size), inf),
+			// \octave, Pseq(octaves.stutter(scale.size), inf),
 			// \root, 0,
 			// \dur, 0.2,
 			\legato, 1.6,
@@ -152,6 +167,8 @@ SynthDef(\pianoVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
 	Pdef(m.ptn).remove;
+	if (verbSynth.notNil) { verbSynth.set(\gate, 0) };
+
 	Event.eventTypes.removeAt(eventTypeName);
 
 	fork {
@@ -160,6 +177,7 @@ SynthDef(\pianoVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 			s.sync;
 			group.free;
 			group = nil;
+			verbSynth = nil;
 		};
 		if (samplesLib.notNil) {
 			samplesLib.do({ |sample|
@@ -179,7 +197,9 @@ SynthDef(\pianoVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var amp = m.accelMassFiltered.lincurve(0, 0.2 * sens, -34, -6, -1);
-	var dur = m.accelMassFiltered.lincurve(0, 1.0 * sens, 0.5, 0.05, -1);
+	var dur = m.accelMassFiltered.lincurve(0, 2.0 * sens, 0.5, 0.05, -1);
+	var oct = (d.sensors.gyroEvent.y / pi.half).linlin(-1, 1, 3, 7).round.asInteger;
+
 
 	if(amp < 29.neg, { amp = 120.neg});
 
@@ -187,6 +207,8 @@ SynthDef(\pianoVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\root, m.com.root ? 0);
+	Pdef(m.ptn).set(\octave, oct);
+
 
 };
 
