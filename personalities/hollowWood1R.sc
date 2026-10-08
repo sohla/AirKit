@@ -14,7 +14,7 @@ var ioiMin = 0.04;
 var ioiMax = 2.0;
 var smooth = 0.99;
 
-var notes = [0, 7, 10, 12, 15,19,24] + 12;
+var notes = [0,7,10,12,19,24,29,36] + 12;
 
 var bodyRatios = [1, 1.34, 2.71];
 var bodyAmps = [0.5, 0.25, 0.12];
@@ -33,7 +33,7 @@ SynthDef(\inputTrigger, { |ratio = 3.0, floorDb = -68,
 	deadtime = 0.01, slowAtk = 0.100, slowRel = 0.150, inGain = 0.7,
 	fullScale = 0.35, curve = 1.5, window = 0.003|
 
-	var in   = SoundIn.ar(0) * inGain;
+	var in   = SoundIn.ar(1) * inGain;
 	var fast = Amplitude.kr(in, 0.001, 0.05);
 	var slow = LagUD.kr(fast, slowAtk, slowRel);
 	var over = fast > ((slow * ratio) + floorDb.dbamp);
@@ -52,17 +52,19 @@ SynthDef(\inputTrigger, { |ratio = 3.0, floorDb = -68,
 
 SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 	decay = 1.5, coef = 0.3, body = 0.6, tone = 4000,
-	gate = 1, rel = 1.5, pan = 0|
+	gate = 1, rel = 1.5, pan = 0, lfoA=1, lfoF=7|
 
 	var fire = Impulse.ar(0);
 	var exc  = LPF.ar(WhiteNoise.ar(1), (tone * vel).clip(200, 18000));
-
-	var plk = Pluck.ar(exc, fire, 0.05, freq.reciprocal.clip(0.0001, 0.05) * 0.5,
+	var lfoe = EnvGen.kr(Env.perc(3,1), gate);	
+	var lfo = SinOsc.kr(lfoF, 0, lfoA.lag(2).linlin(0,1.0,0,0.4).clip(0,0.4) * lfoe, 1);
+	var plk = Pluck.ar(exc, fire, 0.05, freq.reciprocal.clip(0.0001, 0.05) * 0.5 * lfo,
 		decay, coef.clip(0.0, 0.95));
+
 
 	var knock = Decay2.ar(fire, 0.0005, 0.008) * PinkNoise.ar(1);
 	var bod = DynKlank.ar(`[
-		[freq * 1, freq * 1.34, freq * 2.71],
+		[freq * 1, freq * 1.34, freq * 2.71] * lfo,
 		[0.5, 0.25, 0.12],
 		[0.30, 0.18, 0.10] * body
 	], knock);
@@ -113,7 +115,7 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 		nil
 	});
 
-	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
+	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -17,
 		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.001], group);
 
 	OSCdef(hitKey, { |msg|
@@ -124,8 +126,9 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			var now = SystemClock.seconds;
 			var ioi = (now - lastHit).clip(ioiMin, ioiMax);
 			var rate, dec, cf, bod, rt, note;
+			var roll = m.gyroXFiltered.fold(-0.5,0.5).linlin(-0.5,0.5,0.0,1.0);
 			// var ang = (dev.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1);
-			var ang = m.accelMassFiltered.lincurve(0.0, 0.5 * sens, 0.0, 1.0, -1);
+			var ang = m.accelMassFiltered.lincurve(0.0, 0.1 * sens, 0.0, 1.0, -1);
 
 			if (hitCount > 0, {
 				var drift = ((ioi - avgIoi).abs / avgIoi).clip(0.0, 1.0);
@@ -147,18 +150,21 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			cf   = steadiness.linlin(0.0, 1.0, 0.82, 0.25);
 			bod  = rate.linlin(0.5, 12.0, 2.0, 0.8);
 
-			// rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(0.2, 0.9, 0.0, notes.size, 0).asInteger;
+			rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(0.0, 1.0, 0.0, notes.size, 0).asInteger;
 			// rt = rate.linlin(0.5, 12.0, 0.2, notes.size).asInteger;	
 			// rt = rate.linlin(0.5, 15.0, 25, 200);	
-			rt = ang.linlin(0.0, 1.0, 0, notes.size - 1).asInteger;	
+			// (d.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1)
+			// rt = ang.linlin(0.0, 1.0, 0, notes.size - 1).asInteger;	
 			note = notes.clipAt(rt) + 45;
 			Synth(\hollowWood, [
 				\freq, note.midicps,
 				\vel, vel,
 				\amp, 0.5 * ang * vol,
 				\decay, ang * 5,
-				\coef, cf,
+				\coef, cf * roll,
 				\body, ang * 5,
+				\lfoA, ang * 0.1,
+				\lfoF, 7,
 				\rel, ang * 5,
 				\pan, (dev.sensors.gyroEvent.z / pi).clip(-1, 1) * 0.5
 			], group);
@@ -210,18 +216,18 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 				});
 			});
 
-			SystemClock.sched(0.2, {
-			Synth(\hollowWood, [
-				\freq, note.midicps,
-				\vel, vel,
-				\amp, 0.5 * ang * vol,
-				\decay, ang * 5,
-				\coef, cf,
-				\body, ang * 5,
-				\rel, ang * 5,
-				\pan, (dev.sensors.gyroEvent.z / pi).clip(-1, 1) * 0.5
-			], group);
-			});
+			// SystemClock.sched(0.2, {
+			// Synth(\hollowWood, [
+			// 	\freq, note.midicps,
+			// 	\vel, vel,
+			// 	\amp, 0.5 * ang * vol,
+			// 	\decay, ang * 5,
+			// 	\coef, cf,
+			// 	\body, ang * 5,
+			// 	\rel, ang * 5,
+			// 	\pan, (dev.sensors.gyroEvent.z / pi).clip(-1, 1) * 0.5
+			// ], group);
+			// });
 
 		};
 	}, '/akHit', s.addr);
@@ -279,10 +285,10 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 	// Rotation
 	// [d.sensors.rrateEvent.x, d.sensors.rrateEvent.y, d.sensors.rrateEvent.z];
 	// [m.rrateMass, m.rrateMassFiltered];
-
+//m.gyroYFiltered.fold(-0.5,0.5).lincurve(-0.5,0.5,0.0,1.0,0);
 	// Gyro
 	// [(d.sensors.gyroEvent.x / pi)];//roll
-	[(d.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1)];//up down
+	[(d.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1), m.gyroXFiltered.fold(-0.5,0.5).linlin(-0.5,0.5,0.0,1.0)];
 	// [(d.sensors.gyroEvent.z / pi)];//left right
 	// [(d.sensors.gyroEvent.x / pi), (d.sensors.gyroEvent.y / pi.half), (d.sensors.gyroEvent.z / pi)];
   // [m.gyroXFiltered, m.gyroYFiltered, m.gyroZFiltered];

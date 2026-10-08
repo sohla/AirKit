@@ -11,10 +11,14 @@ var steadiness = 0.5;
 var hitCount = 0;
 
 var ioiMin = 0.04;
-var ioiMax = 3.0;
+var ioiMax = 2.0;
 var smooth = 0.99;
 
-var notes = [0, 7, 10, 12, 15,19,24] - 12;
+var notes = [0,7,10,12,19,24,29,36] - 12;
+
+var bodyRatios = [1, 1.34, 2.71];
+var bodyAmps = [0.5, 0.25, 0.12];
+var bodyRings = [0.30, 0.18, 0.10];
 
 m.accelMassFilteredAttack = 0.9;
 m.accelMassFilteredDecay = 0.3;
@@ -48,17 +52,19 @@ SynthDef(\inputTrigger, { |ratio = 3.0, floorDb = -68,
 
 SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 	decay = 1.5, coef = 0.3, body = 0.6, tone = 4000,
-	gate = 1, rel = 1.5, pan = 0|
+	gate = 1, rel = 1.5, pan = 0, lfoA=1, lfoF=7|
 
 	var fire = Impulse.ar(0);
 	var exc  = LPF.ar(WhiteNoise.ar(1), (tone * vel).clip(200, 18000));
-
-	var plk = Pluck.ar(exc, fire, 0.05, freq.reciprocal.clip(0.0001, 0.05) * 0.5,
+	var lfoe = EnvGen.kr(Env.perc(3,1), gate);	
+	var lfo = SinOsc.kr(lfoF, 0, lfoA.lag(2).linlin(0,1.0,0,0.4).clip(0,0.4) * lfoe, 1);
+	var plk = Pluck.ar(exc, fire, 0.05, freq.reciprocal.clip(0.0001, 0.05) * 0.5 * lfo,
 		decay, coef.clip(0.0, 0.95));
+
 
 	var knock = Decay2.ar(fire, 0.0005, 0.008) * PinkNoise.ar(1);
 	var bod = DynKlank.ar(`[
-		[freq * 1, freq * 1.34, freq * 2.71],
+		[freq * 1, freq * 1.34, freq * 2.71] * lfo,
 		[0.5, 0.25, 0.12],
 		[0.30, 0.18, 0.10] * body
 	], knock);
@@ -81,34 +87,48 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 	steadiness = 0.5;
 	hitCount = 0;
 
-	~vdef.(\woodString, { |ev, c|
+	~vdef.(\echoArc, { |ev, c|
 		var mod = ev[\modulation] ? ();
-		var n = ev[\numPoints] ? 48;
-		var brittle = (mod[\brittle] ? 0).clip(0, 1);
-		var grain = mod[\grain] ? 0.14;
-		var seed = mod[\seed] ? 0;
-		var half = c[\size];
+		var n = ev[\numPoints] ? 40;
+		var span = mod[\span] ? 0.5pi;
+		var decay = mod[\decay] ? 1;
+		var body = mod[\body] ? 1;
+		var hold = mod[\hold] ? 1;
+		var reach = mod[\reach] ? 1;
+		var t = c[\elapsed];
 		var mid = c[\pos];
+		var twist = 1 + (m.rrateMassFiltered * (mod[\twist] ? 0.5));
+		var arc = { |r, sp|
+			Array.fill(n, { |j| mid + Polar(r, (j / (n - 1) - 0.5) * sp).asPoint })
+		};
+		var pluck = exp(t.neg * 6.9 / (decay * hold).max(0.01));
 
-		Array.fill(n, { |i|
-			var u = i / (n - 1);
-			var clamp = (u * pi).sin;
-			var hash = ((i * 12.9898) + seed).sin * 43758.5453;
-			var jag = hash - hash.floor - 0.5;
-			mid + (((u - 0.5) * 2 * half) @ (jag * grain * half * brittle * clamp))
-		})
+		if(pluck > 0.01, {
+			c[\render].(arc.(c[\size], span * twist * (0.3 + (0.7 * pluck))), pluck.sqrt, pluck.sqrt, false);
+		});
+		bodyRatios.do { |ratio, i|
+			var a = bodyAmps[i] * 2 * exp(t.neg * 6.9 / (bodyRings[i] * body * hold).max(0.01));
+			if(a > 0.01, {
+				c[\render].(arc.(c[\size] * (1 + ((ratio - 1) * reach)), span * twist / ratio), a * 0.5, a.sqrt, false);
+			});
+		};
+		nil
 	});
 
-	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.15, \floorDb, -17,
-		\fullScale, 0.1, \curve, 0.4, \deadtime, 0.001], group);
+	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -23,
+		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.001], group);
 
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
+			var sens = dev.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 			var vol = dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 			var vel = msg[3];
 			var now = SystemClock.seconds;
 			var ioi = (now - lastHit).clip(ioiMin, ioiMax);
 			var rate, dec, cf, bod, rt, note;
+			var roll = m.gyroXFiltered.fold(-0.5,0.5).linlin(-0.5,0.5,0.0,1.0);
+			// var ang = (dev.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1);
+			var ang = m.accelMassFiltered.lincurve(0.0, 0.1 * sens, 0.0, 1.0, -1);
 
 			if (hitCount > 0, {
 				var drift = ((ioi - avgIoi).abs / avgIoi).clip(0.0, 1.0);
@@ -127,64 +147,88 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			*/
 			rate = avgIoi.reciprocal;
 			dec  = rate.linexp(0.5, 12.0, 12.5, 0.01);
-			dec = (dev.sensors.gyroEvent.y / pi.half).lincurve(0.3, 0.9, 0.001, 7, 0);
 			cf   = steadiness.linlin(0.0, 1.0, 0.82, 0.25);
 			bod  = rate.linlin(0.5, 12.0, 2.0, 0.8);
 
-			// rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(0.2, 0.9, 0.0, notes.size, 0).asInteger;
+			rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(0.0, 1.0, 0.0, notes.size, 0).asInteger;
 			// rt = rate.linlin(0.5, 12.0, 0.2, notes.size).asInteger;	
-			rt = rate.linlin(0.5, 15.0, 25, 200);	
+			// rt = rate.linlin(0.5, 15.0, 25, 200);	
+			// (d.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1)
+			// rt = ang.linlin(0.0, 1.0, 0, notes.size - 1).asInteger;	
 			note = notes.clipAt(rt) + 45;
-
 			Synth(\hollowWood, [
-				\freq, rt,
+				\freq, note.midicps,
 				\vel, vel,
-				\amp, 0.35 * vol,
-				\decay, dec,
-				\coef, cf,
-				\body, bod,
-				\rel, relTime,
+				\amp, 0.5 * ang * vol,
+				\decay, ang * 5,
+				\coef, cf * roll,
+				\body, ang * 5,
+				\lfoA, ang * 0.1,
+				\lfoF, 7,
+				\rel, ang * 5,
 				\pan, (dev.sensors.gyroEvent.z / pi).clip(-1, 1) * 0.5
 			], group);
 
-			(
-				type: \customVisualEvent,
-				amp: 0,
-				dur: 0.01,
-				viewID: dev.port,
+			if(ang > 0.02, {
+				var mark = (
+					type: \customVisualEvent,
+					amp: 0,
+					dur: 0.01,
+					viewID: dev.port,
 
-				shape: \woodString,
-				numPoints: 4,
-				closed: false,
+					shape: \echoArc,
+					numPoints: 40,
+					closed: false,
 
-				sx: 0, ex: 0,
-				sy: rt.explin(25, 200, 0.78, -0.78),
-				ey: rt.explin(25, 200, 0.78, -0.78),
+					rotation: (hitCount * 2pi / 12) - 0.5pi,
+					startSize: rt.linlin(0, notes.size - 1, 260, 140),
+					endSize: rt.linlin(0, notes.size - 1, 260, 140),
 
-				startSize: rt.explin(25, 200, 280, 70),
-				endSize: rt.explin(25, 200, 268, 66),
+					startWidth: vel.linlin(0, 1, 3, 22),
+					endWidth: vel.linlin(0, 1, 3, 22),
 
-				startWidth: vel.lincurve(0, 1, 35, 1.1, -2),
-				endWidth: vel.lincurve(0, 1, 34.5, 0.35, -2),
+					startColor: Color.hsv(0.16, 0.95, 1.0, 0.95),
+					endColor: Color.hsv(0.16, 0.95, 1.0, 0.95),
 
-				startColor: Color.hsv(0.07 + (vel * 0.025),
-					0.88 - (vel * 0.45), 0.45 + (vel * 0.5), 0.92),
-				endColor: Color.hsv(0.07 + (vel * 0.025),
-					0.88 - (vel * 0.45), 0.45 + (vel * 0.5), 0.0),
+					duration: (ang * 5 * 1.5).clip(0.3, 6),
 
-				duration: dec.clip(0.18, 2.0),
+					modulation: (
+						type: \radial,
+						freq: 2 + (rt * 0.5),
+						amp: ang * 14,
+						harmonics: 2,
+						span: (ang * 5).linlin(0, 5, 0.25pi, 0.9pi),
+						decay: ang * 5,
+						body: ang * 5,
+						hold: 1.5,
+						reach: 0.8,
+						twist: 0.6
+					)
+				);
+				mark.copy.play;
+				SystemClock.sched(0.2, {
+					mark.copy.putAll((
+						rotation: mark[\rotation] + pi,
+						startColor: Color.hsv(0.07, 0.95, 1.0, 0.95),
+						endColor: Color.hsv(0.07, 0.95, 1.0, 0.95)
+					)).play;
+					nil
+				});
+			});
 
-				modulation: (
-					type: \normal,
-					freq: 1 + (vel * 4),
-					amp: dec.linlin(0.001, 7.0, 0.5, 9.0),
-					phase: 2pi.rand,
-					harmonics: (1 + (vel * 5)).round.asInteger,
-					brittle: vel,
-					grain: 0.14,
-					seed: 1000.rand
-				)
-			).play;
+			// SystemClock.sched(0.2, {
+			// Synth(\hollowWood, [
+			// 	\freq, note.midicps,
+			// 	\vel, vel,
+			// 	\amp, 0.5 * ang * vol,
+			// 	\decay, ang * 5,
+			// 	\coef, cf,
+			// 	\body, ang * 5,
+			// 	\rel, ang * 5,
+			// 	\pan, (dev.sensors.gyroEvent.z / pi).clip(-1, 1) * 0.5
+			// ], group);
+			// });
+
 		};
 	}, '/akHit', s.addr);
 };
@@ -225,11 +269,11 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 	// [yellow, cyan , magenta]??
 
 	// TRACKER : rate, steadiness, time since last hit
-	[
-		avgIoi.reciprocal.explin(0.5, 12.0, 0.0, 1.0),
-		steadiness,
-		(SystemClock.seconds - lastHit).linlin(0.0, ioiMax, 0.0, 1.0)
-	];
+	// [
+	// 	avgIoi.reciprocal.explin(0.5, 12.0, 0.0, 1.0),
+	// 	steadiness,
+	// 	(SystemClock.seconds - lastHit).linlin(0.0, ioiMax, 0.0, 1.0)
+	// ];
 
 	// [avgIoi.linlin(ioiMin, ioiMax, 0.0, 1.0), lastIoi.linlin(ioiMin, ioiMax, 0.0, 1.0)];
 	// [hitCount % 16 / 16];
@@ -241,10 +285,10 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 	// Rotation
 	// [d.sensors.rrateEvent.x, d.sensors.rrateEvent.y, d.sensors.rrateEvent.z];
 	// [m.rrateMass, m.rrateMassFiltered];
-
+//m.gyroYFiltered.fold(-0.5,0.5).lincurve(-0.5,0.5,0.0,1.0,0);
 	// Gyro
 	// [(d.sensors.gyroEvent.x / pi)];//roll
-	// [(d.sensors.gyroEvent.y / pi.half)];//up down
+	[(d.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1), m.gyroXFiltered.fold(-0.5,0.5).linlin(-0.5,0.5,0.0,1.0)];
 	// [(d.sensors.gyroEvent.z / pi)];//left right
 	// [(d.sensors.gyroEvent.x / pi), (d.sensors.gyroEvent.y / pi.half), (d.sensors.gyroEvent.z / pi)];
   // [m.gyroXFiltered, m.gyroYFiltered, m.gyroZFiltered];
