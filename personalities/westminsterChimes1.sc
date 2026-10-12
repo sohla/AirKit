@@ -32,7 +32,7 @@ SynthDef(\drumkit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 //------------------------------------------------------------
 ~init = ~init <> {
 
-	var folder  = PathName("~/Downloads/westminsterChimes");
+	var folder  = PathName("~/Downloads/yourDNASamples/westminsterChimes");
 	postf("loading samples : % \n", folder);
 
 	~buffers = folder.entries.collect({ |path,i|
