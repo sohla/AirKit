@@ -88,11 +88,12 @@ SynthDef(\multiBeatVoice, {|out=0, freq=440, amp=0.2, pan=0,
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var idx = m.accelMassFiltered.lincurve(0, 2.5 * sens, 0, divs.size - 1, 1)
-		.round.asInteger.clip(0, divs.size - 1);
-	var amp = m.accelMassFiltered.lincurve(0, 0.2 * sens, -60, -8, -1);
+	var idx = m.accelMassFiltered.lincurve(0, 2.5 * sens, 0, divs.size - 1, 7).round.asInteger.clip(0, divs.size - 1);
+	var amp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -25, -6, -1);
 	var ffreq = m.accelMassFiltered.lincurve(0, 1.0 * sens, 700, 6000, 2);
 	var rel = m.accelMassFiltered.lincurve(0, 1.0 * sens, 3.1,0.2, 2);
+
+	if(amp < 23.neg, { amp = 110.neg });
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);

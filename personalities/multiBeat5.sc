@@ -3,8 +3,8 @@ var group;
 var samplesLib;
 
 var beat = 0.5;
-var divs = [1, 2, 4, 8];
-var pool = [0, 4, 7, 12, 14, 12, 7, 4] + 12;
+var divs = [1,2, 4];
+var pool = [0, 2, 7, 12, 14, 11, 7, 4] + 12;
 
 var eventTypeName = (\customEvent_ ++ m.ptn).asSymbol;
 
@@ -119,8 +119,8 @@ SynthDef(\multiBeatSampler, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, p
 			\dur,  Pkey(\div).reciprocal * beat,
 			\octave, Pseq([3,4,5].stutter(4), inf),
 			\legato, 0.8,
-			\attack, 0.004,
-			\release, (Pkey(\dur) * 4) + 0.2,
+			// \attack, 0.004,
+			\release, (Pkey(\dur) * 0.1) + 0.2,
 			\amp, Pkey(\energy) * Pfunc({ |e| if(e[\step] == 0, { 1.0 }, { 0.6 }) }),
 			\pan, Pfunc({ |e| ((e[\panBias] ? 0) + rrand(-0.2, 0.2)).clip(-1, 1) }),
 			\start, 0,
@@ -192,20 +192,21 @@ SynthDef(\multiBeatSampler, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, p
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var e = m.accelMassFiltered;
-	var idx = e.lincurve(0, 1.5 * sens, 0, divs.size - 1, 1)
-		.round.asInteger.clip(0, divs.size - 1);
-	var amp = e.lincurve(0, 0.4 * sens, -20, -10, -1);
+	var idx = e.lincurve(0, 2.5 * sens, 0, divs.size - 1, 4).round.asInteger.clip(0, divs.size - 1);
+	var amp = e.lincurve(0, 2.0 * sens, -25, -6, -1);
 	var oct = (d.sensors.gyroEvent.y / pi.half).lincurve(-1, 1, 4, 6, 1).asInteger;
 	var ptch = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.94, 1.06);
 	var panBias = (d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, -0.5, 0.5);
+	var attack = m.accelMassFiltered.lincurve(0, 2.4 * sens, 0.04, 0.001, -1);
 
-	if(amp < 19.neg, { amp = 90.neg });
+	if(amp < 23.neg, { amp = 110.neg });
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);
 	Pdef(m.ptn).set(\energy, amp.dbamp * vol);
 	Pdef(m.ptn).set(\root, m.com.root ? 0);
 	Pdef(m.ptn).set(\octave, oct);
+	Pdef(m.ptn).set(\attack, attack);
 	// Pdef(m.ptn).set(\ptch, ptch);
 	Pdef(m.ptn).set(\panBias, panBias);
 };

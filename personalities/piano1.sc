@@ -18,7 +18,7 @@ var eventTypeName = (\customEvent_ ++ m.ptn).asSymbol;
 var folder = PathName("~/Downloads/cotf_samples/chronicPiano");
 
 var scale = [0,9,4,11,19,14,28,24];
-var octaves = [3, 4, 5, 6];
+var octaves = [2,3, 4, 5];
 
 //------------------------------------------------------------
 // note-name -> MIDI. The stems end in their note: "..._C4.aif".
@@ -198,7 +198,7 @@ SynthDef(\pianoVerb, {
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var amp = m.accelMassFiltered.lincurve(0, 0.2 * sens, -34, -6, -1);
 	var dur = m.accelMassFiltered.lincurve(0, 2.0 * sens, 0.5, 0.05, -1);
-	var oct = (d.sensors.gyroEvent.y / pi.half).linlin(-1, 1, 3, 7).round.asInteger;
+	var oct = (d.sensors.gyroEvent.y / pi.half).linlin(-1, 1, 3, 6).round.asInteger;
 
 
 	if(amp < 29.neg, { amp = 120.neg});
