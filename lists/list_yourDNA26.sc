@@ -3,7 +3,7 @@
 
 		"silence",
 
-		"train4Button",
+		"fourButtonSamples",
 
 		"hover1",
 		"bee",
