@@ -3,26 +3,32 @@
 
 		"silence",
 
-		"fourButtonSamples",
-
 		"hover1",
-		"bee",
-
-		"ticktockbeat2",
-		"marimbabeat1",
-		"shaker1",
-
-		"beatbell1",
-		"westminsterChimes1",
-		"daveBell1",
-
 		"timWind1",
 
 		"timSwing1",
 
+
+		"ticktockbeat2",
+		"multiBeat5",
+		"shaker1",
+		"beatbell1",
+
+		"daveBell1",
+		"hoverSong",
+
+
+
+		"bee",
+		"hover1",
 		"leaves",
-		"waves",
-		"waves2",
+		"wingChimes2",
+		"crows",
+
+		"westminsterChimes1",
+
+
+		"fourButtonSamples",
 
 		"silence",
 

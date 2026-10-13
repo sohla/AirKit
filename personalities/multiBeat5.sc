@@ -3,7 +3,7 @@ var group;
 var samplesLib;
 
 var beat = 0.5;
-var divs = [1,2, 4];
+var divs = [1,2,4,8];
 var pool = [0, 2, 7, 12, 14, 11, 7, 4] + 12;
 
 var eventTypeName = (\customEvent_ ++ m.ptn).asSymbol;
@@ -117,7 +117,7 @@ SynthDef(\multiBeatSampler, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, p
 			\step, Pswitch(divs.collect({ |n| Pseries(0, 1, n) }),      Pkey(\divIdx)),
 			\note, Pswitch(divs.collect({ |n| Pseq(pool.keep(n), 1) }), Pkey(\divIdx)),
 			\dur,  Pkey(\div).reciprocal * beat,
-			\octave, Pseq([3,4,5].stutter(4), inf),
+			// \octave, Pseq([3,4,5].stutter(4), inf),
 			\legato, 0.8,
 			// \attack, 0.004,
 			\release, (Pkey(\dur) * 0.1) + 0.2,
@@ -193,8 +193,8 @@ SynthDef(\multiBeatSampler, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, p
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var e = m.accelMassFiltered;
 	var idx = e.lincurve(0, 2.5 * sens, 0, divs.size - 1, 4).round.asInteger.clip(0, divs.size - 1);
-	var amp = e.lincurve(0, 2.0 * sens, -25, -6, -1);
-	var oct = (d.sensors.gyroEvent.y / pi.half).lincurve(-1, 1, 4, 6, 1).asInteger;
+	var amp = e.lincurve(0, 2.0 * sens, -25, -1, -1);
+	var oct = (d.sensors.gyroEvent.y / pi.half).lincurve(-1, 1, 2, 7, 1).asInteger;
 	var ptch = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.94, 1.06);
 	var panBias = (d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, -0.5, 0.5);
 	var attack = m.accelMassFiltered.lincurve(0, 2.4 * sens, 0.04, 0.001, -1);
@@ -241,5 +241,6 @@ SynthDef(\multiBeatSampler, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, p
 	// [(d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.94, 1.06) - 1];//ptch
 	// [(d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, -0.5, 0.5)];//panBias
 
-	[m.accelMass, m.accelMassFiltered, (d.sensors.gyroEvent.y / pi.half)];
+	// [m.accelMass, m.accelMassFiltered, (d.sensors.gyroEvent.y / pi.half)];
+	[(d.sensors.gyroEvent.y / pi.half)];
 };

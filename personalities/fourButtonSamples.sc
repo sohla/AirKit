@@ -29,7 +29,7 @@ SynthDef(\samplerTRAIN, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq
 
 //------------------------------------------------------------
 ~init = ~init <> {
-	var folder  = PathName("~/Downloads/yourDNASamples/melbTrain");
+	var folder  = PathName("~/Downloads/yourDNASamples/birdcalls");
 	postf("loading samples : % \n", folder);
 
 	buffers = folder.entries.collect({ |path,i|

@@ -115,7 +115,7 @@ SynthDef(\pianoVerb, {
 
 	group = Group.new;
 	fxBus = Bus.audio(s, 2);
-	verbSynth = Synth.tail(group, \pianoVerb, [\in, fxBus, \out, 0]);
+	verbSynth = Synth.tail(group, \bellVerb, [\in, fxBus, \out, 0]);
 
 	
 	// The zero line, held for the life of the personality, so the shift

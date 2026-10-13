@@ -1,5 +1,7 @@
 var m = ~model;
 var group;
+var fxBus;
+var verbSynth;
 var buffer;
 
 var samplePath = "~/Downloads/yourDNASamples/ding A.wav";
@@ -7,9 +9,9 @@ var baseNote = 68;
 var partialRatios = [1, 3.01, 5.98];
 var partialAmps = [1, 0.44, 0.12];
 
-var melody = [ 0, 7, 12, 19, 12, 7,  0, 16, 24, 16, 12, 4 ] + 4;
+var melody = [ 0, 7, 12, 19, 12, 7,  0, 16, 24, 16, 12, 4 ] + 4 - 12;
 // var melody = [ 0] + 4;
-var beats  = [ 2, 1,  1,  2,  1, 1, Rest(2), 1,  3,  1,  2, 2 ] * 0.4;
+var beats  = [ 2, 1,  1,  2,  1, 1, Rest(2), 1,  3,  1,  2, 2 ] * 0.25;
 
 //------------------------------------------------------------
 m.accelMassFilteredAttack = 0.99;
@@ -31,11 +33,22 @@ SynthDef(\daveBell, { |out = 0, bufnum = 0, freq = 207, basefreq = 207, amp = 0.
 	Out.ar(out, sig * amp * env);
 }).add;
 
+SynthDef(\bellVerb, {
+    |in=0, out=0, mix=0.35, room=2.83, damp=0.2, amp=1, gate=1, release=0.5|
+	var sig = In.ar(in, 2);
+	var env = EnvGen.kr(Env.asr(0.01, 1, release), gate, doneAction: 2);
+	sig = FreeVerb2.ar(sig[0], sig[1], mix, room.clip(0, 0.95), damp);
+	sig = LeakDC.ar(sig);
+	Out.ar(out, sig * env * amp);
+}).add;
+
 //------------------------------------------------------------
 ~init = ~init <> { |d|
 	var path = PathName(samplePath);
 
 	group = Group.new;
+	fxBus = Bus.audio(s, 2);
+	verbSynth = Synth.tail(group, \bellVerb, [\in, fxBus, \out, 0]);
 
 	~vdef.(\dingBand, { |ev, c|
 		var mod = ev[\modulation] ? ();
@@ -70,6 +83,7 @@ SynthDef(\daveBell, { |out = 0, bufnum = 0, freq = 207, basefreq = 207, amp = 0.
 
 	postf("loading sample : % \n", path.fileName);
 
+
 	buffer = Buffer.read(s, path.fullPath, action: { |buf|
 		postf("buffer alloc [%] \n", buf);
 
@@ -77,6 +91,7 @@ SynthDef(\daveBell, { |out = 0, bufnum = 0, freq = 207, basefreq = 207, amp = 0.
 			Pbind(
 				\instrument, \daveBell,
 				\group, group,
+				\out, fxBus,
 				\bufnum, buf,
 				\basefreq, baseNote.midicps,
 
@@ -84,7 +99,8 @@ SynthDef(\daveBell, { |out = 0, bufnum = 0, freq = 207, basefreq = 207, amp = 0.
 				\tone, Pseq(melody, inf),
 				\beat, Pseq(beats, inf),
 				\dur, Pkey(\beat) * Pkey(\pulse),
-				\midinote, Pkey(\tone) + baseNote,
+				\root, 0,
+				\midinote, Pkey(\tone) + baseNote + Pkey(\root),
 				\legato, 0.9,
 				\release, 1.4,
 				\rq, 0.8,

@@ -5,7 +5,7 @@ var buffer;
 var samplePath = "~/Downloads/cotf_samples/orchkit/Shaker-Chrom_ES1.wav";
 
 var beat = 1.0;
-var divs = [4, 6, 8];
+var divs = [1,2,4, 6, 8];
 
 //------------------------------------------------------------
 m.accelMassFilteredAttack = 0.99;

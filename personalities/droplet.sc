@@ -202,9 +202,9 @@ SynthDef(\dropletVerb, {
 
   Pdef(m.ptn).set(\dur, dur);
   Pdef(m.ptn).set(\amp, amp * vol);
-  Pdef(m.ptn).set(\wobble, side);
-  Pdef(m.ptn).set(\decay, dcy);
-  Pdef(m.ptn).set(\reverbRoom, verb);
+  // Pdef(m.ptn).set(\wobble, side);
+  // Pdef(m.ptn).set(\decay, dcy);
+  // Pdef(m.ptn).set(\reverbRoom, verb);
 
   // Pdef(m.ptn).set(\startSize, amp.linlin(0, 1, 45, 200));
 

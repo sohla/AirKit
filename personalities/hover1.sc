@@ -139,8 +139,9 @@ SynthDef(\hoverLoop, { |out = 0, bufnum = 0, amp = 0, rate = 1, t_trig = 0, gate
 	var drive = m.accelMassFiltered;
 	var amp = drive.lincurve(0, 0.6, 0, 1, 2);
 	var rate = drive.linlin(0, 0.6, 1, 1.22);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 
-	synth !? { synth.set(\amp, amp, \rate, rate) };
+	synth !? { synth.set(\amp, amp * vol, \rate, rate) };
 
 	if(armed and: { m.accelMass > 0.55 }, {
 		armed = false;
@@ -197,5 +198,5 @@ SynthDef(\hoverLoop, { |out = 0, bufnum = 0, amp = 0, rate = 1, t_trig = 0, gate
 	// [m.accelMassFiltered.lincurve(0, 1.6, 0, 1, 2)];//amp
 	// [m.accelMassFiltered.linlin(0, 1.6, 1, 1.22) - 1];//rate
 
-	[m.accelMass * 0.5, m.accelMassFiltered * 0.5];
+	[m.accelMassFiltered,m.rrateMassFiltered * 8];
 };

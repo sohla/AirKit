@@ -68,6 +68,8 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 	var folder = PathName("~/Downloads/waveSamples/oneshots");
 	var bgWave1 = PathName("~/Downloads/waveSamples/bgs/wave_bg_16.wav");
 	var bgWave2 = PathName("~/Downloads/waveSamples/bgs/wave_bg_splashes_16.wav");
+	// use hover samples
+
 
 	postf("loading samples : % \n", folder);
 
