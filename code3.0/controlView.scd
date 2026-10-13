@@ -16,14 +16,14 @@ var sliderView = {|lt="default", rt="", d|
       .drawFunc_({|v|
         var vw = v.bounds.width;
         var vh = v.bounds.height;
-        var tw = 140;
-				var pos = (vw * d.params.at(lt.asSymbol)) - (tw/2);
-        // lt.drawLeftJustIn(Rect(10,0,vw/2,vh), Font(size:48), Color.black());
+        var tw = v.bounds.width * 0.15;
+		var pos = (vw * d.params.at(lt.asSymbol)) - (tw/2);
+        lt.drawLeftJustIn(Rect(10,0,vw,vh), Font(size:v.bounds.width * 0.15), Color.black());
         // rt.drawRightJustIn(Rect(vw/2,0,(vw/2)-10,vh), Font(size:48), Color.black());
         Pen.fillColor = d.color.alpha_(0.5);
         Pen.addRect(Rect(pos, 2, tw, vh - 4));
         Pen.fill;
-        lt.drawCenteredIn(Rect(pos,0,tw,40), Font(size:24), Color.black());
+        // lt.drawCenteredIn(Rect(pos,0,tw,40), Font(size:24), Color.black());
       })
       // The slider sends a command and never writes the model : the
       // controller owns the value, clamps it and echoes /airkit/paramIs,
