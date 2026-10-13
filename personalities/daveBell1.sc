@@ -87,61 +87,63 @@ SynthDef(\bellVerb, {
 	buffer = Buffer.read(s, path.fullPath, action: { |buf|
 		postf("buffer alloc [%] \n", buf);
 
-		Pdef(m.ptn,
-			Pbind(
-				\instrument, \daveBell1,
-				\group, group,
-				\out, fxBus,
-				\bufnum, buf,
-				\basefreq, baseNote.midicps,
+		if (group.notNil) {
+			Pdef(m.ptn,
+				Pbind(
+					\instrument, \daveBell1,
+					\group, group,
+					\out, fxBus,
+					\bufnum, buf,
+					\basefreq, baseNote.midicps,
 
-				\col, Pseq((0..melody.size - 1), inf),
-				\tone, Pseq(melody, inf),
-				\beat, Pseq(beats, inf),
-				\dur, Pkey(\beat) * Pkey(\pulse),
-				\root, 0,
-				\midinote, Pkey(\tone) + baseNote + Pkey(\root),
-				\legato, 0.9,
-				\release, 1.4,
-				\rq, 0.8,
-				\pan, Pfunc({ |e| (e[\col] / (melody.size - 1)).linlin(0, 1, -0.6, 0.6) }),
-				\args, #[],
+					\col, Pseq((0..melody.size - 1), inf),
+					\tone, Pseq(melody, inf),
+					\beat, Pseq(beats, inf),
+					\dur, Pkey(\beat) * Pkey(\pulse),
+					\root, 0,
+					\midinote, Pkey(\tone) + baseNote + Pkey(\root),
+					\legato, 0.9,
+					\release, 1.4,
+					\rq, 0.8,
+					\pan, Pfunc({ |e| (e[\col] / (melody.size - 1)).linlin(0, 1, -0.6, 0.6) }),
+					\args, #[],
 
-				\type, \customVisualEvent,
-				\shape, \dingBand,
-				\numPoints, 16,
-				\fill, false,
-				\closed, false,
-				\sx, Pfunc({ |e| (e[\col] / (melody.size - 1)).linlin(0, 1, -0.9, 0.45) }),
-				\ex, Pkey(\sx),
-				\sy, Pfunc({ |e|
-					(e[\midinote] + (e[\ctranspose] ? 0)).linlin(baseNote - 12, baseNote + 36, 0.8, -0.35)
-				}),
-				\ey, Pkey(\sy),
-				\duration, Pfunc({ |e| ((e[\dur] ? 0.3).value * e[\legato]) + e[\release] }),
-				\startSize, Pkey(\duration) * 60,
-				\endSize, Pkey(\startSize),
-				\startWidth, Pfunc({ |e| ((e[\amp] ? 0.1) * 11) + 1.2 }),
-				\endWidth, 0.5,
-				\startColor, Color.new(0.486, 1.0, 0.627, 0.9),
-				\endColor, Color.new(0.486, 1.0, 0.627, 0.0),
-				\rotation, 0,
-				\modulation, Pfunc({ |e| (
-					rest: e.isRest,
-					amp: 0,
-					semiPx: 5,
-					ring: e[\release],
-					strikeRing: 0.14,
-				) }),
-			)
-		);
+					\type, \customVisualEvent,
+					\shape, \dingBand,
+					\numPoints, 16,
+					\fill, false,
+					\closed, false,
+					\sx, Pfunc({ |e| (e[\col] / (melody.size - 1)).linlin(0, 1, -0.9, 0.45) }),
+					\ex, Pkey(\sx),
+					\sy, Pfunc({ |e|
+						(e[\midinote] + (e[\ctranspose] ? 0)).linlin(baseNote - 12, baseNote + 36, 0.8, -0.35)
+					}),
+					\ey, Pkey(\sy),
+					\duration, Pfunc({ |e| ((e[\dur] ? 0.3).value * e[\legato]) + e[\release] }),
+					\startSize, Pkey(\duration) * 60,
+					\endSize, Pkey(\startSize),
+					\startWidth, Pfunc({ |e| ((e[\amp] ? 0.1) * 11) + 1.2 }),
+					\endWidth, 0.5,
+					\startColor, Color.new(0.486, 1.0, 0.627, 0.9),
+					\endColor, Color.new(0.486, 1.0, 0.627, 0.0),
+					\rotation, 0,
+					\modulation, Pfunc({ |e| (
+						rest: e.isRest,
+						amp: 0,
+						semiPx: 5,
+						ring: e[\release],
+						strikeRing: 0.14,
+					) }),
+				)
+			);
 
-		Pdef(m.ptn).set(\amp, 0);
-		Pdef(m.ptn).set(\pulse, 0.22);
-		// Pdef(m.ptn).set(\ctranspose, 4);
-		Pdef(m.ptn).set(\cutoff, 9000);
+			Pdef(m.ptn).set(\amp, 0);
+			Pdef(m.ptn).set(\pulse, 0.22);
+			// Pdef(m.ptn).set(\ctranspose, 4);
+			Pdef(m.ptn).set(\cutoff, 9000);
 
-		Pdef(m.ptn).play(quant: 0.1);
+			Pdef(m.ptn).play(quant: 0.1);
+		};
 	});
 };
 

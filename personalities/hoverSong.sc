@@ -18,13 +18,6 @@ m.gyroFilteredAttack = 0.7;
 m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
-SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=0.8, release=0.59, gate=1|
-	// var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: Done.freeSelf);
-	var env = EnvGen.kr(Env.perc(attack, release), gate, timeScale: 1,doneAction: 2);
-	var sig = SinOsc.ar(freq,0,0.5)!2;
-    Out.ar(out, sig * env * amp);
-}).add;
-
 SynthDef(\hoverSong, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=0, freq=440,
 	attack=0.01, decay=0.1, sustain=0.3, release=3.2, gate=1,cutoff=20000, rq=0.9|
 	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
@@ -37,17 +30,6 @@ SynthDef(\hoverSong, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=0, freq=
 	Out.ar(out, sig);
 }).add;
 
-
-SynthDef(\hoverSongLooper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
-	attack=2.1, decay=0.1, sustain=0.99, release=0.2, gate=1,cutoff=20000, rq=0.9|
-	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
-	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, timeScale: 1,doneAction: 2);
-	var sig = PlayBuf.ar(2, bufnum, rate: lr, startPos: start * BufFrames.kr(bufnum), loop: 1);
-	// sig = RLPF.ar(sig, cutoff, rq);// + osc;
-	sig = Pan2.ar(sig, pan, amp);
-	sig = LeakDC.ar(sig * env);
-	Out.ar(out, sig);
-}).add;
 
 
 
@@ -165,9 +147,9 @@ SynthDef(\hoverSongLooper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, f
 		lastTime = TempoClock.beats;
 		if(m.accelMass>0.05,{
 	    ev.play;
-			synth = Synth(\hoverSong, [\bufnum, bi, \amp, amp * 0.6 * vol, \rate, 1.11 * 1], group);
+			synth = Synth(\hoverSong, [\bufnum, buffers[bi], \amp, amp * 0.6 * vol, \rate, 1.11 * 1], group);
 			bi = bi + 1;
-			if(bi >= (buffers.size-1),{bi=0});
+			if(bi >= buffers.size,{bi=0});
 
 			{synth.set(\gate,0)}.defer(0.2);
 		},{

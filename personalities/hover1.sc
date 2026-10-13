@@ -121,8 +121,10 @@ SynthDef(\hover1, { |out = 0, bufnum = 0, amp = 0, rate = 1, t_trig = 0, gate = 
 
 	fork {
 		s.sync;
-		synth = Synth(\hover1, [\bufnum, buffers[bi], \amp, 0, \gate, 1], group);
-		postf("samples loaded : % \n", buffers.size);
+		if (group.notNil) {
+			synth = Synth(\hover1, [\bufnum, buffers[bi], \amp, 0, \gate, 1], group);
+			postf("samples loaded : % \n", buffers.size);
+		};
 	};
 };
 

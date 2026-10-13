@@ -21,7 +21,7 @@ SynthDef(\multiBeat5, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, pan=0, 
     attack=0.01, decay=0.1, sustain=0.3, release=1.2, gate=1, cutoff=20000, rq=1|
 	var lr = rate * BufRateScale.kr(bufnum) * ptch;
 	var env = EnvGen.kr(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction: 2);
-	var sig = PlayBuf.ar(2, bufnum, rate: [lr, lr * 1.007], startPos: start * BufFrames.kr(bufnum), loop: 0);
+	var sig = PlayBuf.ar(2, bufnum, rate: lr, startPos: start * BufFrames.kr(bufnum), loop: 0);
 	Out.ar(out, sig * amp * env);
 }).add;
 

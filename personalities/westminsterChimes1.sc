@@ -3,7 +3,7 @@ var bi = 0;
 var dur = 0.25;
 var group;
 
-~buffers;
+var buffers;
 m.accelMassFilteredAttack = 0.99;
 m.accelMassFilteredDecay = 0.6;
 
@@ -15,7 +15,7 @@ SynthDef(\westminsterChimes1, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, 
 	var cd = BufDur.kr(bufnum);
   	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
 
-	var sig = PlayBuf.ar(2, bufnum, rate: [lr, lr * 1.0], startPos: start * BufFrames.kr(bufnum), loop: 0) ;
+	var sig = PlayBuf.ar(2, bufnum, rate: lr, startPos: start * BufFrames.kr(bufnum), loop: 0) ;
     sig = RHPF.ar(sig, cutoff, rq);
 		sig = Compander.ar(sig, sig,
         thresh: -15.dbamp,
@@ -36,7 +36,7 @@ SynthDef(\westminsterChimes1, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, 
 	var folder  = PathName("~/Downloads/yourDNASamples/westminsterChimes");
 	postf("loading samples : % \n", folder);
 
-	~buffers = folder.entries.collect({ |path,i|
+	buffers = folder.entries.collect({ |path,i|
 		Buffer.read(s, path.fullPath, action:{|buf|
 			postf("buffer alloc [%] \n", buf);
 			if(folder.entries.size - 1 == i,{
@@ -52,8 +52,8 @@ SynthDef(\westminsterChimes1, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, 
 			\instrument, \westminsterChimes1,
 			\group, group,
 			\bufnum, Pfunc{
-				bi = rrand(1,~buffers.size-1);
-				~buffers[bi];
+				bi = rrand(1,buffers.size-1);
+				buffers[bi];
 			},
 			\rate, Pseq([0,5,-5].midiratio, inf),
 			\start, Pwhite(0,0.1),
@@ -67,14 +67,14 @@ SynthDef(\westminsterChimes1, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, 
 	);
 
 	Pdef(m.ptn).play(quant:dur);
-	Pdef(m.ptn).set(\bufnum, ~buffers[0]);
+	Pdef(m.ptn).set(\bufnum, buffers[0]);
 };
 
 ~deinit = ~deinit <> {
 	var oldGroup = group;
-	var oldBuffers = ~buffers;
+	var oldBuffers = buffers;
 	group = nil;
-	~buffers = nil;
+	buffers = nil;
 	Pdef(m.ptn).remove;
 
 	fork {
@@ -141,4 +141,3 @@ SynthDef(\westminsterChimes1, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, 
 
 
 };
-Buffer.cachedBuffersDo(s, {|b|b.postln})
