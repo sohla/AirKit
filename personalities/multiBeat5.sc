@@ -17,7 +17,7 @@ m.gyroFilteredAttack = 0.7;
 m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
-SynthDef(\multiBeatSampler, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, pan=0, freq=440,
+SynthDef(\multiBeat5, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, pan=0, freq=440,
     attack=0.01, decay=0.1, sustain=0.3, release=1.2, gate=1, cutoff=20000, rq=1|
 	var lr = rate * BufRateScale.kr(bufnum) * ptch;
 	var env = EnvGen.kr(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction: 2);
@@ -109,7 +109,7 @@ SynthDef(\multiBeatSampler, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, p
 
 	Pdef(m.ptn,
 		Pbind(
-			\instrument, \multiBeatSampler,
+			\instrument, \multiBeat5,
 			\group, group,
 			\type, eventTypeName,
 
@@ -166,24 +166,25 @@ SynthDef(\multiBeatSampler, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, p
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var oldGroup = group;
+	var oldSamples = samplesLib;
+	group = nil;
+	samplesLib = nil;
 	Pdef(m.ptn).remove;
 	Event.eventTypes.removeAt(eventTypeName);
 
 	fork {
-		if (group.notNil) {
-			s.bind { group.freeAll };
+		1.0.wait;
+		if (oldGroup.notNil) {
+			s.bind { oldGroup.freeAll };
 			s.sync;
-			group.free;
-			group = nil;
+			oldGroup.free;
 		};
-		if (samplesLib.notNil) {
-			samplesLib.do({|sample|
-				postf("buffer dealloc [%] \n", sample.buffer);
-				sample.buffer.free;
-				s.sync;
-			});
-			samplesLib = nil;
-		};
+		oldSamples.do({|sample|
+			postf("buffer dealloc [%] \n", sample.buffer);
+			sample.buffer.free;
+			s.sync;
+		});
 	};
 };
 

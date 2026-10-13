@@ -1,5 +1,6 @@
 var m = ~model;
 var synth;
+var group;
 m.rrateMassFilteredAttack = 0.3;
 m.rrateMassFilteredDecay = 0.1;
 m.accelMassFilteredAttack = 0.09;
@@ -33,11 +34,23 @@ SynthDef(\syntheticLeaf, {
 }).add;
 
 ~init = ~init <> {
-	synth = Synth(\syntheticLeaf, [\gate, 1]);
+	group = Group.new;
+	synth = Synth(\syntheticLeaf, [\gate, 1], group);
 };
 
 ~deinit = ~deinit <> {
-	synth.set(\gate,0);
+	var oldGroup = group;
+	group = nil;
+	synth !? { synth.set(\gate,0) };
+	synth = nil;
+	fork {
+		2.5.wait;
+		if (oldGroup.notNil) {
+			s.bind { oldGroup.freeAll };
+			s.sync;
+			oldGroup.free;
+		};
+	};
 };
 
 //------------------------------------------------------------

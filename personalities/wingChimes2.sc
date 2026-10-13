@@ -1,4 +1,5 @@
 var m = ~model;
+var group;
 
 
 	SynthDef(\wingChimes2, {|freq = 1000, pulseFreq = 10, amp = 0, rq = 0.001, att = 0.23, dec = 1.3, sus = 0, rel = 3, gate = 1, numHarms = 200|
@@ -21,9 +22,11 @@ var m = ~model;
 
 //------------------------------------------------------------
 ~init = ~init <> {
+	group = Group.new;
 	Pdef(m.ptn,
 		Pbind(
 			\instrument, \wingChimes2,
+			\group, group,
 			\note, Prand([0,7,14,21], inf),
 			\octave, Pseq([3,4], inf),
 			\pulseFreq, Pwhite(1, 3),
@@ -36,7 +39,17 @@ var m = ~model;
 };
 
 ~deinit = ~deinit <> {
+	var oldGroup = group;
+	group = nil;
 	Pdef(m.ptn).remove;
+	fork {
+		3.5.wait;
+		if (oldGroup.notNil) {
+			s.bind { oldGroup.freeAll };
+			s.sync;
+			oldGroup.free;
+		};
+	};
 };
 
 //------------------------------------------------------------

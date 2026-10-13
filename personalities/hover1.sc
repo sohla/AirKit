@@ -1,6 +1,7 @@
 var m = ~model;
 var buffers;
 var synth;
+var group;
 var bi = 0;
 var armed = true;
 var phase = 0;
@@ -13,7 +14,7 @@ m.rrateMassFilteredAttack = 0.8;
 m.rrateMassFilteredDecay = 0.3;
 
 //------------------------------------------------------------
-SynthDef(\hoverLoop, { |out = 0, bufnum = 0, amp = 0, rate = 1, t_trig = 0, gate = 1|
+SynthDef(\hover1, { |out = 0, bufnum = 0, amp = 0, rate = 1, t_trig = 0, gate = 1|
 	var env = EnvGen.kr(Env.asr(0.3, 1, 0.6), gate, doneAction: Done.freeSelf);
 	var sig = PlayBuf.ar(2, bufnum,
 		rate.lag(0.25) * BufRateScale.kr(bufnum),
@@ -116,20 +117,31 @@ SynthDef(\hoverLoop, { |out = 0, bufnum = 0, amp = 0, rate = 1, t_trig = 0, gate
 		)
 	).play;
 
+	group = Group.new;
+
 	fork {
 		s.sync;
-		synth = Synth(\hoverLoop, [\bufnum, buffers[bi], \amp, 0, \gate, 1]);
+		synth = Synth(\hover1, [\bufnum, buffers[bi], \amp, 0, \gate, 1], group);
 		postf("samples loaded : % \n", buffers.size);
 	};
 };
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var oldGroup = group;
 	var old = buffers;
+	group = nil;
+	buffers = nil;
 	synth !? { synth.set(\gate, 0) };
+	synth = nil;
 	fork {
 		1.0.wait;
-		old.do({ |buf| buf.free });
+		if (oldGroup.notNil) {
+			s.bind { oldGroup.freeAll };
+			s.sync;
+			oldGroup.free;
+		};
+		old.do({ |buf| buf.free; s.sync });
 	};
 };
 

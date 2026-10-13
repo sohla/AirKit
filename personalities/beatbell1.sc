@@ -129,13 +129,15 @@ SynthDef(\beatBell, { |out = 0, freq = 440, amp = 0.2, pan = 0,
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var oldGroup = group;
+	group = nil;
 	Pdef(m.ptn).remove;
 	fork {
-		if (group.notNil) {
-			s.bind { group.freeAll };
+		6.0.wait;
+		if (oldGroup.notNil) {
+			s.bind { oldGroup.freeAll };
 			s.sync;
-			group.free;
-			group = nil;
+			oldGroup.free;
 		};
 	};
 };

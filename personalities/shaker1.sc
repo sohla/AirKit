@@ -16,7 +16,7 @@ m.gyroFilteredAttack      = 0.7;
 m.gyroFilteredDecay       = 0.7;
 
 //------------------------------------------------------------
-SynthDef(\shakerVoice, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, pan = 0,
+SynthDef(\shaker1, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, pan = 0,
 	attack = 0.001, release = 0.2, cutoff = 400, rq = 0.9|
 	var lr = rate * BufRateScale.kr(bufnum);
 	var env = EnvGen.kr(Env.perc(attack, release, curve: -3), doneAction: 2);
@@ -37,7 +37,7 @@ SynthDef(\shakerVoice, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, p
 
 	Pdef(m.ptn,
 		Pbind(
-			\instrument, \shakerVoice,
+			\instrument, \shaker1,
 			\group, group,
 
 			\div,  Pswitch(divs.collect({ |n| Pn(n, n) }),         Pkey(\divIdx)),
@@ -90,18 +90,21 @@ SynthDef(\shakerVoice, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, p
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var oldGroup = group;
+	var oldBuffer = buffer;
+	group = nil;
+	buffer = nil;
 	Pdef(m.ptn).remove;
 	fork {
-		if (group.notNil) {
-			s.bind { group.freeAll };
+		1.0.wait;
+		if (oldGroup.notNil) {
+			s.bind { oldGroup.freeAll };
 			s.sync;
-			group.free;
-			group = nil;
+			oldGroup.free;
 		};
-		if (buffer.notNil) {
-			postf("buffer dealloc [%] \n", buffer);
-			buffer.free;
-			buffer = nil;
+		if (oldBuffer.notNil) {
+			postf("buffer dealloc [%] \n", oldBuffer);
+			oldBuffer.free;
 		};
 	};
 };

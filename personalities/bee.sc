@@ -1,5 +1,6 @@
 var m = ~model;
 var synth;
+var group;
 var srr = 0.5.rrand(1.7);
 
 // State, not tunables : the flight cannot be recomputed from m alone because
@@ -170,14 +171,27 @@ SynthDef(\beeSynth1, { |out=0, rr=0.1, amp = 0.0, gate = 1, release = 2, af=264,
 		)
 	).play;
 
-	synth = Synth(\beeSynth1, [\af, 130.rrand(290), \bf, 250.rrand(340)]);
+	group = Group.new;
+	synth = Synth(\beeSynth1, [\af, 130.rrand(290), \bf, 250.rrand(340)], group);
 };
 
+//------------------------------------------------------------
 ~deinit = ~deinit <> {
-	synth.set(\gate, 0);
+	var oldGroup = group;
+	group = nil;
+	synth !? { synth.set(\gate, 0) };
+	synth = nil;
+	fork {
+		2.2.wait;
+		if (oldGroup.notNil) {
+			s.bind { oldGroup.freeAll };
+			s.sync;
+			oldGroup.free;
+		};
+	};
 };
 
-//------------------------------------`------------------------
+//------------------------------------------------------------
 ~next = {|d|
 
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);

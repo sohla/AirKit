@@ -22,7 +22,7 @@ m.gyroFilteredAttack      = 0.7;
 m.gyroFilteredDecay       = 0.7;
 
 //------------------------------------------------------------
-SynthDef(\tickTockPulse, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, pan = 0,
+SynthDef(\ticktockbeat2, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, pan = 0,
 	attack = 0.001, release = 0.3|
 	var lr = rate * BufRateScale.kr(bufnum);
 	var env = EnvGen.kr(Env([0, 1, 1, 0], [attack, release, 0.03]), doneAction: 2);
@@ -58,7 +58,7 @@ SynthDef(\tickTockPulse, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0,
 
 	Pdef(m.ptn,
 		Pbind(
-			\instrument, \tickTockPulse,
+			\instrument, \ticktockbeat2,
 			\group, group,
 
 			\div,  Pswitch(divs.collect({ |n| Pn(n, n) }),         Pkey(\divIdx)),
@@ -109,22 +109,23 @@ SynthDef(\tickTockPulse, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0,
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var oldGroup = group;
+	var oldBuffers = buffers;
+	group = nil;
+	buffers = nil;
 	Pdef(m.ptn).remove;
 	fork {
-		if (group.notNil) {
-			s.bind { group.freeAll };
+		1.0.wait;
+		if (oldGroup.notNil) {
+			s.bind { oldGroup.freeAll };
 			s.sync;
-			group.free;
-			group = nil;
+			oldGroup.free;
 		};
-		if (buffers.notNil) {
-			buffers.do({ |buf|
-				postf("buffer dealloc [%] \n", buf);
-				buf.free;
-				s.sync;
-			});
-			buffers = nil;
-		};
+		oldBuffers.do({ |buf|
+			postf("buffer dealloc [%] \n", buf);
+			buf.free;
+			s.sync;
+		});
 	};
 };
 

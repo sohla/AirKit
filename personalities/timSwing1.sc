@@ -1,6 +1,7 @@
 var m = ~model;
 var isPlaying = false;
 var synth;
+var group;
 var notes = [36,43,48];
 m.accelMassFilteredAttack = 0.6;
 m.accelMassFilteredDecay = 0.2;
@@ -22,12 +23,24 @@ SynthDef("woiworung2", {|out,freq = 1000, amp = 0.5, att = 0.02, dec = 0.3, sus 
 }).add;
 
 ~init = ~init <> {
-	synth = Synth(\woiworung2, [\freq, notes[0].midicps, \gate, 1, \amp, 0]);
+	group = Group.new;
+	synth = Synth(\woiworung2, [\freq, notes[0].midicps, \gate, 1, \amp, 0], group);
 };
 
 ~deinit = ~deinit <> {
-	synth.set(\gate,0);
+	var oldGroup = group;
+	group = nil;
+	synth !? { synth.set(\gate,0) };
+	synth = nil;
 	// synth.free; // for now
+	fork {
+		5.2.wait;
+		if (oldGroup.notNil) {
+			s.bind { oldGroup.freeAll };
+			s.sync;
+			oldGroup.free;
+		};
+	};
 };
 
 //------------------------------------------------------------

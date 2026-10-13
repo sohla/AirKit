@@ -25,7 +25,7 @@ SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=
     Out.ar(out, sig * env * amp);
 }).add;
 
-SynthDef(\waveSampler, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=0, freq=440,
+SynthDef(\crows, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=0, freq=440,
 	attack=0.16, decay=0.1, sustain=0.3, release=1.4, gate=1,cutoff=20000, rq=0.9|
 	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
 	// var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, timeScale: 2,doneAction: 2);
@@ -38,7 +38,7 @@ SynthDef(\waveSampler, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=0, fre
 }).add;
 
 
-SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
+SynthDef(\crowsLooper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 	attack=2.1, decay=0.1, sustain=0.99, release=0.2, gate=1,cutoff=20000, rq=0.9|
 	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, timeScale: 1,doneAction: 2);
@@ -60,6 +60,8 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 
 	postf("loading samples : % \n", folder);
 
+	group = Group.new;
+
 	buffers = folder.entries.collect({ |path,i|
 		Buffer.read(s, path.fullPath, action:{|buf|
 			postf("buffer alloc [%] \n", buf);
@@ -75,15 +77,27 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var oldGroup = group;
+	var oldBuffers = buffers;
+	group = nil;
+	buffers = nil;
 
 	if (synth.notNil) { synth.set(\gate, 0) };
+	synth = nil;
 
-	buffers.do({|buf|
-		postf("buffer dealloc [%] \n", buf);
-		buf.free;
-	});
-
-
+	fork {
+		2.0.wait;
+		if (oldGroup.notNil) {
+			s.bind { oldGroup.freeAll };
+			s.sync;
+			oldGroup.free;
+		};
+		oldBuffers.do({|buf|
+			postf("buffer dealloc [%] \n", buf);
+			buf.free;
+			s.sync;
+		});
+	};
 };
 
 //------------------------------------------------------------
@@ -151,7 +165,7 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 		lastTime = TempoClock.beats;
 		if(m.accelMass>0.05,{
 	    ev.play;
-			synth = Synth(\waveSampler, [\bufnum, bi, \amp, amp * 0.6 * vol, \rate, 1.11 * rrand(0.9,1.1)]);
+			synth = Synth(\crows, [\bufnum, bi, \amp, amp * 0.6 * vol, \rate, 1.11 * rrand(0.9,1.1)], group);
 			bi = bi + 1;
 			if(bi >= (buffers.size-1),{bi=0});
 

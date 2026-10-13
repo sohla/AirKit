@@ -1,6 +1,7 @@
 var m = ~model;
 var synth;
 var synth2;
+var group;
 
 var lastTime=0;
 var notes = [0,0,7,0,0,0,7,0,7,5,0,0,0,7,0,0,7,5,0,0,0,-2,7,-2,7,5,-2,-2,7,5,-2,-2,-2,-4,7,5,-4,-4,7,5,-2,-2,7,5,-2,7,5];
@@ -26,11 +27,22 @@ SynthDef(\timWind1, { |out, freq=111, gate=0, amp = 0.3, pchx=0|
 
 
 ~init = ~init <> {
+	group = Group.new;
 };
 
 ~deinit = ~deinit <> {
-  synth.set(\gate,0);
-
+	var oldGroup = group;
+	group = nil;
+	synth !? { synth.set(\gate,0) };
+	synth = nil;
+	fork {
+		5.5.wait;
+		if (oldGroup.notNil) {
+			s.bind { oldGroup.freeAll };
+			s.sync;
+			oldGroup.free;
+		};
+	};
 };
 
 //------------------------------------------------------------
@@ -61,7 +73,7 @@ SynthDef(\timWind1, { |out, freq=111, gate=0, amp = 0.3, pchx=0|
 				\freq, (36 + currentNote + currentRoot + oct).midicps,
 				\gate, 1,
 				\amp, amp * 0.4 * av * vol,
-			]);
+			], group);
 			synth.server.sendBundle(0.3,[\n_set, synth.nodeID, \gate, 0]);
 		});
 	});  

@@ -22,7 +22,7 @@ m.gyroFilteredAttack      = 0.7;
 m.gyroFilteredDecay       = 0.7;
 
 //------------------------------------------------------------
-SynthDef(\daveBell, { |out = 0, bufnum = 0, freq = 207, basefreq = 207, amp = 0.2, pan = 0,
+SynthDef(\daveBell1, { |out = 0, bufnum = 0, freq = 207, basefreq = 207, amp = 0.2, pan = 0,
 	attack = 0.003, decay = 0.4, susLevel = 0.6, release = 1.4, gate = 1,
 	cutoff = 9000, rq = 0.8|
 	var rate = (freq / basefreq) * BufRateScale.kr(bufnum);
@@ -89,7 +89,7 @@ SynthDef(\bellVerb, {
 
 		Pdef(m.ptn,
 			Pbind(
-				\instrument, \daveBell,
+				\instrument, \daveBell1,
 				\group, group,
 				\out, fxBus,
 				\bufnum, buf,
@@ -147,19 +147,29 @@ SynthDef(\bellVerb, {
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var oldGroup = group;
+	var oldVerb = verbSynth;
+	var oldBus = fxBus;
+	var oldBuffer = buffer;
+	group = nil;
+	verbSynth = nil;
+	fxBus = nil;
+	buffer = nil;
 	Pdef(m.ptn).remove;
 	fork {
-		if (group.notNil) {
-			s.bind { group.freeAll };
+		2.0.wait;
+		oldVerb !? { oldVerb.set(\gate, 0) };
+		0.7.wait;
+		if (oldGroup.notNil) {
+			s.bind { oldGroup.freeAll };
 			s.sync;
-			group.free;
-			group = nil;
+			oldGroup.free;
 		};
-		if (buffer.notNil) {
-			postf("buffer dealloc [%] \n", buffer);
-			buffer.free;
+		oldBus !? { oldBus.free };
+		if (oldBuffer.notNil) {
+			postf("buffer dealloc [%] \n", oldBuffer);
+			oldBuffer.free;
 			s.sync;
-			buffer = nil;
 		};
 	};
 };

@@ -2,6 +2,7 @@ var m = ~model;
 var synths = Array.newClear(4);
 var states = 0!4;
 var buffers;
+var group;
 
 m.accelMassFilteredAttack = 0.9;
 m.accelMassFilteredDecay = 0.1;
@@ -11,7 +12,7 @@ m.gyroFilteredAttack = 0.7;
 m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
-SynthDef(\samplerTRAIN, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=440, attack=0.01, decay=0.1, sustain=0.9, release=3.7, gate=1,cutoff=20000, rq=1, loop=1|
+SynthDef(\fourButtonSamples, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=440, attack=0.01, decay=0.1, sustain=0.9, release=3.7, gate=1,cutoff=20000, rq=1, loop=1|
 	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
   var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum, rate: lr, startPos: start * BufFrames.kr(bufnum), loop: loop);
@@ -32,6 +33,8 @@ SynthDef(\samplerTRAIN, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq
 	var folder  = PathName("~/Downloads/yourDNASamples/birdcalls");
 	postf("loading samples : % \n", folder);
 
+	group = Group.new;
+
 	buffers = folder.entries.collect({ |path,i|
 		Buffer.read(s, path.fullPath, action:{|buf|
 			postf("buffer alloc [%] \n", buf);
@@ -40,7 +43,25 @@ SynthDef(\samplerTRAIN, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq
 };
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
-	synths.do({|o|o?o.set(\gate, 0)});
+	var oldGroup = group;
+	var oldBuffers = buffers;
+	group = nil;
+	buffers = nil;
+	synths.do({|o| o !? { o.set(\gate, 0) } });
+	synths = Array.newClear(4);
+	fork {
+		3.9.wait;
+		if (oldGroup.notNil) {
+			s.bind { oldGroup.freeAll };
+			s.sync;
+			oldGroup.free;
+		};
+		oldBuffers.do({|buf|
+			postf("buffer dealloc [%] \n", buf);
+			buf.free;
+			s.sync;
+		});
+	};
 };
 
 //------------------------------------------------------------
@@ -51,7 +72,7 @@ SynthDef(\samplerTRAIN, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq
       if(o == 1,{
       	states[i] = 0;
         //max 11
-				synths.put(i, Synth(\samplerTRAIN, [\bufnum, buffers[i+0], \rate, 1, \amp, amps[i]]));
+				synths.put(i, Synth(\fourButtonSamples, [\bufnum, buffers[i+0], \rate, 1, \amp, amps[i]], group));
       	// ["on",i].postln;
     	});
 		},{

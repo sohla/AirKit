@@ -1,13 +1,14 @@
 var m = ~model;
 var bi = 0;
 var dur = 0.25;
+var group;
 
 ~buffers;
 m.accelMassFilteredAttack = 0.99;
 m.accelMassFilteredDecay = 0.6;
 
 //------------------------------------------------------------
-SynthDef(\drumkit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
+SynthDef(\westminsterChimes1, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
     attack=0.01, decay=0.1, sustain=0.8, release=1.3, gate=1,cutoff=10, rq=1|
 
 	var lr = rate * BufRateScale.kr(bufnum);// * (freq/440.0);
@@ -44,9 +45,12 @@ SynthDef(\drumkit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 		});
 	});
 
+	group = Group.new;
+
 	Pdef(m.ptn,
 		Pbind(
-			\instrument, \drumkit,
+			\instrument, \westminsterChimes1,
+			\group, group,
 			\bufnum, Pfunc{
 				bi = rrand(1,~buffers.size-1);
 				~buffers[bi];
@@ -67,13 +71,25 @@ SynthDef(\drumkit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 };
 
 ~deinit = ~deinit <> {
+	var oldGroup = group;
+	var oldBuffers = ~buffers;
+	group = nil;
+	~buffers = nil;
 	Pdef(m.ptn).remove;
 
-	~buffers.do({|buf|
-		postf("buffer dealloc [%] \n", buf);
-		s.sync;
-		buf.free;
-	});
+	fork {
+		2.5.wait;
+		if (oldGroup.notNil) {
+			s.bind { oldGroup.freeAll };
+			s.sync;
+			oldGroup.free;
+		};
+		oldBuffers.do({|buf|
+			postf("buffer dealloc [%] \n", buf);
+			buf.free;
+			s.sync;
+		});
+	};
 	// synth.free;
 };
 
