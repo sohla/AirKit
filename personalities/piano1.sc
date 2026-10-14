@@ -17,8 +17,8 @@ var eventTypeName = (\customEvent_ ++ m.ptn).asSymbol;
 
 var folder = PathName("~/Downloads/cotf_samples/chronicPiano");
 
-var scale = [0,9,4,11,19,14,28,24];
-var octaves = [2,3, 4, 5];
+// var scale = [0,9,4,11,19,14,28,24];
+var scale = [0,9,4,11,19-12,14-12,28-12,24-12];
 
 //------------------------------------------------------------
 // note-name -> MIDI. The stems end in their note: "..._C4.aif".
@@ -40,16 +40,22 @@ m.accelMassFilteredDecay = 0.6;
 
 //------------------------------------------------------------
 SynthDef(\pianoVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
-    attack=0.002, sustain=0.3, release=0.2|
+    attack=0.002, sustain=0.3, release=0.2, mr=1, moda=0.0, modf=0.1, suba=1.0|
 	var env = EnvGen.kr(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum,
 		rate: rate * BufRateScale.kr(bufnum),
 		startPos: start * BufFrames.kr(bufnum), loop: 0);
+	var sub = PlayBuf.ar(2, bufnum,
+		rate: rate * BufRateScale.kr(bufnum) * mr * LFCub.ar(modf, 1, moda,1),
+		startPos: start * BufFrames.kr(bufnum), loop: 0);
+	sig = BRF.ar(sig, 200, 0.98);
+	sig = sig + (sub * suba).tanh;
+
 	Out.ar(out, Balance2.ar(sig[0], sig[1], pan, amp * env));
 }).add;
 
 SynthDef(\pianoVerb, {
-    |in=0, out=0, mix=0.3, room=2.83, damp=0.2, amp=1, gate=1, release=0.5|
+    |in=0, out=0, mix=0.1, room=2.83, damp=0.3, amp=1, gate=1, release=0.5|
 	var sig = In.ar(in, 2);
 	var env = EnvGen.kr(Env.asr(0.01, 1, release), gate, doneAction: 2);
 	sig = FreeVerb2.ar(sig[0], sig[1], mix, room.clip(0, 0.95), damp);
@@ -115,7 +121,7 @@ SynthDef(\pianoVerb, {
 
 	group = Group.new;
 	fxBus = Bus.audio(s, 2);
-	verbSynth = Synth.tail(group, \bellVerb, [\in, fxBus, \out, 0]);
+	verbSynth = Synth.tail(group, \pianoVerb, [\in, fxBus, \out, 0]);
 
 	
 	// The zero line, held for the life of the personality, so the shift
@@ -141,7 +147,7 @@ SynthDef(\pianoVerb, {
 			\type, eventTypeName,
 
 			\note, Pseq(scale, inf),
-			// \octave, Pseq(octaves.stutter(scale.size), inf),
+			\start, Pwhite(0.0, 0.04, inf),
 			// \root, 0,
 			// \dur, 0.2,
 			\legato, 1.6,
@@ -197,10 +203,12 @@ SynthDef(\pianoVerb, {
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var amp = m.accelMassFiltered.lincurve(0, 0.2 * sens, -34, -6, -1);
-	var dur = m.accelMassFiltered.lincurve(0, 2.0 * sens, 0.5, 0.05, -1);
-	var oct = (d.sensors.gyroEvent.y / pi.half).linlin(-1, 1, 3, 6).round.asInteger;
+	var dur = m.accelMassFiltered.lincurve(0, 2.0 * sens, 0.5, 0.05, -3);
+	var oct = ((d.sensors.gyroEvent.y / pi).fold(-0.5,0.5) * 2.0).linlin(-1, 1, 3, 5).round.asInteger;
+	var mr = ((d.sensors.gyroEvent.y / pi).fold(-0.5,0.5) * 2.0).linlin(-1, 1, 2, -1).round.asInteger;
 
-
+	mr = 1.0 / 2.pow(mr);
+	mr.postln;
 	if(amp < 29.neg, { amp = 120.neg});
 
 	Pdef(m.ptn).set(\viewID, d.port);
@@ -208,6 +216,7 @@ SynthDef(\pianoVerb, {
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\root, m.com.root ? 0);
 	Pdef(m.ptn).set(\octave, oct);
+	Pdef(m.ptn).set(\mr, mr);
 
 
 };
@@ -216,5 +225,5 @@ SynthDef(\pianoVerb, {
 ~plotMin = -1;
 ~plotMax = 1;
 ~plot = { |d,p|
-	[m.accelMass, m.accelMassFiltered];
+	[((d.sensors.gyroEvent.y / pi).fold(-0.5,0.5) * 2.0)];
 };
