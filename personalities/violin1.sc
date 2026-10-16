@@ -17,7 +17,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
     var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, timeScale: 1,doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum, rate: [lr, lr * 1.013], startPos: start * BufFrames.kr(bufnum), loop: 0);
     sig = RLPF.ar(sig, cutoff, rq);
-    // sig = Balance2.ar(sig[0], sig[1], pan, amp * env);
+	sig = HPF.ar(sig, 50, 0.98);
     Out.ar(out, sig * amp * env);
 }).add;
 
@@ -57,6 +57,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 				\sustain,0.1,
 				\release,3.2,
 				\rate, 0.25,
+				\out, Pwhite(0,3).asInteger,
 				// \dur, Pseq([0.25], inf),
 				\args, #[],
 

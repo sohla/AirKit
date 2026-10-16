@@ -75,6 +75,7 @@ m.com.bgColor = Color.yellow(0.5);
 			\dur,  Pkey(\div).reciprocal * beat,
 			\note, 0,
 			\octave, 5,
+			// \out, Pwhite(0, 3).asInteger,
 
 			\pick, Pfunc({ |e| if(e[\step] == 0, { kickIdx }, { (e[\pal] ? 1).rand }) }),
 			\bufnum, Pfunc({ |e| buffers[e[\pick].clip(0, buffers.size - 1)] }),

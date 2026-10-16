@@ -40,7 +40,7 @@ m.accelMassFilteredDecay = 0.6;
 
 //------------------------------------------------------------
 SynthDef(\pianoVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
-    attack=0.002, sustain=0.3, release=0.2, mr=1, moda=0.0, modf=0.1, suba=1.0|
+    attack=0.004, sustain=0.3, release=0.2, mr=1, moda=0.0, modf=0.1, suba=1.0|
 	var env = EnvGen.kr(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum,
 		rate: rate * BufRateScale.kr(bufnum),
@@ -48,7 +48,7 @@ SynthDef(\pianoVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 	var sub = PlayBuf.ar(2, bufnum,
 		rate: rate * BufRateScale.kr(bufnum) * mr * LFCub.ar(modf, 1, moda,1),
 		startPos: start * BufFrames.kr(bufnum), loop: 0);
-	sig = BRF.ar(sig, 200, 0.98);
+	sig = BRF.ar(sig, 160, 0.98);
 	sig = sig + (sub * suba).tanh;
 
 	Out.ar(out, Balance2.ar(sig[0], sig[1], pan, amp * env));
@@ -61,6 +61,7 @@ SynthDef(\pianoVerb, {
 	sig = FreeVerb2.ar(sig[0], sig[1], mix, room.clip(0, 0.95), damp);
 	sig = LeakDC.ar(sig);
 	Out.ar(out, sig * env * amp);
+	Out.ar(2, sig * env * amp);
 }).add;
 
 //------------------------------------------------------------
@@ -120,8 +121,8 @@ SynthDef(\pianoVerb, {
 	});
 
 	group = Group.new;
-	fxBus = Bus.audio(s, 2);
-	verbSynth = Synth.tail(group, \pianoVerb, [\in, fxBus, \out, 0]);
+	fxBus = Bus.audio(s, 4);
+	verbSynth = Synth.tail(group, \pianoVerb, [\in, fxBus, \out, 0, \mix, 0.4, \room, 2.83, \damp, 0.3, \amp, 1]);
 
 	
 	// The zero line, held for the life of the personality, so the shift
@@ -208,7 +209,6 @@ SynthDef(\pianoVerb, {
 	var mr = ((d.sensors.gyroEvent.y / pi).fold(-0.5,0.5) * 2.0).linlin(-1, 1, 2, -1).round.asInteger;
 
 	mr = 1.0 / 2.pow(mr);
-	mr.postln;
 	if(amp < 29.neg, { amp = 120.neg});
 
 	Pdef(m.ptn).set(\viewID, d.port);

@@ -21,10 +21,12 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction:2);
 	var sig = Splay.arFill(2,{|i|
-			Warp1.ar(2, bufnum, start, rate * (i+1) , 0.3, -1, 8, windowRandRatio:0.3)
+			Warp1.ar(2, bufnum, start, rate * (i+1), 0.3, -1, 8, windowRandRatio:0.3)
 	},1,1,0);
+
+	sig = BLowShelf.ar(sig, 90, 0.97,8);
   	sig = Compander.ar(sig, sig,
-        thresh: 0.01,
+        thresh: 0.1,
         slopeBelow: 1,
         slopeAbove: 0.1,
         clampTime:  0.01,
@@ -142,12 +144,14 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 	var amp = m.accelMassFiltered.linlin(0, 2.5 * sens,0.00001,1);
 	var rate =  m.gyroYFiltered.lincurve(-1.0,1.0,0.1,2.0,0);
 	var start = m.gyroZFiltered.lincurve(-1.0,1.0,0.0,1.0,0);
+	var sp = m.gyroZFiltered.lincurve(-1.0,1.0,0,3,0);
 
 	if(amp < 0.01, {amp = 0});
 
 	synth.set(\start, start);
 	synth.set(\rate, rate);
 	synth.set(\amp, amp * 20 * vol);
+	// synth.set(\out, sp);
 
 };
 //------------------------------------------------------------
