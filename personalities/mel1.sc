@@ -17,8 +17,8 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, timeScale: 1,doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum, rate: [lr, lr * 1.003], startPos: start * BufFrames.kr(bufnum), loop: 0);
 	var hs = RHPF.ar(sig, [6000,7000], 0.99,13).tanh;
-	sig = RLPF.ar(sig, cutoff, rq);// + osc;
-	sig = Pan2.ar(hs + sig, pan, amp * env);
+	// sig = RLPF.ar(sig, cutoff, rq);// + osc;
+	sig = Pan2.ar(Mix.ar(hs[0] + sig[0]), pan, amp * env);
 	sig = FreeVerb.ar(sig,0.5,0.4);
 	sig = LeakDC.ar(sig);
 	Out.ar(out, sig);
@@ -40,6 +40,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 				\bufnum, buf,
 				// \octave, Pxrand([0,1,2,1,3,2], inf),
 				\note, Pwhite(33,33, inf).floor,
+				\pan, Pwhite(-0.9,0.9),
 				\start,Pwhite(0.0,0.9),
 				\attack,0.01,
 				\decay, 0.2,
@@ -50,6 +51,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 
 			\type, \customVisualEvent,
 			\shape, \circle,
+			
 			\duration, 3.6,
 			\sx, 1.neg + Pfunc({|e| e.octave * 0.02}),
 			\sy, 1.5 - Pfunc({|e| e.rate * 0.75}),

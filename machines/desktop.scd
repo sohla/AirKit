@@ -13,7 +13,7 @@
 	outAddr: ["192.168.70.211", 5005],
 	numDevices: 5,
 
-	list: "list_BtB.sc",
+	list: "list_BtB_Dev.sc",
 
 	secs: 0.01,
 	latency: 0.03,
@@ -21,6 +21,7 @@
 	blockSize: 64,
 	hardwareBufferSize: 64,
 	numInputs: 2,
+	numOutputs: 5,
 
 	border: true,
 	fullScreen: false,

@@ -143,7 +143,7 @@ s.options.blockSize = machine[\blockSize];
 machine[\hardwareBufferSize] !? { |v| s.options.hardwareBufferSize = v };
 s.options.numBuffers = 2048;
 s.options.memSize = 65536;   
-s.options.numOutputBusChannels = 2; 
+s.options.numOutputBusChannels = machine[\numOutputs];
 s.options.numInputBusChannels = machine[\numInputs];
 s.latency = machine[\latency]; 
 

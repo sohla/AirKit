@@ -86,6 +86,12 @@ var defaults = (
 	// channel 1 out as a private bus.
 	numInputs: 1,
 
+	// Hardware output channels. Stereo unless a kit is wired for more - the
+	// multichannel rigs in synths/fourChannel.sc and utils/serverSetup.sc want
+	// 4 or 5. Private buses start above this, so raising it shifts every
+	// Bus.audio index up.
+	numOutputs: 2,
+
 	border: isOSX,
 	fullScreen: isOSX.not,
 
