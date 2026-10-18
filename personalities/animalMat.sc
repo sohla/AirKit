@@ -56,6 +56,8 @@ SynthDef(\stereoSamplerAM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, f
 ~next = {|d|
 
 	// var dur = m.accelMassFiltered.lincurve(0,1,0.30,0.04,-1).lag(0.2);
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var leg= m.accelMassFiltered.linlin(0,1,0.6,0.2);
 	var amp = m.gyroYFiltered.lincurve(-1.0,1.0,0.5,1,-2);
 
@@ -78,7 +80,7 @@ SynthDef(\stereoSamplerAM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, f
 		});
 	});
 
-	Pdef(m.ptn).set(\amp, amp*1);
+	Pdef(m.ptn).set(\amp, amp * 0.5 * vol);
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\cutoff, co);
 	Pdef(m.ptn).set(\ts, leg);

@@ -67,6 +67,9 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, 
 
 //------------------------------------------------------------
 ~next = {|d|
+
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var amp = m.accelMass.linlin(0,1,0.00001,1);
 	var speed= m.accelMassFiltered.linlin(0,1,0.25,0.35);
 	var rate = m.accelMassFiltered.linlin(0,1,0.9,1.4);
@@ -76,7 +79,7 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, 
 
 	synth.set(\pch, rate);
 	synth.set(\speed, speed);
-	synth.set(\amp, amp * 0.9);
+	synth.set(\amp, amp * vol);
 	synth.set(\pan, pan);
 };
 //------------------------------------------------------------

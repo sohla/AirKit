@@ -57,7 +57,7 @@
 		"nicPrrr1",
 		"animalMat",
 		"crows",
-		"frog1",
+		"frog2",
 		"quackQuack",
 		"bee",
 		"hover1",
