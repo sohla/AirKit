@@ -13,6 +13,11 @@
 		"multiBeat5",
 		"multiBeat4",
 
+		"miniMoog",
+		"miniDroplet",
+		"miniHarp",
+		"miniMarimba",
+
 		"nicTwoNote",
 		"nicbb1",
 		"nicPrrr1",
@@ -23,6 +28,7 @@
 		"mel1",
 		"mel4",
 
+
 		"violin1",
 		"violin2",
 
@@ -31,8 +37,7 @@
 		"gendy3",
 		"movingBeast",
 
-		"miniMoog",
-		"miniDroplet",
+
 		"buchlaMetallic",
 
 		"bells",
@@ -48,6 +53,16 @@
 		"alonPerc1",
 		"temp_input7",
 		"temp_input8",
+
+		"nicPrrr1",
+		"animalMat",
+		"crows",
+		"frog1",
+		"quackQuack",
+		"bee",
+		"hover1",
+		"hoverSong",
+
 
 		"silence",
 	]

@@ -132,17 +132,17 @@ SynthDef(\buchlaInspired, {
 			// \root, 0,
 			\pick, Pfunc({ |e| if(e[\step] == 0, { 0 }, { (e[\pal] ? 1).rand }) }),
 			\note, Pfunc({ |e| notes[e[\pick].clip(0, notes.size - 1)] }),
-			\octave, Pfunc({ |e| if(e[\step] == 0, { 3 }, { [3,4,5].choose }) }),
+			\octave, Pfunc({ |e| if(e[\step] == 0, { 4 }, { [5,6].choose }) }),
 
 			\osc1Waveform, 1, \osc1Index, 0.8,
 			\osc2Waveform, 2, \osc2Index, 0.6,
 			\osc1Ratio, Pfunc({ |e| 1.0 * (e[\roll] ? 1) }),
 			\osc2Ratio, Pfunc({ |e| 1.0 * (e[\roll] ? 1) }),
-			\release, Pkey(\dur) * 3.5,
+			\release, Pkey(\dur) * 2,
 			\complexOscFold, 1.5, \complexOscWarp, 0.3,
 			\lpgSustain, 0,
 			\lowpassResonance, 0.1,
-			\attack, 0.001,
+			\attack, Pwhite(0.01,0.1),
 			\pan, Pwhite(-0.2, 0.2),
 			\reverbMix, 0.2, \reverbRoom, 0.3, \reverbDamp, 0.5,
 
@@ -223,9 +223,9 @@ SynthDef(\buchlaInspired, {
 	Pdef(m.ptn).set(\divIdx, idx);
 	Pdef(m.ptn).set(\pal, pal);
 	// Pdef(m.ptn).set(\roll, roll);
-	Pdef(m.ptn).set(\gestAmp, amp.dbamp * vol);
+	Pdef(m.ptn).set(\gestAmp, amp.dbamp * vol * 0.5);
 	Pdef(m.ptn).set(\lowpassCutoff, cut);
-	Pdef(m.ptn).set(\lpgDecay, ring);
+	Pdef(m.ptn).set(\lpgDecay, ring * 0.4);
 	Pdef(m.ptn).set(\root, m.com.root);
 };
 

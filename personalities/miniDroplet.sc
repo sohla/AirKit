@@ -27,7 +27,8 @@ SynthDef(\miniDroplet, {
 	sig = Pan2.ar(sig, pan);
 	Out.ar(out, sig * amp);
   	DetectSilence.ar(sig, doneAction: 2);
-    Out.ar(out, PanAz.ar(2, sig, pan, 1, 2, 0.8) * amp);
+    // Out.ar(out, PanAz.ar(2, sig, pan, 1, 2, 0.8) * amp);
+    Out.ar(out, Pan2.ar(sig, pan) * amp);
 }).add;
 
 SynthDef(\dropletVerb, {
@@ -89,7 +90,7 @@ SynthDef(\dropletVerb, {
 			\scale, Scale.minor,
 			\pick, Pfunc({ |e| if(e[\step] == 0, { 0 }, { (e[\pal] ? 1).rand }) }),
 			\note, Pfunc({ |e| notes[e[\pick].clip(0, notes.size - 1)] }),
-			\octave, Pfunc({ |e| if(e[\step] == 0, { 3 }, { [3,5,6].choose }) }),
+			\octave, Pfunc({ |e| if(e[\step] == 0, { 4}, { [5,6,7].choose }) }),
 
 			\attack, 0.001,
 			\filterRQ, Pwhite(0.5, 1.5),
