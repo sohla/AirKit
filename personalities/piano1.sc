@@ -18,7 +18,33 @@ var eventTypeName = (\customEvent_ ++ m.ptn).asSymbol;
 var folder = PathName("~/Downloads/cotf_samples/chronicPiano");
 
 // var scale = [0,9,4,11,19,14,28,24];
-var scale = [0,9,4,11,19-12,14-12,28-12,24-12];
+// var scale = [0,9,4,11,19-12,14-12,28-12,24-12];
+// var scale = [0,9,4,11,7,2,16,12] - 3;
+
+
+
+var scale = [3,12,7,14,10,5,19,15] - 3; // OG
+// var scale = [3,12,7,14,10,5,19,15] - 6; // OG
+
+// var scale = [4,12,7,14,11,7,2,16,12] + 5;
+// var scale = [3,12,7,14,10,2,15,12] + 2;
+// var scale = [4,12,7,14,11,7,2,16,12] - 2;
+// var scale = [4,12,7,14,11,7,2,16,0] + 3;
+// var scale = [4,0,7,14,11,7,2,16,12] + 2;
+
+
+// list
+// var scale = [0,9,4,11,7,2,16,12]; //OG
+// var scale = [0,7,4,11,7,2,16,12] + 5;
+// var scale = [0,9,3,10,7,2,15,12] + 2;
+//var scale = [0,7,4,11,7,2,16,12] - 2;
+//  var scale = [0,7,4,11,7,2,16,12] + 3;
+// var scale = [0,7,4,11,7,2,16,12] + 2;
+
+
+
+
+
 
 //------------------------------------------------------------
 // note-name -> MIDI. The stems end in their note: "..._C4.aif".

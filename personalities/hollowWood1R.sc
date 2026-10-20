@@ -29,7 +29,11 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 
-SynthDef(\inputTrigger, { |ratio = 3.0, floorDb = -68,
+// Right input. The name has to be unique across every loaded personality -
+// SynthDefs are global on the server, so while this and hollowWood1L both
+// called themselves \inputTrigger the last roster entry to load decided
+// which channel BOTH of them listened to.
+SynthDef(\hollowWoodTriggerR, { |ratio = 3.0, floorDb = -68,
 	deadtime = 0.01, slowAtk = 0.100, slowRel = 0.150, inGain = 0.7,
 	fullScale = 0.35, curve = 1.5, window = 0.003|
 
@@ -115,7 +119,7 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 		nil
 	});
 
-	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -37,
+	trig = Synth(\hollowWoodTriggerR, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -37,
 		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.001], group);
 
 	OSCdef(hitKey, { |msg|
@@ -159,7 +163,7 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			Synth(\hollowWood, [
 				\freq, note.midicps,
 				\vel, vel,
-				\amp, 0.5 * ang * vol,
+				\amp, 0.3 * ang * vol,
 				\decay, ang * 5,
 				\coef, cf * roll,
 				\body, ang * 5,

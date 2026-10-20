@@ -14,7 +14,8 @@ var ioiMin = 0.04;
 var ioiMax = 2.0;
 var smooth = 0.99;
 
-var notes = [0,7,10,12,19,24,29,36] - 12;
+// var notes = [0,7,10,12,19,24,29,36] - 12;
+var notes = [0,7,19] - 12;
 
 var bodyRatios = [1, 1.34, 2.71];
 var bodyAmps = [0.5, 0.25, 0.12];
@@ -29,7 +30,11 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 
-SynthDef(\inputTrigger, { |ratio = 3.0, floorDb = -68,
+// Left input. The name has to be unique across every loaded personality -
+// SynthDefs are global on the server, so while this and hollowWood1R both
+// called themselves \inputTrigger the last roster entry to load decided
+// which channel BOTH of them listened to.
+SynthDef(\hollowWoodTriggerL, { |ratio = 3.0, floorDb = -68,
 	deadtime = 0.01, slowAtk = 0.100, slowRel = 0.150, inGain = 0.7,
 	fullScale = 0.35, curve = 1.5, window = 0.003|
 
@@ -52,7 +57,7 @@ SynthDef(\inputTrigger, { |ratio = 3.0, floorDb = -68,
 
 SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 	decay = 1.5, coef = 0.3, body = 0.6, tone = 4000,
-	gate = 1, rel = 1.5, pan = 0, lfoA=1, lfoF=7|
+	gate = 1, rel = 1.5, pan = 0, lfoA=1, lfoF=7, filtf=200|
 
 	var fire = Impulse.ar(0);
 	var exc  = LPF.ar(WhiteNoise.ar(1), (tone * vel).clip(200, 18000));
@@ -69,7 +74,9 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 		[0.30, 0.18, 0.10] * body
 	], knock);
 
-	var sig = (plk + bod*0.5) * vel;
+	var filter = RLPF.ar(plk + bod, filtf, 0.9);
+
+	var sig = (filter * 0.5) * vel;
 	var env = EnvGen.kr(Env.cutoff(rel, 1, \sin), gate, doneAction: 2);
 
 	DetectSilence.ar(sig, 0.0001, 0.2, doneAction: 2);
@@ -115,7 +122,7 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 		nil
 	});
 
-	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -23,
+	trig = Synth(\hollowWoodTriggerL, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -23,
 		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.001], group);
 
 	OSCdef(hitKey, { |msg|
@@ -125,10 +132,11 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			var vel = msg[3];
 			var now = SystemClock.seconds;
 			var ioi = (now - lastHit).clip(ioiMin, ioiMax);
+			var rrate = m.rrateMassFiltered.lincurve(0.0, 1.0 * sens, 40.0, 2000.0, -1).clip(20, 18000);
 			var rate, dec, cf, bod, rt, note;
 			var roll = m.gyroXFiltered.fold(-0.5,0.5).linlin(-0.5,0.5,0.0,1.0);
 			// var ang = (dev.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1);
-			var ang = m.accelMassFiltered.lincurve(0.0, 0.1 * sens, 0.0, 1.0, -1);
+			var ang = m.accelMassFiltered.lincurve(0.0, 2.5 * sens, 0.0, 1.0, -1);
 
 			if (hitCount > 0, {
 				var drift = ((ioi - avgIoi).abs / avgIoi).clip(0.0, 1.0);
@@ -159,13 +167,14 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			Synth(\hollowWood, [
 				\freq, note.midicps,
 				\vel, vel,
-				\amp, 0.5 * ang * vol,
+				\amp, 0.3 * ang * vol,
 				\decay, ang * 5,
 				\coef, cf * roll,
+				\filtf, rrate,
 				\body, ang * 5,
 				\lfoA, ang * 0.1,
-				\lfoF, 7,
-				\rel, ang * 5,
+				\lfoF, ang * 7,
+				\rel, ang * 4,
 				\pan, (dev.sensors.gyroEvent.z / pi).clip(-1, 1) * 0.5
 			], group);
 
@@ -284,11 +293,12 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 	// Rotation
 	// [d.sensors.rrateEvent.x, d.sensors.rrateEvent.y, d.sensors.rrateEvent.z];
-	// [m.rrateMass, m.rrateMassFiltered];
+	[m.rrateMass, m.rrateMassFiltered];
 //m.gyroYFiltered.fold(-0.5,0.5).lincurve(-0.5,0.5,0.0,1.0,0);
 	// Gyro
 	// [(d.sensors.gyroEvent.x / pi)];//roll
-	[(d.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1), m.gyroXFiltered.fold(-0.5,0.5).linlin(-0.5,0.5,0.0,1.0)];
+	// [(d.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1), m.gyroXFiltered.fold(-0.5,0.5).linlin(-0.5,0.5,0.0,1.0)];
+	// [(dev.sensors.gyroEvent.y / pi.half)];
 	// [(d.sensors.gyroEvent.z / pi)];//left right
 	// [(d.sensors.gyroEvent.x / pi), (d.sensors.gyroEvent.y / pi.half), (d.sensors.gyroEvent.z / pi)];
   // [m.gyroXFiltered, m.gyroYFiltered, m.gyroZFiltered];
