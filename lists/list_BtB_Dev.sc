@@ -11,6 +11,7 @@
 		"dulcimer2",
 		"piano1",
 		"piano2",
+		"piano3",
 		"multiBeat1",
 		"multiBeat5",
 		"multiBeat4",
@@ -24,6 +25,7 @@
 		"nicbb1",
 		"nicPrrr1",
 		"nicMouth1",
+		"nicMouthPerc",
 
 		"melbb1",
 		"melbb2",
@@ -63,6 +65,8 @@
 		"temp_input11",
 		"temp_input12",
 		"temp_input13",
+		"temp_input14",
+		"temp_input15",
 
 
 		"silence",

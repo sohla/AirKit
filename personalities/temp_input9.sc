@@ -1,3 +1,4 @@
+var inputBus = 0;
 var m = ~model;
 var dev = ~device;
 var group, trig;
@@ -17,7 +18,7 @@ var noteSets = [
 ];
 
 // A pass is one set's worth of notes, so a set lasts reps * set.size hits.
-var reps = 2;
+var reps = 1;
 
 // 50 - 12, temp_input7's first root - keeps the register of the template.
 var base = 38;
@@ -35,11 +36,11 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 
-SynthDef(\inputTrigger, { |ratio = 3.0, floorDb = -48,
+SynthDef(\inputTrigger, { |inputBus = 0, ratio = 3.0, floorDb = -48,
 	deadtime = 0.10, slowAtk = 0.300, slowRel = 0.150, inGain = 0.7,
 	fullScale = 0.35, curve = 1.5, window = 0.005|
 
-	var in   = SoundIn.ar(0) * inGain;
+	var in   = SoundIn.ar(inputBus) * inGain;
 	var fast = Amplitude.kr(in, 0.001, 0.05);
 	var slow = LagUD.kr(fast, slowAtk, slowRel);
 	var over = fast > ((slow * ratio) + floorDb.dbamp);
@@ -100,7 +101,7 @@ SynthDef(\miniMoogVoice, {
 
 	// trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -42,
 	// 	\fullScale, 0.7, \curve, 1.5, \deadtime, 0.02], group);
-	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
+	trig = Synth(\inputTrigger, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
 		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.02], group);
 
 

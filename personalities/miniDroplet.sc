@@ -190,6 +190,12 @@ SynthDef(\dropletVerb, {
 	Pdef(m.ptn).set(\decay, ring);
 	Pdef(m.ptn).set(\wobble, wob);
 	Pdef(m.ptn).set(\root, m.com.root);
+
+	// Pdef(m.ptn).set(\filterFreq, 1000);
+	// Pdef(m.ptn).set(\decay, 0.1);
+	// Pdef(m.ptn).set(\wobble, 0);
+	// Pdef(m.ptn).set(\root, m.com.root);
+
 };
 
 //------------------------------------------------------------

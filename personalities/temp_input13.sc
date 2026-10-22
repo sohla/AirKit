@@ -7,6 +7,7 @@ rhythm:      the drummer's own, replayed at the mover's tempo
 instruments: [Template]
 */
 
+var inputBus = 1;
 var m = ~model;
 var dev = ~device;
 var group, trig, echo;
@@ -55,11 +56,11 @@ m.gyroFilteredDecay = 0.7;
 // The trigger. Unchanged from temp_input11 and 12 apart from the name, so
 // the drummer's feel carries straight over. The input is only ever read as
 // an onset and a velocity - nothing downstream touches the signal itself.
-SynthDef(\inputTrigger13, { |ratio = 3.0, floorDb = -48,
+SynthDef(\inputTrigger13, { |inputBus = 1, ratio = 3.0, floorDb = -48,
 	deadtime = 0.10, slowAtk = 0.300, slowRel = 0.150, inGain = 0.7,
 	fullScale = 0.35, curve = 1.5, window = 0.005|
 
-	var in   = SoundIn.ar(1) * inGain;
+	var in   = SoundIn.ar(inputBus) * inGain;
 	var fast = Amplitude.kr(in, 0.001, 0.05);
 	var slow = LagUD.kr(fast, slowAtk, slowRel);
 	var over = fast > ((slow * ratio) + floorDb.dbamp);
@@ -162,7 +163,7 @@ SynthDef(\strike13, { |out = 0, freq = 440, amp = 0.3, vel = 1.0,
 		[ mid + (x @ h.neg), mid + (x @ h) ]
 	});
 
-	trig = Synth(\inputTrigger13, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
+	trig = Synth(\inputTrigger13, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -82,
 		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.02], group);
 
 	// the remembered contour

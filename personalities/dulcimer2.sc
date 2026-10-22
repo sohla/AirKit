@@ -85,7 +85,7 @@ SynthDef(\dulcimerVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 		rate: rate * BufRateScale.kr(bufnum) * [1, 1.007],
 		startPos: start * BufFrames.kr(bufnum), loop: 0);
 	var tone = LFTri.ar(freq * [1,1.02] * 0.5 * LFCub.ar(9 * amp,0, 0.1 * amp,2), 0, subamp);
-	var mix = (sig + tone) * amp * env * 0.5;
+	var mix = (sig + tone) * amp * env;
 	Out.ar(out, mix);
 }).add;
 
@@ -222,7 +222,7 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var idx = m.accelMassFiltered.lincurve(0, 3.0 * sens, 0, divs.size - 1, 2).round.asInteger.clip(0, divs.size - 1);
+	var idx = m.accelMassFiltered.lincurve(0, 2.0 * sens, 0, divs.size - 1, -1).round.asInteger.clip(0, divs.size - 1);
 	var amp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -30, -10, -2);
 	var subamp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -20, -4, -2);
 

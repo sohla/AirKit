@@ -1,3 +1,4 @@
+var inputBus = 0;
 var m = ~model;
 var group, synth, trig;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
@@ -23,11 +24,11 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 
-SynthDef(\inputTrigger, { |ratio = 3.0, floorDb = -48,
+SynthDef(\inputTrigger, { |inputBus = 0, ratio = 3.0, floorDb = -48,
 	deadtime = 0.10, slowAtk = 0.300, slowRel = 0.150, inGain = 0.7,
 	fullScale = 0.35, curve = 1.5, window = 0.005|
 
-	var in   = SoundIn.ar(0) * inGain;
+	var in   = SoundIn.ar(inputBus) * inGain;
 	var fast = Amplitude.kr(in, 0.001, 0.05);
 	var slow = LagUD.kr(fast, slowAtk, slowRel);
 	var over = fast > ((slow * ratio) + floorDb.dbamp);
@@ -121,7 +122,7 @@ SynthDef(\simpleHit, {|out=0, amp=0.0, freq=120, attack=0.001, decay=0.03, susta
 		).play;
 	};
 
-	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -52,
+	trig = Synth(\inputTrigger, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -52,
 		\fullScale, 0.7, \curve, 1.5, \deadtime, 0.02], group);
 
 	synth = Synth(\simpleHit, [\hitAmp, 0.7, \duckAmt, 0.7, \hitDec, 0.4], group, \addToTail);

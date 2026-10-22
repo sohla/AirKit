@@ -11,7 +11,7 @@
 	platform: \osx,
 
 	outAddr: ["192.168.70.211", 5005],
-	numDevices: 5,
+	numDevices: 10,
 
 	list: "list_BtB_Dev.sc",
 
@@ -21,10 +21,10 @@
 	blockSize: 64,
 	hardwareBufferSize: 64,
 	numInputs: 2,
-	numOutputs: 5,
+	numOutputs: 4,
 
 	border: true,
 	fullScreen: false,
 
-	drumInput: true
+	drumInput: false
 )

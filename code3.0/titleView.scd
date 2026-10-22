@@ -8,14 +8,9 @@ var addTitleView = { |d|
 			[d.name, Color.black, d.color.alpha_(0.8)],
 			[d.name, Color.black.alpha_(0.5), Color.white.alpha_(0.1)],
 		])
+		.value_(if(d.enabled, 0, 1))
 		.action_({|but|
-			if(but.value == 0, {
-				d.enabled = true;
-				NetAddr.new("127.0.0.1", 57120).sendMsg("/airkit/reLoadPersonality", d.port, d.personality);
-			},{
-				d.enabled = false;
-				NetAddr.new("127.0.0.1", 57120).sendMsg("/airkit/unLoadPersonality", d.port, d.personality);
-		});
+			NetAddr.new("127.0.0.1", 57120).sendMsg(if(but.value == 0, "/airkit/unmute", "/airkit/mute"), d.port);
 		});
 
 	OSCFunc({ |msg, time, addr, recvPort|
@@ -33,13 +28,13 @@ var addTitleView = { |d|
 
 	OSCFunc({ |msg, time, addr, recvPort|
 		if(msg[1].asInteger == d.port, {
-			{ button.valueAction = 1 }.defer;
+			{ button.value = 1 }.defer;
 		});
 	},'/airkit/mute');
 
 	OSCFunc({ |msg, time, addr, recvPort|
 		if(msg[1].asInteger == d.port, {
-			{ button.valueAction = 0 }.defer;
+			{ button.value = 0 }.defer;
 		});
 	},'/airkit/unmute');
 

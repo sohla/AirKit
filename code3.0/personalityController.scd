@@ -436,6 +436,18 @@ OSCFunc({ |msg, time, addr, recvPort|
     reLoadPersonality.(msg[1], msg[2]);
 },'/airkit/reLoadPersonality', NetAddr("127.0.0.1", NetAddr.langPort));
 
+// The one place mute acts. Every title button sends here and only mirrors
+// the result, so all views agree and a mute unloads once, not once per view.
+OSCdef(\airkitMute, { |msg|
+    var d = ~devices.at(msg[1].asInteger);
+    if(d.notNil and: { d.enabled }, { d.enabled = false; unLoadPersonality.(d.port, d.personality) });
+}, '/airkit/mute');
+
+OSCdef(\airkitUnmute, { |msg|
+    var d = ~devices.at(msg[1].asInteger);
+    if(d.notNil and: { d.enabled.not }, { d.enabled = true; reLoadPersonality.(d.port, d.personality) });
+}, '/airkit/unmute');
+
 // OSCFunc({ |msg, time, addr, recvPort|
 //     NetAddr.new("127.0.0.1", 57120).sendMsg("/airkit/personalityName", msg[1], ~devices.at(msg[1]).name);
 // },'/airkit/getPersonalityName', NetAddr("127.0.0.1", NetAddr.langPort));

@@ -1,3 +1,4 @@
+var inputBus = 1;
 var m = ~model;
 var dev = ~device;
 var group, trig;
@@ -5,7 +6,7 @@ var hitKey = ('hit_' ++ m.ptn).asSymbol;
 var relTime = 0.8;
 
 var notes = [0, 16, 4, 7, 14, 19, 11];
-var roots = [50,53,48].stutter(16) - 12;
+var roots = [50,53,48].stutter(16) + 12;
 
 var step = 0;
 
@@ -18,11 +19,11 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 
-SynthDef(\inputTrigger, { |ratio = 3.0, floorDb = -48,
+SynthDef(\inputTrigger, { |inputBus = 0, ratio = 3.0, floorDb = -48,
 	deadtime = 0.10, slowAtk = 0.300, slowRel = 0.150, inGain = 0.7,
 	fullScale = 0.35, curve = 1.5, window = 0.005|
 
-	var in   = SoundIn.ar(0) * inGain;
+	var in   = SoundIn.ar(inputBus) * inGain;
 	var fast = Amplitude.kr(in, 0.001, 0.05);
 	var slow = LagUD.kr(fast, slowAtk, slowRel);
 	var over = fast > ((slow * ratio) + floorDb.dbamp);
@@ -110,7 +111,7 @@ SynthDef(\warmPadVoice, {
 
 	// trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -42,
 	// 	\fullScale, 0.7, \curve, 1.5, \deadtime, 0.02], group);
-	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
+	trig = Synth(\inputTrigger, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
 		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.02], group);
 
 

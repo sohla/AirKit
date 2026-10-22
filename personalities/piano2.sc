@@ -44,7 +44,7 @@ var scales = [
 // ];
 
 // Passes through one set before moving to the next.
-var reps = 2;
+var reps = 5;
 
 
 
@@ -79,7 +79,7 @@ SynthDef(\pianoVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 		rate: rate * BufRateScale.kr(bufnum) * mr * LFCub.ar(modf, 1, moda,1),
 		startPos: start * BufFrames.kr(bufnum), loop: 0);
 	sig = BRF.ar(sig, 160, 0.98);
-	sig = sig + (sub * suba).tanh;
+	sig = sig + (sub * suba * 0.5).tanh;
 
 	Out.ar(out, Balance2.ar(sig[0], sig[1], pan, amp * env));
 }).add;
