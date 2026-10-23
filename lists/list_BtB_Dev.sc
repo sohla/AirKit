@@ -49,6 +49,9 @@
 		"pluck1",
 		"droplet",
 
+		"waves",
+		"waves2",
+
 		"trigTrakPattern1",
 		"hollowWood",
 		"hollowWood1L",

@@ -59,7 +59,7 @@ m.gyroFilteredDecay = 0.7;
 //------------------------------------------------------------
 SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, start = 0, pan = 0,
 	attack = 0.002, sustain = 0.1, release = 0.0003|
-	var env = EnvGen.kr(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction: 2);
+	var env = EnvGen.kr(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction: 2);////~~!!!!
 	var sig = PlayBuf.ar(2, bufnum, rate * BufRateScale.kr(bufnum), startPos: start * BufFrames.kr(bufnum));
 	Out.ar(out, Balance2.ar(sig[0], sig[1], pan, amp * vel * env));
 }).add;

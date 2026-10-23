@@ -1,5 +1,8 @@
 var m = ~model;
 var dev = ~device;
+
+var inputBus = 0;
+
 var group, trig;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
 var relTime = 1.5;
@@ -15,7 +18,7 @@ var ioiMax = 2.0;
 var smooth = 0.99;
 
 // var notes = [0,7,10,12,19,24,29,36] - 12;
-var notes = [0,7,19] - 12;
+var notes = [0,7,19] - 12 - 9;
 
 var bodyRatios = [1, 1.34, 2.71];
 var bodyAmps = [0.5, 0.25, 0.12];
@@ -38,7 +41,7 @@ SynthDef(\hollowWoodTriggerL, { |ratio = 3.0, floorDb = -68,
 	deadtime = 0.01, slowAtk = 0.100, slowRel = 0.150, inGain = 0.7,
 	fullScale = 0.35, curve = 1.5, window = 0.003|
 
-	var in   = SoundIn.ar(0) * inGain;
+	var in   = SoundIn.ar(inputBus) * inGain;
 	var fast = Amplitude.kr(in, 0.001, 0.05);
 	var slow = LagUD.kr(fast, slowAtk, slowRel);
 	var over = fast > ((slow * ratio) + floorDb.dbamp);
@@ -55,7 +58,7 @@ SynthDef(\hollowWoodTriggerL, { |ratio = 3.0, floorDb = -68,
 
 //------------------------------------------------------------
 
-SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
+SynthDef(\hollowWoodL, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 	decay = 1.5, coef = 0.3, body = 0.6, tone = 4000,
 	gate = 1, rel = 1.5, pan = 0, lfoA=1, lfoF=7, filtf=200|
 
@@ -78,6 +81,8 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 	var sig = (filter * 0.5) * vel;
 	var env = EnvGen.kr(Env.cutoff(rel, 1, \sin), gate, doneAction: 2);
+
+	// sig = sig + DelayL.ar(sig, 0.3, 0.3, 0.5);
 
 	DetectSilence.ar(sig, 0.0001, 0.2, doneAction: 2);
 
@@ -164,7 +169,7 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			// (d.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1)
 			// rt = ang.linlin(0.0, 1.0, 0, notes.size - 1).asInteger;	
 			note = notes.clipAt(rt) + 45;
-			Synth(\hollowWood, [
+			Synth(\hollowWoodL, [
 				\freq, note.midicps,
 				\vel, vel,
 				\amp, 0.3 * ang * vol,
@@ -190,21 +195,21 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 					closed: false,
 
 					rotation: (hitCount * 2pi / 12) - 0.5pi,
-					startSize: rt.linlin(0, notes.size - 1, 260, 140),
-					endSize: rt.linlin(0, notes.size - 1, 260, 140),
+					startSize: rt.linlin(0, notes.size - 1, 60, 140),
+					endSize: rt.linlin(0, notes.size - 1, 60, 140),
 
-					startWidth: vel.linlin(0, 1, 3, 22),
-					endWidth: vel.linlin(0, 1, 3, 22),
+					startWidth: vel.linlin(0, 1, 3, 62 * ang),
+					endWidth: vel.linlin(0, 1, 3, 62 * ang),
 
-					startColor: Color.hsv(0.16, 0.95, 1.0, 0.95),
-					endColor: Color.hsv(0.16, 0.95, 1.0, 0.95),
+					startColor: Color.hsv(0.76, 0.95, 1.0, 0.95),
+					endColor: Color.hsv(0.76, 0.95, 1.0, 0.95),
 
 					duration: (ang * 5 * 1.5).clip(0.3, 6),
 
 					modulation: (
 						type: \radial,
-						freq: 2 + (rt * 0.5),
-						amp: ang * 14,
+						freq: 5 + (rt * 5),
+						amp: ang * 2,
 						harmonics: 2,
 						span: (ang * 5).linlin(0, 5, 0.25pi, 0.9pi),
 						decay: ang * 5,
@@ -215,14 +220,14 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 					)
 				);
 				mark.copy.play;
-				SystemClock.sched(0.2, {
-					mark.copy.putAll((
-						rotation: mark[\rotation] + pi,
-						startColor: Color.hsv(0.07, 0.95, 1.0, 0.95),
-						endColor: Color.hsv(0.07, 0.95, 1.0, 0.95)
-					)).play;
-					nil
-				});
+				// SystemClock.sched(0.2, {
+				// 	mark.copy.putAll((
+				// 		rotation: mark[\rotation] + pi,
+				// 		startColor: Color.hsv(0.47, 0.95, 1.0, 0.95),
+				// 		endColor: Color.hsv(0.47, 0.95, 1.0, 0.95)
+				// 	)).play;
+				// 	nil
+				// });
 			});
 
 			// SystemClock.sched(0.2, {

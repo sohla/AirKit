@@ -138,7 +138,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 
 	synth !? { |x|
 		x.set(\amp, amp.dbamp * vol);
-		x.set(\freq, freq);
+		x.set(\freq, freq * 0.midiratio);
 		x.set(\detune, detune);
 		x.set(\cutoff, cutoff);
 	};

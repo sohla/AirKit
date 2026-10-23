@@ -55,7 +55,7 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 	attack=2.1, decay=0.1, sustain=0.99, release=1.2, gate=1,cutoff=20000, rq=0.9|
 	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, timeScale: 1,doneAction: 2);
-	var sig = PlayBuf.ar(2, bufnum, rate: lr, startPos: start * BufFrames.kr(bufnum), loop: 1);
+	var sig = PlayBuf.ar(2, bufnum, rate: lr, startPos: start * BufFrames.kr(bufnum), loop: 0,doneAction: 2);
 	// sig = RLPF.ar(sig, cutoff, rq);// + osc;
 	sig = Pan2.ar(sig, pan, amp);
 	sig = LeakDC.ar(sig * env);
@@ -86,11 +86,11 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 
 	bgWaveBuffer1 = Buffer.read(s, bgWave1.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		bgWaveSynth1 = Synth(\looper, [\bufnum, buf, \amp, 0.3]);
+		bgWaveSynth1 = Synth(\looper, [\bufnum, buf, \amp, 0.2]);
 	});
 	bgWaveBuffer2 = Buffer.read(s, bgWave2.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		bgWaveSynth2 = Synth(\looper, [\bufnum, buf, \amp, 0.2]);
+		bgWaveSynth2 = Synth(\looper, [\bufnum, buf, \amp, 0.1]);
 	});
 
 };
@@ -120,9 +120,9 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 
 //------------------------------------------------------------
 ~next = {|d|
-  var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
-  var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-  var amp = m.accelMassFiltered.lincurve(0, 4 * sens,0.3,2, 2);
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var amp = m.accelMassFiltered.lincurve(0, 4 * sens,0.3,2, 2);
 
 	var time = TempoClock.beats;
 	var xPos = [-0.8,-0.6,-0.3,0.0,0.2,0.5,0.7,1.0].choose; // Random x position
@@ -171,20 +171,21 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 		ey: 1,//baseY.neg, // Stay in same y, oscillation via envelope
 		yEnv: yEnv, // Vertical oscillation
 		rotation: sin(time) * 0.003,
-      modulation: (
-        type: \noise,
-        freq: 3,
-        amp: 10,
-        harmonics: 15
-    ),
+		modulation: (
+			type: \noise,
+			freq: 3,
+			amp: 10,
+			harmonics: 15
+		),
 	);
 
-	if(TempoClock.beats > (lastTime + rrand(0.1,0.2)),{
+	if(TempoClock.beats > (lastTime + rrand(0.3,0.6)),{
 		lastTime = TempoClock.beats;
 		if(m.accelMass>0.05,{
-	    ev.play;
-			synth = Synth(\waveSampler, [\bufnum, bi, \amp, amp * 0.2 * vol]);
+	    	ev.play;
+			synth = Synth(\waveSampler, [\bufnum, bi, \amp, amp * 0.2 * vol, \rate, ]);
 			bi = bi + 1;
+			// bi.postln;
 			if(bi >= (buffers.size-1),{bi=0});
 		},{
 		});
