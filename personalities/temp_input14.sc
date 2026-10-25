@@ -5,7 +5,7 @@ var group, trig, voice;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
 
 var root = 38 - 12;
-var notes = [0, 3, 7, 10, 12];
+var notes = [0, 3, 7, 10, 12] + 24;
 var filterSteps = [1, 2.5, 0.6, 4, 1.5, 0.8, 3, 1.2];
 
 m.accelMassFilteredAttack = 0.7;
@@ -39,7 +39,7 @@ SynthDef(\inputTrigger14, { |inputBus = 0, ratio = 3.0, floorDb = -48,
 //------------------------------------------------------------
 
 SynthDef(\evolver14, { |out = 0, gate = 1, amp = 0.3, t_hit = 0, vel = 1,
-	evolveTime = 5, stepTime = 0.25, stepGlide = 1.8,
+	evolveTime = 5, stepTime = 0.1, stepGlide = 0.08,
 	filterLo = 150, filterHi = 2500, rq = 0.3,
 	detuneLo = 0.001, detuneHi = 0.015,
 	note = 0, vibRate = 5.5, vibDepth = 0, drive = 1,

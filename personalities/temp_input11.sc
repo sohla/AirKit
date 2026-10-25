@@ -1,4 +1,4 @@
-var inputBus = 1;
+var inputBus = 0;
 var m = ~model;
 var dev = ~device;
 var group, trig, pad;
@@ -11,7 +11,7 @@ var sampleFilter = "Marimba ln f l1x";
 // The note pool. Up/down tilt picks an index into it, and a trigger plays
 // subdivLen notes from there - so the run is a rotation of the pool and
 // the tilt decides which note it starts on.
-var notes = [0, 3, 5, 2,7,10,9];
+var notes = [0, 3, 5, 2,7,10,9] - 12;
 
 // Mid to high for the marimba; the pad sits an octave below it and its
 // SynthDef adds a sub an octave below that again.
@@ -26,8 +26,8 @@ var padBase = 84-12;
 // with wrapAt, so a pool of 3 played 4 long wraps back to the first note,
 // and a long pool played 3 long only ever sounds 3 of its notes per hit.
 var beat = 1;
-var subdiv = 6;
-var subdivLen = 3;
+var subdiv = 4;
+var subdivLen = 1;
 
 // Motion values owned by ~next. The OSCdef and the sequence routine read
 // them rather than computing anything themselves.
@@ -155,7 +155,7 @@ SynthDef(\mellowPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 	// arrives and the four notes smear into one slide.
 	pad = Synth.tail(group, \mellowPad, [\freq, padBase.midicps, \amp, 0, \glide, 0.08]);
 
-	trig = Synth(\inputTriggerR, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
+	trig = Synth(\inputTriggerR, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -22,
 		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.02], group);
 
 

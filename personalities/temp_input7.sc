@@ -1,4 +1,4 @@
-var inputBus = 1;
+var inputBus = 0;
 var m = ~model;
 var dev = ~device;
 var group, trig;

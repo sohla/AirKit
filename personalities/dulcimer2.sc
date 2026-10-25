@@ -37,10 +37,10 @@ var divs = [2, 4, 8];
 
 var pools = [
 	[0] - 3,
-	[0] + 5,
+	[-5] + 5,
 	[0] + 2,
 	[0] - 2,
-	[0] + 3,
+	[0-5] + 3,
 	[0] + 2
 ] ;
 
@@ -149,7 +149,7 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 			\octave, Pseq([4, 3,2].stutter(2), inf),
 			\dur,  Pkey(\div).reciprocal * beat,
 			\legato, 0.8,
-			\attack, 0.004,
+			\attack, 0.4,
 			\release, 2,
 			\pan, Pwhite(-0.3, 0.3),
 
@@ -160,14 +160,19 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 			\sy, Pfunc({ |e| ((e[\note] ? 0) + (e[\root] ? 0)).linlin(-4, 14, 0.6, -0.6) }),
 			\ey, Pkey(\sy).neg,
 			\startSize, Pkey(\amp) * 990,
-			\endSize, Pkey(\amp) * 990,
+			\endSize, Pkey(\amp) * 90,
 			\startColor, Color.new(1.0, 0.0, 0.0, 0.9),
 			\endColor, Color.new(0.0, 1.0, 0.0, 0.0),
-			\startWidth, Pfunc({ |e| ((e[\amp] ? 0.2) * 802) + 1 }),
+			\startWidth, Pfunc({ |e| ((e[\amp] ? 0.2) * 4) + 1 }),
 			\endWidth, 0.4,
 			\duration, Pkey(\dur) * 6,
 			// \func, Pfunc({ |e| ~onEvent.(e) }),
-
+			\modulation, (
+				type: \normal,
+				freq: 8,
+				amp: 2,
+				harmonics: 4
+			),
 			\args, #[],
 		);
 	);

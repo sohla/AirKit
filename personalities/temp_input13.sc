@@ -5,6 +5,8 @@ sound:       struck bars, bright for the live stroke and darker for the remember
 pitch:       pentatonic, chosen by how hard each stroke was hit, transposed by tilt
 rhythm:      the drummer's own, replayed at the mover's tempo
 instruments: [Template]
+
+energy longer or something
 */
 
 var inputBus = 1;
@@ -100,7 +102,7 @@ SynthDef(\strike13, { |out = 0, freq = 440, amp = 0.3, vel = 1.0,
 	var sig = (body * (0.3 + bright)).tanh * vel * env * amp;
 
 	DetectSilence.ar(sig, 0.0001, 0.2, doneAction: 2);
-	Out.ar(out, Pan2.ar(sig, pan));
+	Out.ar(0, Pan2.ar(sig, pan));
 }).add;
 
 //------------------------------------------------------------

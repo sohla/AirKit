@@ -290,16 +290,16 @@ core.makeCanvas = { |self, name, frameRate = 60, action|
 
 	view.drawFunc_({ drawCanvas.(name, view) });
 
-	if(action.notNil, {
-		view.mouseUpAction_({ view.background_(core.ground) });
-		view.mouseDownAction_({
-			view.background_(Color.white.alpha_(0.1));
-			action.();
-		});
-	},{
-		view.mouseDownAction_({false});
-		view.mouseUpAction_({false});
-	});
+	// if(action.notNil, {
+	// 	view.mouseUpAction_({ view.background_(core.ground) });
+	// 	view.mouseDownAction_({
+	// 		view.background_(Color.white.alpha_(0.1));
+	// 		action.();
+	// 	});
+	// },{
+	// 	view.mouseDownAction_({false});
+	// 	view.mouseUpAction_({false});
+	// });
 
 	core.canvases[name] = (view: view, events: List.new(32), bg: ground);
 	view

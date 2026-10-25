@@ -56,14 +56,14 @@ SynthDef(\miniMoogVoice, {
 ~init = ~init <> {
 	group = Group.new;
 
-	trig = Synth(\inputTrigger, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
-		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.001], group);
+	trig = Synth(\inputTrigger, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -30,
+		\fullScale, 0.7, \curve, 0.3, \deadtime, 0.001], group);
 
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
 			var vel = msg[3];
 			// var notes = [0,7,12,16] + 40;
-			var notes = [2,4,5,7,9,11,12,14] + 40;
+			var notes = [2,4,5,7,9,11,12,14] + 40 - 12;
 			var ff = m.accelMassFiltered.lincurve(0.0, 1.0, 200, 2000, -2).clip(200, 12000);
 			var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger;
 
@@ -72,10 +72,10 @@ SynthDef(\miniMoogVoice, {
 				\amp, vel.linlin(0.0, 1.0, 0.05, 0.5),
 				\attack, vel.linexp(0.0, 1.0, 0.05, 0.001),
 				\filterFreq, ff,
-				\attack,vel.lincurve(0.0, 1.0, 1.01, 0.002,-2),
+				\attack, 0.001,//vel.lincurve(0.0, 1.0, 1.01, 0.002,-2),
 				\decay, 0.12,
 				\sustain, 0.1,
-				\release, relTime * vel.lincurve(0.0, 1.0, 2.01, 0.002,-2),
+				\release, 0.2,//relTime * vel.lincurve(0.0, 1.0, 2.01, 0.002,-2),
 				\fq, 0.3,
 				\dur, 0.2
 			], group);

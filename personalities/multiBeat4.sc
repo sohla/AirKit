@@ -7,11 +7,14 @@ var kickIdx = 0;
 var kickNames = ["drum", "kick", "bd"];
 
 var beat = 0.5;
-var divs = [2,4,8];
+var divs = [2,3,4,6];
 
-var rates = [1, 1, 1, 0.5, 2, 1.5, -1];
+var rates = [1, 1, 1, 0.5, 2, 1.5, -1] * 1;
 
 var kitFolder = "~/Downloads/openLabSamples/kit";
+
+// TODO make IMU more 
+
 
 //------------------------------------------------------------
 m.accelMassFilteredAttack = 0.99;
@@ -22,7 +25,7 @@ m.gyroFilteredAttack = 0.7;
 m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
-SynthDef(\multiBeatKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
+SynthDef(\multiBeatKit, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
     attack=0.005, decay=0.1, sustain=0.8, release=0.02, gate=1, cutoff=50, rq=0.01|
 	var lr = rate * BufRateScale.kr(bufnum);
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
@@ -39,6 +42,14 @@ SynthDef(\multiBeatKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 	// sig = Balance2.ar(sig[0], sig[1], pan);
 	Out.ar(out, sig * amp * env);
 }).add;
+
+SynthDef(\dpulse, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
+    attack=0.005, decay=0.1, sustain=0.8, release=0.02, gate=1, cutoff=50, rq=0.01, sd = 1|
+	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
+	var sig = LFPulse.ar(1);
+	Out.ar(out, sig * amp * env);
+}).add;
+
 
 //------------------------------------------------------------
 ~init = ~init <> {
@@ -75,7 +86,7 @@ m.com.bgColor = Color.yellow(0.5);
 			\dur,  Pkey(\div).reciprocal * beat,
 			\note, 0,
 			\octave, 5,
-			// \out, Pwhite(0, 3).asInteger,
+			\out, 2,
 
 			\pick, Pfunc({ |e| if(e[\step] == 0, { kickIdx }, { (e[\pal] ? 1).rand }) }),
 			\bufnum, Pfunc({ |e| buffers[e[\pick].clip(0, buffers.size - 1)] }),
@@ -85,7 +96,7 @@ m.com.bgColor = Color.yellow(0.5);
 			\start, Pfunc({ |e|
 				if(e[\rate] < 0, { 0.98 }, { [0, 0.12].wchoose([0.88, 0.12]) })
 			}),
-			\release, Pkey(\dur) * 1.2,
+			\release, 0.01,//Pkey(\dur) * 1.2,
 			\legato, 0.9,
 			\pan, Pwhite(-0.4, 0.4),
 

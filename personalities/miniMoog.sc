@@ -6,6 +6,8 @@ m.accelMassFilteredDecay = 0.2;
 m.rrateMassFilteredAttack = 0.9;
 m.rrateMassFilteredDecay = 0.5;
 
+//mel conducts bass player
+
 //------------------------------------------------------------
 SynthDef(\miniMoog, {
 	|freq = 440, amp = 0.5, attack = 0.1, decay = 0.2, sustain = 0.7, release = 0.3, gate = 1, filterFreq = 800, fq=0.5, pan = 0|
@@ -95,7 +97,7 @@ SynthDef(\miniMoog, {
 		);
 	);
 	Pdef(m.ptn).play(quant:0.1);
-	Pdef(m.ptn).pause;
+	// Pdef(m.ptn).pause;
 };
 
 //------------------------------------------------------------
@@ -125,6 +127,8 @@ SynthDef(\miniMoog, {
 	// var ff = m.accelMassFiltered.linexp(0, 1 * sens,60,18000);
 	var ff = m.rrateMassFiltered.linexp(0, 0.4 * sens,60,15000);
 
+	if(amp < 14.neg, {amp = 110.neg});
+
 	// tells the visual router which device these shapes came from
 	Pdef(m.ptn).set(\viewID, d.port);
 
@@ -134,15 +138,15 @@ SynthDef(\miniMoog, {
 	Pdef(m.ptn).set(\rel, rel);
     Pdef(m.ptn).set(\filterFreq, ff);
 
-	if(m.accelMassFiltered > 0.02,{
-		if( Pdef(m.ptn).isPlaying.not,{
-			Pdef(m.ptn).resume(quant:dur);
-		});
-	},{
-		if( Pdef(m.ptn).isPlaying,{
-			Pdef(m.ptn).pause();
-		});
-	});
+	// if(m.accelMassFiltered > 0.02,{
+	// 	if( Pdef(m.ptn).isPlaying.not,{
+	// 		Pdef(m.ptn).resume(quant:dur);
+	// 	});
+	// },{
+	// 	if( Pdef(m.ptn).isPlaying,{
+	// 		Pdef(m.ptn).pause();
+	// 	});
+	// });
 };
 
 //------------------------------------------------------------

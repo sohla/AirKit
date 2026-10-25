@@ -137,10 +137,11 @@ SynthDef(\pianoVerb, {
 		~bufnum = found.buffer;
 		~rate = found.rate;
 
-		~sx = target.linlin(24, 71, -0.85, 0.85);
-		~ex = ~sx;
-		~sy = found.shift.linlin(-6, 6, 0.7, -0.7);
+		~sy = target.linlin(24, 71, 0.85, -0.85);
 		~ey = ~sy;
+		~sx = found.shift.linlin(-6, 6, -0.9, 0.9);
+		~ex = ~sx;
+
 		~startColor = Color.hsv(found.idx / samplesLib.size, 0.9, 1.0, 0.9);
 		~endColor = Color.hsv(found.idx / samplesLib.size, 0.9, 0.5, 0.0);
 
@@ -189,7 +190,7 @@ SynthDef(\pianoVerb, {
 
 			\shape, \circle,
 			\fill, true,
-			\startSize, Pfunc({ |e| ((e[\amp] ? 0.2) * 90) + 14 }),
+			\startSize, Pfunc({ |e| ((e[\amp] ? 0.2) * 40) + 14 }),
 			\endSize, 6,
 			\startWidth, 3,
 			\endWidth, 0.4,

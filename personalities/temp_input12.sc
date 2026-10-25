@@ -21,7 +21,7 @@ var padBase = 84-36;
 // beat / subdiv is the grid the run is measured in. Fixed on purpose -
 // the rhythm of a trigger never depends on the IMU.
 var beat = 1;
-var subdiv = 4;
+var subdiv = 2;
 
 // The rhythmic material. One entry per note of the run, each the number of
 // grid steps that note lasts before the next one fires. So with beat 1 and
@@ -62,7 +62,7 @@ m.gyroFilteredDecay = 0.7;
 // Right input. Named \inputTriggerR rather than \inputTrigger because
 // every other trigger personality defines a \inputTrigger of its own and
 // the last one loaded wins on the server - see the note in my reply.
-SynthDef(\inputTriggerR, { |inputBus = 1, ratio = 3.0, floorDb = -48,
+SynthDef(\inputTriggerR, { |inputBus = 1, ratio = 3.0, floorDb = -38,
 	deadtime = 0.10, slowAtk = 0.300, slowRel = 0.150, inGain = 0.7,
 	fullScale = 0.35, curve = 1.5, window = 0.005|
 

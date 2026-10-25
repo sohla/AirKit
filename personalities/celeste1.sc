@@ -103,7 +103,7 @@ SynthDef(\celesteVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 			\cyc, Pfunc({
 				var ringSteps = 96;
 				var ph = (step % ringSteps) / ringSteps;
-				step = step + 1;
+				step = step + 2;
 				ph
 			}),
 			\rad, Pfunc({ |e|
@@ -113,17 +113,17 @@ SynthDef(\celesteVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 			\startSize, Pfunc({ |e| e[\rad] * 380 }),
 			\endSize, Pkey(\startSize),
 			\fill, false,
-			// \startColor, Color.new(1.0, 1.0, 1.0, 0.9),
-			// \endColor, Color.new(0.35, 0.85, 1.0, 0.0),
-			\startColor, Color.black,
-			\endColor, Color.black,
+			\startColor, Color.hsv(0.2, 0.8, 1.0, 1.0),
+			\endColor, Color.hsv(0.8, 0.8, 1.0, 0.0),
+			// \startColor, Color.black,
+			// \endColor, Color.black,
 			\startWidth, 3,
 			\endWidth, 0.5,
-			\duration, Pfunc({ |e| (e[\release] ? 1.6) * 5 }),
+			\duration, Pfunc({ |e| (e[\release] ? 1.6) * 3 }),
 			\modulation, Pfunc({ |e| (
 				rest: e.isRest,
 				head: (e[\amp] ? 0.2).clip(0.01, 1).linexp(0.01, 1, 8, 40),
-				spoke: 410,
+				spoke: 50,
 				decay: ((e[\release] ? 1.6) * 0.22).clip(0.08, 0.6),
 				amp: 0
 			) }),

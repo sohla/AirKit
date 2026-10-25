@@ -75,7 +75,7 @@ SynthDef(\grainCloud15, { |out = 0, buf = 0, amp = 0.3, vel = 1,
 		postf("buffer alloc [%] \n", b);
 	});
 
-	trig = Synth(\inputTrigger15, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
+	trig = Synth(\inputTrigger15, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -52,
 		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.02], group);
 
 	OSCdef(hitKey, { |msg|

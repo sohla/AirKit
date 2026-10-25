@@ -18,7 +18,7 @@ var ioiMax = 2.0;
 var smooth = 0.99;
 
 // var notes = [0,7,10,12,19,24,29,36] - 12;
-var notes = [0,7,19] - 12 - 9;
+var notes = [0,7,19] - 9 + 24;
 
 var bodyRatios = [1, 1.34, 2.71];
 var bodyAmps = [0.5, 0.25, 0.12];
@@ -127,7 +127,7 @@ SynthDef(\hollowWoodL, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 		nil
 	});
 
-	trig = Synth(\hollowWoodTriggerL, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -23,
+	trig = Synth(\hollowWoodTriggerL, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -33,
 		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.001], group);
 
 	OSCdef(hitKey, { |msg|
