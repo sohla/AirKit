@@ -138,7 +138,7 @@ SynthDef(\pianoVerb, {
 		~rate = found.rate;
 
 		~sy = target.linlin(24, 71, 0.85, -0.85);
-		~ey = ~sy;
+		~ey = ~sy + 0.4;
 		~sx = found.shift.linlin(-6, 6, -0.9, 0.9);
 		~ex = ~sx;
 
@@ -158,18 +158,18 @@ SynthDef(\pianoVerb, {
 	
 	// The zero line, held for the life of the personality, so the shift
 	// axis has something to be read against.
-	(
-		type: \customVisualEvent,
-		amp: 0, dur: 0.01,
-		viewID: d.port,
-		shape: \line,
-		sx: 0, sy: 0, ex: 0, ey: 0,
-		startSize: 900,
-		startWidth: 1, endWidth: 1,
-		startColor: Color.new(0.4, 0.4, 0.4, 0.5),
-		endColor: Color.new(0.4, 0.4, 0.4, 0.5),
-		duration: inf
-	).play;
+	// (
+	// 	type: \customVisualEvent,
+	// 	amp: 0, dur: 0.01,
+	// 	viewID: d.port,
+	// 	shape: \line,
+	// 	sx: 0, sy: 0, ex: 0, ey: 0,
+	// 	startSize: 900,
+	// 	startWidth: 1, endWidth: 1,
+	// 	startColor: Color.new(0.4, 0.4, 0.4, 0.5),
+	// 	endColor: Color.new(0.4, 0.4, 0.4, 0.5),
+	// 	duration: inf
+	// ).play;
 
 	Pdef(m.ptn,
 		Pbind(

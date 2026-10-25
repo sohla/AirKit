@@ -99,7 +99,7 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 	// sig = FreeVerb2.ar(sig[0], sig[1], mix, room, damp);
 	sig = LeakDC.ar(sig);
 	// Out.ar(out, sig * env * amp);
-	Out.ar(2, sig * env * amp);
+	Out.ar(out, sig * env * amp);
 }).add;
 
 //------------------------------------------------------------
@@ -157,8 +157,8 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 			\rotation, pi.half,
 			\sx, (Pkey(\step) / Pkey(\div) * 1.5) - 0.75,
 			\ex, Pkey(\sx),
-			\sy, Pfunc({ |e| ((e[\note] ? 0) + (e[\root] ? 0)).linlin(-4, 14, 0.6, -0.6) }),
-			\ey, Pkey(\sy).neg,
+			\ey, Pfunc({ |e| ((e[\note] ? 0) + (e[\root] ? 0)).linlin(-4, 14, 0.6, -0.6) }),
+			\sy, Pkey(\ey).neg,
 			\startSize, Pkey(\amp) * 990,
 			\endSize, Pkey(\amp) * 90,
 			\startColor, Color.new(1.0, 0.0, 0.0, 0.9),
