@@ -198,7 +198,8 @@ s.waitForBoot({
 	// probe shells out to xrandr, and unixCmdGetStdOut blocks the same
 	// language thread that runs ~next at 33Hz.
 	ensureHdmi = {
-		var rect = screens.();
+		var rect = screens.(machine[\screenProbe]);
+		var moved = rect != hdmiRect;
 		hdmiRect = rect;
 		if(rect.notNil, {
 			if(z.isNil, {
@@ -210,7 +211,19 @@ s.waitForBoot({
 			});
 			// setTopLeftBounds bypasses Window.flipY (which measures against
 			// the PRIMARY screen height and would put it in the wrong place).
-			z.setTopLeftBounds(rect, 0);
+			//
+			// macOS : fullscreen on that display hides its menu bar. Only
+			// re-placed when the screen changed, so a repeat press does not
+			// drop out of fullscreen and back.
+			if(machine[\screenProbe] == \osx, {
+				if(moved, {
+					z.endFullScreen;
+					z.setTopLeftBounds(rect, 0);
+					z.fullScreen;
+				});
+			},{
+				z.setTopLeftBounds(rect, 0);
+			});
 			z.front;
 			if(w.notNil, { w.front });	// keep the panel focused on the DSI
 		},{

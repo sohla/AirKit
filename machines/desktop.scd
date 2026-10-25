@@ -25,6 +25,7 @@
 
 	border: true,
 	fullScreen: false,
+	screenProbe: \osx,
 
 	drumInput: false
 )

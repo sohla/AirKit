@@ -3,7 +3,10 @@
 //
 // Second-screen detection. One-shot, on demand - there is no timer.
 //
-// Two independent signals, because neither alone is enough:
+// Which method is the machine file's \screenProbe : \hdmi (below) on a Pi,
+// \osx (macScreen) on a Mac.
+//
+// \hdmi uses two independent signals, because neither alone is enough:
 //
 //  1. /sys/class/drm/card*-HDMI-A-*/status -> is a cable physically in?
 //     (kernel truth, works with no X/Wayland at all)
@@ -74,7 +77,22 @@ var secondScreen = {
 	found
 };
 
-var probe = {
+// macOS : Qt only reports the primary screen, so ask AppKit via JXA.
+// NSScreen frames are bottom-left origin measured from the primary screen
+// (always first in the list); flip each into Qt's top-left global space.
+// A mirrored display is not listed, so mirroring reads as "no second screen".
+var macScreen = {
+	var js = "ObjC.import(\"AppKit\"); var s = $.NSScreen.screens; var o = []; for (var i = 0; i < s.count; i++) { var f = s.objectAtIndex(i).frame; o.push([f.origin.x, f.origin.y, f.size.width, f.size.height].join(\" \")); } o.join(\"\\n\")";
+	var frames = ("osascript -l JavaScript -e '" ++ js ++ "' 2>/dev/null").unixCmdGetStdOut
+		.split($\n).collect({ |line| line.split($ ).reject(_.isEmpty).collect(_.asFloat) })
+		.select({ |f| f.size == 4 }).collect(_.asInteger);
+	var primaryHeight = frames.first !? { |f| f[3] };
+	frames.drop(1).collect({ |f|
+		Rect(f[0], primaryHeight - (f[1] + f[3]), f[2], f[3])
+	}).first
+};
+
+var hdmiProbe = {
 	var rect = nil;
 	if(hdmiConnected.(), {
 		rect = secondScreen.();
@@ -87,6 +105,25 @@ var probe = {
 		"[screens] no HDMI connected".postln;
 	});
 	rect
+};
+
+var osxProbe = {
+	var rect = macScreen.();
+	if(rect.notNil, {
+		"[screens] second screen at %".format(rect).postln;
+	},{
+		"[screens] no second screen (or mirrored)".postln;
+	});
+	rect
+};
+
+// kind comes from the machine file's \screenProbe
+var probe = { |kind = \hdmi|
+	switch(kind,
+		\hdmi, { hdmiProbe.() },
+		\osx, { osxProbe.() },
+		{ "[screens] unknown screenProbe % - no second screen".format(kind).warn; nil }
+	)
 };
 
 //------------------------------------------------------------

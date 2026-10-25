@@ -95,6 +95,11 @@ var defaults = (
 	border: isOSX,
 	fullScreen: isOSX.not,
 
+	// How screens.scd finds the second screen for the visuals window.
+	// \hdmi : the Pi's HDMI port (/sys/class/drm + xrandr)
+	// \osx  : AppKit's screen list, any display arranged beside the main one
+	screenProbe: if(isOSX, \osx, \hdmi),
+
 	// utils/drumInput.scd - a virtual drummer on the input buses, for the
 	// personalities that trigger off SoundIn. Off unless a kit asks for it.
 	drumInput: false,
