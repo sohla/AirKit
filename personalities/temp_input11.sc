@@ -41,6 +41,22 @@ var blendNow = 0.5;
 
 var step = 0;
 
+// Speakers. Each stereo voice writes its left to outBus and its right to
+// outBus + spread, wrapping at numChans - so 0 and 3 is front left and
+// back left on a quad rig, and outBus 3 with spread 1 is 3 and 0.
+//
+// Other ways to place a voice, kept here for reference:
+//  - rotate when the SynthDef is built:
+//      Out.ar(0, (sig ++ (0 ! (numChans - 2))).rotate(offset));
+//    wraps, but offset and numChans are fixed at build time, not per note.
+//  - pad with silent channels: Out.ar(0, (0 ! offset) ++ sig);
+//    adjacent channels only, and never wraps.
+//  - PanAz.ar(numChans, mono, pos) : a continuous position round a ring of
+//    speakers. Wraps naturally, mono in, suits IMU-driven movement.
+var outBus = 0;
+var spread = 3;
+var numChans = s.options.numOutputBusChannels;
+
 m.accelMassFilteredAttack = 0.7;
 m.accelMassFilteredDecay = 0.2;
 m.rrateMassFilteredAttack = 0.9;
@@ -75,16 +91,17 @@ SynthDef(\inputTriggerR, { |inputBus = 1, ratio = 3.0, floorDb = -48,
 // Both voices are verbatim copies from personalities/miniMarimba.sc under
 // local names, so that personality's \miniMarimba and \miniMarimbaPad are
 // left exactly as they are.
-SynthDef(\marimbaVoice, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, pan = 0,
+SynthDef(\marimbaVoice11, { |out = 0, spread = 1, numChans = 2, bufnum = 0, amp = 0.5, rate = 1, start = 0, pan = 0,
 	attack = 0.002, sustain = 0.04, release = 1.2|
 	var lr = rate * BufRateScale.kr(bufnum);
 	var env = EnvGen.kr(Env([0, 1, 1, 0], [attack, sustain, release]), doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum, rate: lr, startPos: start * BufFrames.kr(bufnum), loop: 0);
 	sig = Balance2.ar(sig[0], sig[1], pan, amp * env);
-	Out.ar(out, sig);
+	Out.ar(out, sig[0]);
+	Out.ar((out + spread) % numChans, sig[1]);
 }).add;
 
-SynthDef(\mellowPad, { |out = 0, freq = 130, amp = 0, gate = 1,
+SynthDef(\mellowPad11, { |out = 0, spread = 1, numChans = 2, freq = 130, amp = 0, gate = 1,
 	cutoff = 800, blend = 0.5, glide = 0.25|
 	var f = freq.lag(glide);
 	var env = EnvGen.kr(Env.asr(2.0, 1, 2.5), gate, doneAction: 2);
@@ -92,8 +109,9 @@ SynthDef(\mellowPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 	var warm = VarSaw.ar(f * drift, 0, blend.lag(0.4).linlin(0, 1, 0.5, 0.05), 0.25).sum;
 	var sub = SinOsc.ar(f * 0.5, 0, 0.5);
 	var sig = MoogFF.ar(warm + sub, cutoff.lag(0.4).clip(120, 6000), 1.4);
-	sig = Splay.ar([sig, DelayC.ar(sig, 0.03, 0.013)], 0.6);
-	Out.ar(out, sig * env * amp.lagud(0.4, 1.8));
+	sig = Splay.ar([sig, DelayC.ar(sig, 0.03, 0.013)], 0.6) * env * amp.lagud(0.4, 1.8);
+	Out.ar(out, sig[0]);
+	Out.ar((out + spread) % numChans, sig[1]);
 }).add;
 
 //------------------------------------------------------------
@@ -155,7 +173,7 @@ SynthDef(\mellowPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 	// at silence. glide is shortened from the SynthDef's 0.25 because the
 	// run's notes are 0.25s apart - at the default the pitch lag never
 	// arrives and the four notes smear into one slide.
-	pad = Synth.tail(group, \mellowPad, [\freq, padBase.midicps, \amp, 0, \glide, 0.08]);
+	pad = Synth.tail(group, \mellowPad11, [\out, outBus, \spread, spread, \numChans, numChans, \freq, padBase.midicps, \amp, 0, \glide, 0.08]);
 
 	trig = Synth(\inputTriggerR, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -22,
 		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.02], group);
@@ -176,7 +194,10 @@ SynthDef(\mellowPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 						note = baseNote + notes.wrapAt(idxAtHit + i);
 						found = findClosestSample.(note);
 
-						Synth(\marimbaVoice, [
+						Synth(\marimbaVoice11, [
+							\out, outBus,
+							\spread, spread,
+							\numChans, numChans,
 							\bufnum, found[\buffer],
 							\rate, found[\rate],
 							\amp, ampNow * vel,
