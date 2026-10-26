@@ -1,3 +1,4 @@
+var inputBus = 0;
 var m = ~model;
 var dev = ~device;
 var group, trig;
@@ -25,11 +26,11 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 
-SynthDef(\inputTrigger, { |ratio = 3.0, floorDb = -68,
+SynthDef(\inputTrigger, { |inputBus = 0, ratio = 3.0, floorDb = -68,
 	deadtime = 0.01, slowAtk = 0.100, slowRel = 0.150, inGain = 0.7,
 	fullScale = 0.35, curve = 1.5, window = 0.003|
 
-	var in   = SoundIn.ar(0) * inGain;
+	var in   = SoundIn.ar(inputBus) * inGain;
 	var fast = Amplitude.kr(in, 0.001, 0.05);
 	var slow = LagUD.kr(fast, slowAtk, slowRel);
 	var over = fast > ((slow * ratio) + floorDb.dbamp);
@@ -99,7 +100,7 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 		})
 	});
 
-	trig = Synth(\inputTrigger, [\ratio, 0.3, \slowRel, 0.15, \floorDb, -27,
+	trig = Synth(\inputTrigger, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.15, \floorDb, -27,
 		\fullScale, 0.1, \curve, 0.3, \deadtime, 0.1], group);
 
 	OSCdef(hitKey, { |msg|

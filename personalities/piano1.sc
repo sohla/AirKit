@@ -220,6 +220,10 @@ SynthDef(\pianoVerb, {
 			});
 			samplesLib = nil;
 		};
+		if (fxBus.notNil) {
+			fxBus.free;
+			fxBus = nil;
+		};
 	};
 };
 

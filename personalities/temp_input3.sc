@@ -1,3 +1,4 @@
+var inputBus = 0;
 var m = ~model;
 var synth;
 
@@ -10,11 +11,11 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 
-SynthDef(\warmBass, { |out = 0, amp = 0.3, freq = 65, thresh = -26, full = 0.25,
+SynthDef(\warmBass, { |inputBus = 0, out = 0, amp = 0.3, freq = 65, thresh = -26, full = 0.25,
 	attack = 0.006, release = 0.2, fdecay = 0.28, width = 0.45,
 	fmul = 2.5, fdepth = 4000, res = 1.6|
 
-	var in = SoundIn.ar(0);
+	var in = SoundIn.ar(inputBus);
 	var follower = Amplitude.kr(in, 0.001, 0.05);
 	var trig = follower > thresh.dbamp;
 	var vel = Latch.kr(follower, trig).linlin(0.0, full, 0.25, 1.0).clip(0.25, 1.0);
@@ -33,7 +34,7 @@ SynthDef(\warmBass, { |out = 0, amp = 0.3, freq = 65, thresh = -26, full = 0.25,
 
 //------------------------------------------------------------
 ~init = ~init <> {
-	synth = Synth(\warmBass, [\amp, 8, \thresh, -6]);
+	synth = Synth(\warmBass, [\inputBus, inputBus, \amp, 8, \thresh, -6]);
 
 };
 

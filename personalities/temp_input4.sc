@@ -1,3 +1,4 @@
+var inputBus = 0;
 var m = ~model;
 var synth;
 
@@ -14,11 +15,11 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 
-SynthDef(\bellChime, { |out = 0, amp = 0.3, freq = 523, ratio = 3.0, floorDb = -48,
+SynthDef(\bellChime, { |inputBus = 0, out = 0, amp = 0.3, freq = 523, ratio = 3.0, floorDb = -48,
 	deadtime = 0.07, slowAtk = 0.300, slowRel = 0.150, inGain = 0.7,
 	decay = 3.0, fullScale = 0.35, curve = 1.5, window = 0.005, tone = 5000|
 
-	var in   = SoundIn.ar(0) * inGain;
+	var in   = SoundIn.ar(inputBus) * inGain;
 	var fast = Amplitude.kr(in, 0.001, 0.05);
 	var slow = LagUD.kr(fast, slowAtk, slowRel);
 	var over = fast > ((slow * ratio) + floorDb.dbamp);
@@ -41,7 +42,7 @@ SynthDef(\bellChime, { |out = 0, amp = 0.3, freq = 523, ratio = 3.0, floorDb = -
 
 //------------------------------------------------------------
 ~init = ~init <> {
-	synth = Synth(\bellChime, [\amp,0.2, \ratio, 0.3, \slowRel, 0.25, \floorDb, -32, \fullScale, 0.7, \decay, 3.0]);
+	synth = Synth(\bellChime, [\inputBus, inputBus, \amp,0.2, \ratio, 0.3, \slowRel, 0.25, \floorDb, -32, \fullScale, 0.7, \decay, 3.0]);
 };
 
 //------------------------------------------------------------

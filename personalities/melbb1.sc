@@ -5,6 +5,7 @@ var limit = 8;
 var step = 1;
 var lastTime=0;
 var buffers;
+var shaker = (m.ptn ++ "_shaker").asSymbol;
 
 // ~buffers;
 m.accelMassFilteredAttack = 0.99;
@@ -111,7 +112,7 @@ SynthDef(\melbb2, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	);
 
 
-	Pdef(\shaker,
+	Pdef(shaker,
 		Pbind(
 			\instrument, \melbb2,
 			\bi, Pxrand([0,1,3,5], inf),			
@@ -162,14 +163,14 @@ SynthDef(\melbb2, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	Pdef(m.ptn).play(quant:dur);
 	Pdef(m.ptn).set(\bufnum, buffers[0]);
 
-	Pdef(\shaker).play(quant:dur);
+	Pdef(shaker).play(quant:dur);
 
 
 };
 
 ~deinit = ~deinit <> {
 	Pdef(m.ptn).remove;
-	Pdef(\shaker).remove;
+	Pdef(shaker).remove;
 
 	buffers.do({|buf|
 		postf("buffer dealloc [%] \n", buf);
@@ -204,14 +205,14 @@ SynthDef(\melbb2, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	var sa = m.rrateMassFiltered.lincurve(0, 2.6 * sens,0.0,0.2, -1);
 
 	Pdef(m.ptn).set(\viewID, d.port);
-	Pdef(\shaker).set(\viewID, d.port);
+	Pdef(shaker).set(\viewID, d.port);
 
 	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\release, rel);
 	Pdef(m.ptn).set(\rate, roll);
 	step = 2.pow(m.accelMassFiltered.lincurve(0, 2 * sens,-1,0, -1));
 
-	Pdef(\shaker).set(\amp, sa * vol);	
+	Pdef(shaker).set(\amp, sa * vol);	
 	Pdef(m.ptn).set(\dur, dur);	
 
 

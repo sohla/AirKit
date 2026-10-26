@@ -1,3 +1,4 @@
+var inputBus = 0;
 var m = ~model;
 var synth;
 
@@ -10,10 +11,10 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 
-SynthDef(\help_Klank, { |out = 0, freq=250|
+SynthDef(\help_Klank, { |inputBus = 0, out = 0, freq=250|
     var klank, n, harm, amp, ring;
 	var i = Decay.ar(Impulse.ar(Rand(0.8, 2.2)), 0.03, ClipNoise.ar(0.01));
-	var src = SoundIn.ar(0)!2;
+	var src = SoundIn.ar(inputBus)!2;
 	var gated = Compander.ar(src, src,
         thresh: -6.dbamp,
         slopeBelow: 10,
@@ -32,7 +33,7 @@ SynthDef(\help_Klank, { |out = 0, freq=250|
 
 //------------------------------------------------------------
 ~init = ~init <> {
-	synth = Synth(\help_Klank,[\amp,0.3]);
+	synth = Synth(\help_Klank,[\inputBus, inputBus, \amp,0.3]);
 };
 
 //------------------------------------------------------------

@@ -9,6 +9,8 @@ var bgWaveBuffer1;
 var bgWaveSynth1;
 var bgWaveBuffer2;
 var bgWaveSynth2;
+var group;
+var dead = false;
 
 m.accelMassFilteredAttack = 0.9;
 m.accelMassFilteredDecay = 0.8;
@@ -73,6 +75,8 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 
 	postf("loading samples : % \n", folder);
 
+	group = Group.new;
+
 	buffers = folder.entries.collect({ |path,i|
 		Buffer.read(s, path.fullPath, action:{|buf|
 			postf("buffer alloc [%] \n", buf);
@@ -86,36 +90,43 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 
 	bgWaveBuffer1 = Buffer.read(s, bgWave1.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		bgWaveSynth1 = Synth(\looper, [\bufnum, buf, \amp, 0.2]);
+		if(dead.not, { bgWaveSynth1 = Synth(\looper, [\bufnum, buf, \amp, 0.2], group) });
 	});
 	bgWaveBuffer2 = Buffer.read(s, bgWave2.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		bgWaveSynth2 = Synth(\looper, [\bufnum, buf, \amp, 0.1]);
+		if(dead.not, { bgWaveSynth2 = Synth(\looper, [\bufnum, buf, \amp, 0.1], group) });
 	});
 
 };
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var dying = group;
+	var dyingBuffers = (buffers ? []) ++ [bgWaveBuffer1, bgWaveBuffer2].reject(_.isNil);
 
-	bgWaveSynth1.set(\gate, 0);
-	bgWaveSynth2.set(\gate, 0);
+	dead = true;
+	bgWaveSynth1 !? (_.set(\gate, 0));
+	bgWaveSynth2 !? (_.set(\gate, 0));
+	group = nil;
+	buffers = nil;
+	bgWaveBuffer1 = nil;
+	bgWaveBuffer2 = nil;
+	bgWaveSynth1 = nil;
+	bgWaveSynth2 = nil;
 
-	bgWaveSynth1.onFree({
-		"bg synth1 on free".postln;
-		bgWaveBuffer1.free;
-	});
-
-	bgWaveSynth2.onFree({
-		"bg synth2 on free".postln;
-		bgWaveBuffer2.free;
-	});
-
-	buffers.do({|buf|
-		postf("buffer dealloc [%] \n", buf);
-		buf.free;
-	});
-
+	fork {
+		3.5.wait;
+		if(dying.notNil, {
+			s.bind { dying.freeAll };
+			s.sync;
+			dying.free;
+		});
+		dyingBuffers.do({|buf|
+			postf("buffer dealloc [%] \n", buf);
+			buf.free;
+			s.sync;
+		});
+	};
 };
 
 //------------------------------------------------------------
@@ -183,7 +194,7 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 		lastTime = TempoClock.beats;
 		if(m.accelMass>0.05,{
 	    	ev.play;
-			synth = Synth(\waveSampler, [\bufnum, bi, \amp, amp * 0.2 * vol, \rate, ]);
+			synth = Synth(\waveSampler, [\bufnum, buffers[bi], \amp, amp * 0.2 * vol, \rate, ], group);
 			bi = bi + 1;
 			// bi.postln;
 			if(bi >= (buffers.size-1),{bi=0});

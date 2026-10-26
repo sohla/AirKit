@@ -1,6 +1,7 @@
 var m = ~model;
 var synth;
 var buffer;
+var dead = false;
 var mouthVoices = 3;
 var squeezeAt = 0.4;
 var squeezeSlope = 0.1;
@@ -40,7 +41,7 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 	postf("loading sample : % \n", path.fileName);
 	buffer = Buffer.read(s, path.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		synth = Synth(\nicMouthGrain,[\out, 2, \bufnum,buf, \rate, 1, \gate, 1 ]);
+		if(dead.not, { synth = Synth(\nicMouthGrain,[\out, 2, \bufnum,buf, \rate, 1, \gate, 1 ]) });
 	});
 
 	~vdef.(\mouth, { |ev, c|
@@ -100,11 +101,16 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
-	synth.onFree({
-		postf("buffer dealloc [%] \n", buffer);
-		buffer.free;
-	});	
-	synth.set(\gate, 0);
+	var dying = synth;
+	var dyingBuffer = buffer;
+	var freeBuffer = { dyingBuffer !? { postf("buffer dealloc [%] \n", dyingBuffer); dyingBuffer.free } };
+	dead = true;
+	synth = nil;
+	buffer = nil;
+	if(dying.notNil, {
+		dying.onFree(freeBuffer);
+		dying.set(\gate, 0);
+	}, freeBuffer);
 };
 //------------------------------------------------------------
 ~next = {|d|

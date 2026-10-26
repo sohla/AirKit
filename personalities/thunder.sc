@@ -1,6 +1,7 @@
 var m = ~model;
 var buffers;
 var synth;
+var group;
 var lastTime=0;
 var index = 0;
 
@@ -26,6 +27,8 @@ SynthDef(\thunderSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 
 	var folder  = PathName("~/Downloads/yourDNASamples/thunder");
 	postf("loading samples : % \n", folder);
+
+	group = Group.new;
 
 	buffers = folder.entries.collect({ |path,i|
 		Buffer.read(s, path.fullPath, action:{|buf|
@@ -54,12 +57,24 @@ SynthDef(\thunderSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 	// 	synth.set(\gate, 0);	
 	// });
 	// synth.sendMsg(\gate, 0);
-	synth.free;
-	buffers.do({|buf|
-		buf.free;
-		s.sync;
-		postf("buffer dealloc [%] \n", buf);
-	});
+	var dying = group;
+	var dyingBuffers = buffers;
+	group = nil;
+	buffers = nil;
+	synth = nil;
+
+	fork {
+		if(dying.notNil, {
+			s.bind { dying.freeAll };
+			s.sync;
+			dying.free;
+		});
+		dyingBuffers.do({|buf|
+			buf.free;
+			s.sync;
+			postf("buffer dealloc [%] \n", buf);
+		});
+	};
 
 };
 
@@ -79,7 +94,7 @@ SynthDef(\thunderSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 				\gate, 1,
 				\amp, amp * vol,
         \bufnum, buffers[index]
-			]);
+			], group);
 			synth.server.sendBundle(0.3,[\n_set, synth.nodeID, \gate, 0]);
 			index = index + 1;
       if(index >= buffers.size,{ index = 3});

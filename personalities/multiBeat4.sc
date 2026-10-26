@@ -40,7 +40,7 @@ SynthDef(\multiBeatKit, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
 		relaxTime: 0.01
 	);
 	// sig = Balance2.ar(sig[0], sig[1], pan);
-	Out.ar(out, sig * amp * env);
+	Out.ar(out, Mix(sig) * amp * env);
 }).add;
 
 SynthDef(\dpulse, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,

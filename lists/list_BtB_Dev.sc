@@ -19,9 +19,6 @@
 		"miniMoog",
 		"miniDroplet",
 
-				"droplet",
-		"droplet",
-
 		"miniHarp",
 		"miniMarimba",
 

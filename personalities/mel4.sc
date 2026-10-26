@@ -1,6 +1,7 @@
 var m = ~model;
 var synth;
 var buffer;
+var dead = false;
 var grainWindow = 0.3;
 var grainOverlaps = 8;
 var grainRand = 0.3;
@@ -42,7 +43,7 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 	postf("loading sample : % \n", path.fileName);
 	buffer = Buffer.read(s, path.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		synth = Synth(\bufGrainM,[\out, 0, \bufnum,buf, \rate, 1, \gate, 1 ]);
+		if(dead.not, { synth = Synth(\bufGrainM,[\out, 0, \bufnum,buf, \rate, 1, \gate, 1 ]) });
 	});
 
 	~vdef.(\mouthGrain, { |ev, c|
@@ -133,11 +134,16 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
-	synth.onFree({
-		postf("buffer dealloc [%] \n", buffer);
-		buffer.free;
-	});	
-	synth.set(\gate, 0);
+	var dying = synth;
+	var dyingBuffer = buffer;
+	var freeBuffer = { dyingBuffer !? { postf("buffer dealloc [%] \n", dyingBuffer); dyingBuffer.free } };
+	dead = true;
+	synth = nil;
+	buffer = nil;
+	if(dying.notNil, {
+		dying.onFree(freeBuffer);
+		dying.set(\gate, 0);
+	}, freeBuffer);
 };
 //------------------------------------------------------------
 ~next = {|d|

@@ -1,3 +1,4 @@
+var inputBus = 0;
 var m = ~model;
 var synth;
 
@@ -16,9 +17,9 @@ SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=
 }).add;
 
 
-SynthDef(\input, {|out=0, amp=0.5, rt=1, attack=0.001, decay=0.03, sustain=0.8, release=2.59, gate=1, al=0.9|
+SynthDef(\input, {|inputBus = 0, out=0, amp=0.5, rt=1, attack=0.001, decay=0.03, sustain=0.8, release=2.59, gate=1, al=0.9|
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: Done.freeSelf);
-	var src = SoundIn.ar(0)!2 * 1;
+	var src = SoundIn.ar(inputBus)!2 * 1;
 	var flt = HPF.ar(src,120);
 	var li = LocalIn.ar(2) * 0.5;
 	var sig = PitchShift.ar(flt+li, 0.4*3, rt, [0.01, 0.012], 0.0, 1, src );
@@ -32,7 +33,7 @@ SynthDef(\input, {|out=0, amp=0.5, rt=1, attack=0.001, decay=0.03, sustain=0.8, 
 
 //------------------------------------------------------------
 ~init = ~init <> {
-	synth = Synth(\input,[\amp,0.2]);
+	synth = Synth(\input,[\inputBus, inputBus, \amp,0.2]);
 };
 
 //------------------------------------------------------------

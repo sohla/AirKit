@@ -1,5 +1,6 @@
 var m = ~model;
 var buffer;
+var dead = false;
 // var notes = [0,1,4,5,7,8,7,5,4,5,4,1,4,1,0,0];
 // var notes = [0,4,5,7,9,10,16,17,19];
 var notes = [0,2,5,-2] + 2;
@@ -34,48 +35,55 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 
 	buffer = Buffer.read(s, path.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		Pdef(m.ptn,
-			Pbind(
-				\instrument, \stereoSampler1,
-				\bufnum, buf,
-				// \octave, Pxrand([0,1,2,1,3,2], inf),
-				\note, Pwhite(33,33, inf).floor,
-				\pan, Pwhite(-0.9,0.9),
-				\start,Pwhite(0.0,0.9),
-				\out, Pseq([0,2], inf),
-				// \attack,0.2,
-				\decay, 0.2,
-				\sustain,0.1,
-				\release,1.3,
-				\rate, Pslide(notes.midiratio, inf, Pkey(\range), 0, 0),
+		if(dead.not, {
+			Pdef(m.ptn,
+				Pbind(
+					\instrument, \stereoSampler1,
+					\bufnum, buf,
+					// \octave, Pxrand([0,1,2,1,3,2], inf),
+					\note, Pwhite(33,33, inf).floor,
+					\pan, Pwhite(-0.9,0.9),
+					\start,Pwhite(0.0,0.9),
+					\out, Pseq([0,2], inf),
+					// \attack,0.2,
+					\decay, 0.2,
+					\sustain,0.1,
+					\release,1.3,
+					\rate, Pslide(notes.midiratio, inf, Pkey(\range), 0, 0),
 
 
-			\type, \customVisualEvent,
-			\shape, \circle,
+				\type, \customVisualEvent,
+				\shape, \circle,
 			
-			\duration, 3.6,
-			\sx, 1.neg + Pfunc({|e| e.octave * 0.02}),
-			\sy, 1.5 - Pfunc({|e| e.rate * 0.75}),
-			\startSize, 10,
-			\ex, Pkey(\sx),
-			\ey, Pkey(\sy),
-			\startWidth, 80,
-			\endWidth, 30,
-			\rotation, pi.half,
+				\duration, 3.6,
+				\sx, 1.neg + Pfunc({|e| e.octave * 0.02}),
+				\sy, 1.5 - Pfunc({|e| e.rate * 0.75}),
+				\startSize, 10,
+				\ex, Pkey(\sx),
+				\ey, Pkey(\sy),
+				\startWidth, 80,
+				\endWidth, 30,
+				\rotation, pi.half,
 
-				\args, #[],
-			)
-		);
-		Pdef(m.ptn).play(quant:0.125);
+					\args, #[],
+				)
+			);
+			Pdef(m.ptn).play(quant:0.125);
+		});
 	});
 };
 ~deinit = ~deinit <> {
+	var dyingBuffer = buffer;
+	dead = true;
+	buffer = nil;
 	Pdef(m.ptn).remove;
 	fork{
 		1.0.yield;
-		postf("buffer dealloc [%] \n", buffer);
-		buffer.free;
-		s.sync;
+		dyingBuffer !? {
+			postf("buffer dealloc [%] \n", dyingBuffer);
+			dyingBuffer.free;
+			s.sync;
+		};
 	};
 };
 

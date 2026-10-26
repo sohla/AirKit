@@ -1,6 +1,9 @@
 var m = ~model;
 var buffers;
 var synths=[];
+var group;
+var dead = false;
+var releaseTime = 10;
 var lastTime=0;
 
 m.accelMassFilteredAttack = 0.01;
@@ -24,19 +27,22 @@ SynthDef(\rainSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 	var folder  = PathName("~/Downloads/yourDNASamples/rain");
 	postf("loading samples : % \n", folder);
 
+	group = Group.new;
+
 	buffers = folder.entries.collect({ |path,i|
 		Buffer.read(s, path.fullPath, action:{|buf|
 			postf("buffer alloc [%] \n", buf);
 			// postf("buffer alloc [%] \n", buf.path.basename.splitext[0]);
-			synths = synths.add(Synth(\rainSampler, [
-				\rate, 1.1,
-				\gate, 1,
-				\amp, 0,
-				\pan,-1,
-				\release, 10,
-        \bufnum, buf
-			]);
-			);
+			if(dead.not, {
+				synths = synths.add(Synth(\rainSampler, [
+					\rate, 1.1,
+					\gate, 1,
+					\amp, 0,
+					\pan,-1,
+					\release, releaseTime,
+					\bufnum, buf
+				], group));
+			});
 			if(folder.entries.size - 1 == i,{
 				"samples loaded".postln;
 			});
@@ -46,22 +52,28 @@ SynthDef(\rainSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 };
 
 ~deinit = ~deinit <> {
+	var dying = group;
+	var dyingBuffers = buffers;
 
-	synths.do({|synth, i|
-		synth.onFree({
-			if(i >= 3,{
-				"all synths on free".postln;
-				buffers.do({|buf|
-					{
-						postf("buffer dealloc [%] \n", buf);
-						buf.free;
-						s.sync;
-					}.fork;
-				});
-			});
+	dead = true;
+	synths.do({|synth| synth.set(\gate, 0) });
+	synths = [];
+	group = nil;
+	buffers = nil;
+
+	fork {
+		(releaseTime + 0.5).wait;
+		if(dying.notNil, {
+			s.bind { dying.freeAll };
+			s.sync;
+			dying.free;
 		});
-		synth.set(\gate, 0);	
-	});
+		dyingBuffers.do({|buf|
+			postf("buffer dealloc [%] \n", buf);
+			buf.free;
+			s.sync;
+		});
+	};
 
 	// buffers.do({|buf|
 	// 	buf.free;

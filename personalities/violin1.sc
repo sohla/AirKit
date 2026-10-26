@@ -1,5 +1,6 @@
 var m = ~model;
 var buffer;
+var dead = false;
 
 m.accelMassFilteredAttack = 0.99;
 m.accelMassFilteredDecay = 0.6;
@@ -18,7 +19,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 	var sig = PlayBuf.ar(2, bufnum, rate: [lr, lr * 1.013], startPos: start * BufFrames.kr(bufnum), loop: 0);
     sig = RLPF.ar(sig, cutoff, rq);
 	sig = HPF.ar(sig, 50, 0.98);
-    Out.ar(out, sig * amp * env);
+    Out.ar(out, Mix(sig.flat) * amp * env);
 }).add;
 
 //------------------------------------------------------------
@@ -46,57 +47,63 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 
 	buffer = Buffer.read(s, path.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		Pdef(m.ptn,
-			Pbind(
-				\instrument, \stereoSampler1,
-				\bufnum, buf,
-				// \octave, Pxrand([3], inf),
-				// \note, Pxrand([33,35,37], inf),
-				\note, Pxrand([33,38,45,52].stutter(4) - 2, inf),
-				\decay, 0.2,
-				\sustain,0.1,
-				\release,3.2,
-				\rate, 0.25,
-				\out, Pwhite(0,3).asInteger,
-				// \dur, Pseq([0.25], inf),
-				\args, #[],
+		if(dead.not, {
+			Pdef(m.ptn,
+				Pbind(
+					\instrument, \stereoSampler1,
+					\bufnum, buf,
+					// \octave, Pxrand([3], inf),
+					// \note, Pxrand([33,35,37], inf),
+					\note, Pxrand([33,38,45,52].stutter(4) - 2, inf),
+					\decay, 0.2,
+					\sustain,0.1,
+					\release,3.2,
+					\rate, 0.25,
+					\out, Pwhite(0,3).asInteger,
+					// \dur, Pseq([0.25], inf),
+					\args, #[],
 
-				\type, \customVisualEvent,
-				\shape, \bowRibbon,
-				\bowEnv, Pfunc({ |e|
-					var atk = e[\attack] ? 0.01;
-					var gate = (e[\sustain] ? 0.1) * TempoClock.default.beatDur;
-					var held = Env([0, 1, e[\sustain] ? 0.1], [atk, e[\decay] ? 0.2], -4).at(gate);
-					Env([0, 1, held, 0], [atk, (gate - atk).max(0.001), e[\release] ? 3.2], -4)
-				}),
-				\sx, Pfunc({ |e| (e[\start] ? 0.02).linlin(0.02, 0.09, -1, -0.6) }),
-				\ex, 1,
-				\sy, Pfunc({ |e| ((e[\note] ? 33) + (((e[\octave] ? 5) - 5) * 12) + 60).linlin(81, 160, 0.95, -0.95) }),
-				\ey, Pkey(\sy),
-				\startSize, Pfunc({ |e| (e[\amp] ? 0).clip(0, 15).lincurve(0, 15, 8, 10, -2) }),
-				\endSize, Pkey(\startSize),
-				\startWidth, 1,
-				\endWidth, 1,
-				\fill, true,
-				\closed, true,
-				\numPoints, Pfunc({ |e| (e[\dur] ? 0.5).linlin(0.03, 0.5, 16, 48).round.asInteger }),
-				\startColor, Pfunc({ |e|
-					Color.new(0.87, 0.64, 0.24,
-						(e[\amp] ? 0).clip(0, 15).lincurve(0, 15, 0, 0.85, -3)
-						* (e[\dur] ? 0.5).linlin(0.03, 0.5, 0.35, 1))
-				}),
-				\endColor, Color.new(0.62, 0.04, 0.14, 0),
-				\duration, Pfunc({ |e| e[\bowEnv].duration * (e[\dur] ? 0.5).linlin(0.03, 0.5, 0.2, 1) }),
-				\modulation, Pfunc({ |e| (env: e[\bowEnv], warp: 2.5, amp: 0) }),
-			)
-		);
-		Pdef(m.ptn).play(quant:0.125);
+					\type, \customVisualEvent,
+					\shape, \bowRibbon,
+					\bowEnv, Pfunc({ |e|
+						var atk = e[\attack] ? 0.01;
+						var gate = (e[\sustain] ? 0.1) * TempoClock.default.beatDur;
+						var held = Env([0, 1, e[\sustain] ? 0.1], [atk, e[\decay] ? 0.2], -4).at(gate);
+						Env([0, 1, held, 0], [atk, (gate - atk).max(0.001), e[\release] ? 3.2], -4)
+					}),
+					\sx, Pfunc({ |e| (e[\start] ? 0.02).linlin(0.02, 0.09, -1, -0.6) }),
+					\ex, 1,
+					\sy, Pfunc({ |e| ((e[\note] ? 33) + (((e[\octave] ? 5) - 5) * 12) + 60).linlin(81, 160, 0.95, -0.95) }),
+					\ey, Pkey(\sy),
+					\startSize, Pfunc({ |e| (e[\amp] ? 0).clip(0, 15).lincurve(0, 15, 8, 10, -2) }),
+					\endSize, Pkey(\startSize),
+					\startWidth, 1,
+					\endWidth, 1,
+					\fill, true,
+					\closed, true,
+					\numPoints, Pfunc({ |e| (e[\dur] ? 0.5).linlin(0.03, 0.5, 16, 48).round.asInteger }),
+					\startColor, Pfunc({ |e|
+						Color.new(0.87, 0.64, 0.24,
+							(e[\amp] ? 0).clip(0, 15).lincurve(0, 15, 0, 0.85, -3)
+							* (e[\dur] ? 0.5).linlin(0.03, 0.5, 0.35, 1))
+					}),
+					\endColor, Color.new(0.62, 0.04, 0.14, 0),
+					\duration, Pfunc({ |e| e[\bowEnv].duration * (e[\dur] ? 0.5).linlin(0.03, 0.5, 0.2, 1) }),
+					\modulation, Pfunc({ |e| (env: e[\bowEnv], warp: 2.5, amp: 0) }),
+				)
+			);
+			Pdef(m.ptn).play(quant:0.125);
+		});
 	});
 };
 ~deinit = ~deinit <> {
+	dead = true;
 	Pdef(m.ptn).remove;
-	postf("buffer dealloc [%] \n", buffer);
-	buffer.free;
+	buffer !? {
+		postf("buffer dealloc [%] \n", buffer);
+		buffer.free;
+		buffer = nil;
+	};
 };
 
 //------------------------------------------------------------
