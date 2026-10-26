@@ -86,13 +86,13 @@ m.com.bgColor = Color.yellow(0.5);
 			\dur,  Pkey(\div).reciprocal * beat,
 			\note, 0,
 			\octave, 5,
-			\out, 2,
+			\out, Pseq([0,1,2,3], inf),
 
 			\pick, Pfunc({ |e| if(e[\step] == 0, { kickIdx }, { (e[\pal] ? 1).rand }) }),
 			\bufnum, Pfunc({ |e| buffers[e[\pick].clip(0, buffers.size - 1)] }),
 
 			\amp, Pkey(\energy) * Pfunc({ |e| if(e[\step] == 0, { 1.0 }, { 0.55 }) }),
-			\rate, Pfunc({ |e| rates.choose * (e[\roll] ? 1) }),
+			\rate, 0.25,//Pfunc({ |e| rates.choose * (e[\roll] ? 1) }),
 			\start, Pfunc({ |e|
 				if(e[\rate] < 0, { 0.98 }, { [0, 0.12].wchoose([0.88, 0.12]) })
 			}),

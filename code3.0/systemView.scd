@@ -229,7 +229,7 @@ var systemView = {
 
 s.plotTreeView(0.5, nodeTree);
 
-ServerMeterView.new(s, meterView, 0@0, 2, 2);
+ServerMeterView.new(s, meterView, 0@0, 2, 4);
 
 OSCFunc({ |msg, time, addr, recvPort|
 	s.quit({

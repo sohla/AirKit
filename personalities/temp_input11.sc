@@ -1,3 +1,5 @@
+// IMU controls chords and root. 
+
 var inputBus = 0;
 var m = ~model;
 var dev = ~device;

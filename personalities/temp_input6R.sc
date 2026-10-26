@@ -76,7 +76,7 @@ SynthDef(\miniMoogVoice, {
 				\attack, rel,//vel.lincurve(0.0, 1.0, 1.01, 0.002,-2),
 				\decay, 0.12,
 				\sustain, 0.1,
-				\release, rel,//relTime * vel.lincurve(0.0, 1.0, 2.01, 0.002,-2),
+				\release, 2,//relTime * vel.lincurve(0.0, 1.0, 2.01, 0.002,-2),
 				\fq, 0.3,
 				\dur, 0.2
 			], group);

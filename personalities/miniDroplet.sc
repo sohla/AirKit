@@ -175,7 +175,7 @@ SynthDef(\dropletVerb, {
 	var e = m.accelMassFiltered;
 	var idx = e.lincurve(0, 2.0 * sens, 0, divs.size - 1, 1).round.asInteger.clip(0, divs.size - 1);
 	var pal = e.lincurve(0, 2.0 * sens, 1, notes.size, 1).round.asInteger.clip(1, notes.size);
-	var amp = e.lincurve(0.0, 2.0 * sens, -50, -1, -2);
+	var amp = e.lincurve(0.0, 1.0 * sens, -50, -1, -2);
 	var wob = ((d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5) * 2).lincurve(-1.0, 1.0, 0.01, 14000.0, -2);
 	var cut = m.rrateMassFiltered.linexp(0.0, 2.0 * sens, 180, 4000);
 	var ring = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0, 1.0, 0.05, 1.9, 2);

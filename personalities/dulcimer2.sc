@@ -164,7 +164,7 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 			\startColor, Color.new(1.0, 0.0, 0.0, 0.9),
 			\endColor, Color.new(0.0, 1.0, 0.0, 0.0),
 			\startWidth, Pfunc({ |e| ((e[\amp] ? 0.2) * 4) + 1 }),
-			\endWidth, 0.4,
+			\endWidth, 10.4,
 			\duration, Pkey(\dur) * 6,
 			// \func, Pfunc({ |e| ~onEvent.(e) }),
 			\modulation, (

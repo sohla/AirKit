@@ -1,4 +1,4 @@
-var inputBus = 1;
+var inputBus = 0;
 var m = ~model;
 var dev = ~device;
 var group, trig, pad;
@@ -27,7 +27,7 @@ var padBase = 84-12;
 // and a long pool played 3 long only ever sounds 3 of its notes per hit.
 var beat = 1;
 var subdiv = 4;
-var subdivLen = 3;
+var subdivLen = 1;
 
 // Motion values owned by ~next. The OSCdef and the sequence routine read
 // them rather than computing anything themselves.

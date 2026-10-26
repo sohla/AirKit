@@ -40,7 +40,7 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 	postf("loading sample : % \n", path.fileName);
 	buffer = Buffer.read(s, path.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		synth = Synth(\nicMouthGrain,[\bufnum,buf, \rate, 1, \gate, 1 ]);
+		synth = Synth(\nicMouthGrain,[\out, 2, \bufnum,buf, \rate, 1, \gate, 1 ]);
 	});
 
 	~vdef.(\mouth, { |ev, c|
@@ -87,10 +87,10 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 	(
 		type: \customVisualEvent, amp: 0, dur: 0.01, viewID: d.port,
 		shape: \mouth,
-		sx: -1, ex: 1, sy: -0.9, ey: -0.9,
+		sx: -1, ex: 1, sy: -0.0, ey: -0.0,
 		startSize: 420, endSize: 420,
-		startWidth: 2, endWidth: 2,
-		startColor: Color.new(1.0, 0.42, 0.68, 0.9),
+		startWidth: 4, endWidth: 2,
+		startColor: Color.new(1.0, 0.22, 0.98, 0.9),
 		endColor: Color.new(1.0, 0.42, 0.68, 0.9),
 		numPoints: 8, fill: false, closed: true,
 		duration: inf,

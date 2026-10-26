@@ -69,13 +69,13 @@ SynthDef(\miniMoogVoice, {
 
 			Synth(\miniMoogVoice, [
 				\freq, notes[rt].midicps,
-				\amp, vel.linlin(0.0, 1.0, 0.05, 0.5),
+				\amp, vel.linlin(0.0, 1.0, 0.05, 0.8),
 				\attack, vel.linexp(0.0, 1.0, 0.05, 0.001),
 				\filterFreq, ff,
 				\attack, 0.001,//vel.lincurve(0.0, 1.0, 1.01, 0.002,-2),
 				\decay, 0.12,
 				\sustain, 0.1,
-				\release, 0.2,//relTime * vel.lincurve(0.0, 1.0, 2.01, 0.002,-2),
+				\release, 2.2,//relTime * vel.lincurve(0.0, 1.0, 2.01, 0.002,-2),
 				\fq, 0.3,
 				\dur, 0.2
 			], group);

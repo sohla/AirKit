@@ -18,6 +18,10 @@
 
 		"miniMoog",
 		"miniDroplet",
+
+				"droplet",
+		"droplet",
+
 		"miniHarp",
 		"miniMarimba",
 
@@ -31,6 +35,13 @@
 		"melbb2",
 		"mel1",
 		"mel4",
+
+		"gendy1",
+		"gendy3",
+
+		"mel4",
+		"nicPrrr1",
+		"nicMouth1",
 
 
 		"violin1",

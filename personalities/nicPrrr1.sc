@@ -23,7 +23,7 @@ SynthDef(\nicPrrrLoop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1|
 		rate.lag(0.25) * BufRateScale.kr(bufnum),
 		1, 0, loop: 1);
 	sig = LeakDC.ar(sig);
-	Out.ar(out, sig * env * amp.lag(0.12));
+	Out.ar(2, sig * env * amp.lag(0.12));
 }).add;
 
 //------------------------------------------------------------
@@ -152,7 +152,7 @@ SynthDef(\nicPrrrLoop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1|
 	if(armed and: { buffers.notNil } and: { m.accelMass > (0.55 * sens) }, {
 		armed = false;
 		bi = (bi + 1) % buffers.size;
-		noteOn.(amp * vol, 1);
+		noteOn.(amp * vol * 2, 1);
 
 		(
 			type: \customVisualEvent,

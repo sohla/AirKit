@@ -42,7 +42,7 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 	postf("loading sample : % \n", path.fileName);
 	buffer = Buffer.read(s, path.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		synth = Synth(\bufGrainM,[\bufnum,buf, \rate, 1, \gate, 1 ]);
+		synth = Synth(\bufGrainM,[\out, 0, \bufnum,buf, \rate, 1, \gate, 1 ]);
 	});
 
 	~vdef.(\mouthGrain, { |ev, c|
@@ -105,15 +105,15 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 			duration: inf,
 			fill: false,
 			closed: true,
-			sx: -1, sy: 1, ex: 1, ey: -1,
+			sx: -0.4, sy: 0.4, ex: 1, ey: -1,
 			startSize: 1860,
 			endSize: 860,
 			startWidth: 3,
 			endWidth: 1,
-			// startColor: col.alpha_(0.85),
-			// endColor: col.alpha_(0.85),
-			startColor: Color.black,
-			endColor: Color.black,
+			startColor: col.alpha_(0.85),
+			endColor: col.alpha_(0.85),
+			// startColor: Color.black,
+			// endColor: Color.black,
 			modulation: (
 				slot: i,
 				stretch: 1 ,
@@ -125,7 +125,9 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 			)
 		).play;
 	};
-	m.com.bgColor = Color.red(1);
+	m.com.bgColor = Color.red(0.2);
+	
+
 
 };
 

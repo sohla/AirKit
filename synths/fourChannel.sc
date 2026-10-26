@@ -1,6 +1,8 @@
 (
-var input = ServerOptions.devices.indexOfEqual("SensiLab 848");
-var output = ServerOptions.devices.indexOfEqual("SensiLab 848");
+// var input = ServerOptions.devices.indexOfEqual("SensiLab 848");
+// var output = ServerOptions.devices.indexOfEqual("SensiLab 848");
+var input = ServerOptions.devices.indexOfEqual("SERIES 208i");
+var output = ServerOptions.devices.indexOfEqual("SERIES 208i");
 
 o = Server.local.options;
 o.inDevice = ServerOptions.devices[input];
@@ -44,7 +46,7 @@ Synth(\blip, [\out, ~quad]);
 
 (
 SynthDef(\noise, { |out, freq=440, az=0|
-	var sig = BrownNoise.ar(0.2);
+	var sig = BrownNoise.ar(0.1);
 	var mx = MouseX.kr(-1,1);
 	var my = MouseY.kr(-1,1);
     Out.ar(out, Pan4.ar(sig, mx, my)); // Pan4.ar(in, xpos, ypos)
