@@ -2,11 +2,11 @@
 NetAddr.localAddr
 
 // configure to send
-b = NetAddr.new("192.168.100.217", 8888);
+b = NetAddr.new("192.168.100.239", 8888);
 
 
 // set LED
-b.sendMsg("/Config/SetLED",1,0,1,255);
+b.sendMsg("/Config/SetLED",1,0,0,255);
 
 // set ID / OSC path
 b.sendMsg("/Config/SetID","5");
