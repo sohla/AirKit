@@ -18,8 +18,8 @@ m.gyroFilteredAttack = 0.7;
 m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
-SynthDef(\crows, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=0, freq=440,
-	attack=0.16, decay=0.1, sustain=0.3, release=1.4, gate=1,cutoff=20000, rq=0.9|
+SynthDef(\crowsSampler, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=0, freq=440,
+	attack=0.01, decay=0.1, sustain=0.3, release=3.2, gate=1,cutoff=20000, rq=0.9|
 	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
 	// var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, timeScale: 2,doneAction: 2);
 	var env = EnvGen.kr(Env.perc(attack, release), gate, timeScale: 1,doneAction: 2);
@@ -33,16 +33,14 @@ SynthDef(\crows, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=0, freq=440,
 
 
 
+
+
 //------------------------------------------------------------
 ~init = ~init <> {
 
-	// var folder = PathName("~/Downloads/yourDNASamples/hover");
 	var folder = PathName("~/Downloads/yourDNASamples/birdcalls");
-	// var folder = PathName("~/Downloads/yourDNASamples/splats");
 
 	postf("loading samples : % \n", folder);
-
-	group = Group.new;
 
 	buffers = folder.entries.collect({ |path,i|
 		Buffer.read(s, path.fullPath, action:{|buf|
@@ -59,27 +57,15 @@ SynthDef(\crows, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=0, freq=440,
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
-	var oldGroup = group;
-	var oldBuffers = buffers;
-	group = nil;
-	buffers = nil;
+
 
 	if (synth.notNil) { synth.set(\gate, 0) };
-	synth = nil;
 
-	fork {
-		2.0.wait;
-		if (oldGroup.notNil) {
-			s.bind { oldGroup.freeAll };
-			s.sync;
-			oldGroup.free;
-		};
-		oldBuffers.do({|buf|
-			postf("buffer dealloc [%] \n", buf);
-			buf.free;
-			s.sync;
-		});
-	};
+	buffers.do({|buf|
+		postf("buffer dealloc [%] \n", buf);
+		buf.free;
+	});
+
 };
 
 //------------------------------------------------------------
@@ -143,13 +129,14 @@ SynthDef(\crows, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=0, freq=440,
     ),
 	);
 
-	if(TempoClock.beats > (lastTime + rrand(0.1,0.2)),{
+
+	if(TempoClock.beats > (lastTime + 0.1),{
 		lastTime = TempoClock.beats;
 		if(m.accelMass>0.05,{
 	    ev.play;
-			synth = Synth(\crows, [\bufnum, buffers[bi], \amp, amp * 0.6 * vol, \rate, 1.11 * rrand(0.9,1.1)], group);
+			synth = Synth(\crowsSampler, [\bufnum, bi, \amp, amp * 0.6 * vol, \rate, 1.11 * 1]);
 			bi = bi + 1;
-			if(bi >= buffers.size,{bi=0});
+			if(bi >= (buffers.size-1),{bi=0});
 
 			{synth.set(\gate,0)}.defer(0.2);
 		},{
