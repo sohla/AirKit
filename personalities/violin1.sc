@@ -54,7 +54,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 					\bufnum, buf,
 					// \octave, Pxrand([3], inf),
 					// \note, Pxrand([33,35,37], inf),
-					\note, Pxrand([33,38,45,52].stutter(4) - 2, inf),
+					\note, Pxrand([33,35,40,45].stutter(4) + 10, inf),
 					\decay, 0.2,
 					\sustain,0.1,
 					\release,3.2,
@@ -113,16 +113,16 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var dur = m.accelMassFiltered.linlin(0, 2 * sens,0.5,0.03);
 	var start = m.gyroXFiltered.lincurve(0.0,1.0,0.02,0.4,-2);
-	var amp = m.accelMassFiltered.lincurve(0, 0.6 * sens,0,1,-2);
+	var amp = m.accelMassFiltered.lincurve(0, 2.0 * sens,0,1,-2);
 	var rate= m.accelMass.linlin(0, 2 * sens,0,2);
-	var oct = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,2,7,3).floor;
+	var oct = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,4,6,3).floor;
 
 	if(amp < 0.03, {amp = 0});
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\octave, 0 + oct);
 	Pdef(m.ptn).set(\dur, dur);
-	Pdef(m.ptn).set(\amp, amp * 15 * vol);
+	Pdef(m.ptn).set(\amp, amp * 10 * vol);
  	Pdef(m.ptn).set(\start, start.linlin(0,1,0.02,0.09));
 
 };
