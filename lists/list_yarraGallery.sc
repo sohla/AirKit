@@ -4,21 +4,17 @@
 
 
 		"dulcimer2",
-		"piano3",
-	
 		"miniHarp",
-		"miniMarimba",
-
 		"nicTwoNote",
-
-		"mel1",
-
-
-		"violin1",
-		"violin2",
-
-		"rain1",
 		"thunder",
+
+		"piano2",
+		"miniMarimba",
+		"miniDroplet",
+		"mel1",
+		"rain1",
+	
+
 
 		"silence",
 	]

@@ -87,7 +87,7 @@ SynthDef(\thunderSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 	var amp = m.accelMassFiltered.lincurve(0, 5 * sens,0.05,0.9,-2);
 
 	if(move > 0.1, {
-		if(TempoClock.beats > (lastTime + 0.35),{
+		if(TempoClock.beats > (lastTime + 0.65),{
 			lastTime = TempoClock.beats;
 			synth = Synth(\thunderSampler, [
 				\rate, 1,
