@@ -32,7 +32,9 @@ SynthDef(\hoverSampler, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=0, fr
 	// var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, timeScale: 2,doneAction: 2);
 	var env = EnvGen.kr(Env.perc(attack, release), gate, timeScale: 1,doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum, rate: lr, startPos: start * BufFrames.kr(bufnum), loop: 0);
+	var tone = SinOsc.ar([freq * 0.27, freq * 0.53] * LFNoise2.ar(12,0.03,1) * rate, LFNoise2.ar(3,6),[0.1,0.12 ]* env * 6);
 	// sig = RLPF.ar(sig, cutoff, rq);// + osc;
+	sig = sig + tone;
 	sig = Balance2.ar(sig[0], sig[1], pan, amp);
 	sig = LeakDC.ar(sig * env);
 	Out.ar(out, sig);
@@ -148,7 +150,7 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 		if(m.accelMass>0.05,{
 	    ev.play;
 
-			synth = Synth(\hoverSampler, [\bufnum, bi, \amp, amp * 0.6 * vol, \rate, 1.11 * 1]);
+			synth = Synth(\hoverSampler, [\bufnum, bi, \amp, amp * 0.6 * vol, \rate, 1.11 * [0.5,1,2,4].choose], group);
 			bi = bi + 1;
 			if(bi >= (buffers.size-1),{bi=0});
 			{synth.set(\gate,0)}.defer(0.2);

@@ -4,9 +4,12 @@
 		"silence",
 
 		"hover1",
-		"timWind1",
-
+		"hattieFlower",
+		"plantGrow",
+		"spaceship",
+		
 		"timSwing1",
+
 
 
 		"ticktockbeat2",

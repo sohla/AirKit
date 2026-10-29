@@ -13,7 +13,8 @@
 	outAddr: ["192.168.70.211", 5005],
 	numDevices: 10,
 
-	list: "list_BtB_Dev.sc",
+	// list: "list_BtB_Dev.sc",
+	list: "list_yourDNA26.sc",
 
 	secs: 0.01,
 	latency: 0.03,
