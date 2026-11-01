@@ -427,13 +427,15 @@
                         degree.set(e.source.id ?? e.source, degree.get(e.source.id ?? e.source) + 1);
                         degree.set(e.target.id ?? e.target, degree.get(e.target.id ?? e.target) + 1);
                     });
-                    const pull = d => degree.get(d.id) ? 0.04 : 0.15;
+                    const pull = d => degree.get(d.id) ? 0.02 : 0.08;
+                    const fontPx = d => Math.max(8, Math.min(12, Math.sqrt(d.complexity) * 0.8 + 6));
+                    const space = d => Math.max((Math.sqrt(d.complexity) * 0.5 + 5) * 0.5 + 8, d.name.length * fontPx(d) * 0.3 + 8);
                     sim = d3.forceSimulation(filteredData.nodes)
                         .force('link', d3.forceLink(filteredData.edges).id(d => d.id)
-                            .distance(d => 30 + (1 - d.similarity) * 150)
+                            .distance(d => 80 + (1 - d.similarity) * 260)
                             .strength(d => d.similarity / Math.min(degree.get(d.source.id ?? d.source), degree.get(d.target.id ?? d.target))))
-                        .force('charge', d3.forceManyBody().strength(-80).distanceMax(300))
-                        .force('collision', d3.forceCollide().radius(d => (Math.sqrt(d.complexity) * 0.5 + 5) * 0.5 + 3))
+                        .force('charge', d3.forceManyBody().strength(-350).distanceMax(1200))
+                        .force('collision', d3.forceCollide().radius(space).strength(1).iterations(3))
                         .force('x', d3.forceX(width / 2).strength(pull))
                         .force('y', d3.forceY(height / 2).strength(pull))
                         .on('end', () => zoomToFit(width, height));
@@ -477,7 +479,7 @@
             const xs = filteredData.nodes.map(n => n.x), ys = filteredData.nodes.map(n => n.y);
             const x0 = d3.min(xs), x1 = d3.max(xs), y0 = d3.min(ys), y1 = d3.max(ys);
             if (!isFinite(x0)) return;
-            const scale = Math.min(4, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height, 1e-6));
+            const scale = Math.max(0.6, Math.min(1.5, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height, 1e-6)));
             const t = d3.zoomIdentity.translate(width / 2, height / 2).scale(scale)
                 .translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
             svg.transition().duration(600).call(zoom.transform, t);

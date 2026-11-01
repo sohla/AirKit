@@ -144,7 +144,7 @@
     <script>
         let networkData = null;
         let filteredData = null;
-        let svg, simulation, nodes, links, labels;
+        let svg, simulation, nodes, links, labels, zoom;
         let selectedNode = null;
         
         // Color scheme for file categories
@@ -169,7 +169,7 @@
             svg.attr('width', width).attr('height', height);
             
             // Add zoom behavior
-            const zoom = d3.zoom()
+            zoom = d3.zoom()
                 .scaleExtent([0.1, 4])
                 .on('zoom', (event) => {
                     svg.select('g').attr('transform', event.transform);
@@ -431,17 +431,34 @@
             });
         }
         
+        function zoomToFit(width, height) {
+            const xs = filteredData.nodes.map(n => n.x), ys = filteredData.nodes.map(n => n.y);
+            const x0 = d3.min(xs), x1 = d3.max(xs), y0 = d3.min(ys), y1 = d3.max(ys);
+            if (!isFinite(x0)) return;
+            const scale = Math.max(0.6, Math.min(1.5, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height, 1e-6)));
+            const t = d3.zoomIdentity.translate(width / 2, height / 2).scale(scale)
+                .translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
+            svg.transition().duration(600).call(zoom.transform, t);
+        }
+
         // Create simulation based on layout type
         function createSimulation(layoutType, width, height) {
             let sim;
             
             switch (layoutType) {
                 case 'force':
+                    const nodeR = d => Math.sqrt(d.commit_count) + 3;
+                    const fontPx = d => Math.min(12, Math.sqrt(d.commit_count) + 6);
+                    const space = d => d.commit_count > 5
+                        ? Math.max(nodeR(d) + 8, d.label.length * fontPx(d) * 0.3 + 8)
+                        : nodeR(d) + 8;
                     sim = d3.forceSimulation(filteredData.nodes)
-                        .force('link', d3.forceLink(filteredData.edges).id(d => d.id).distance(50))
-                        .force('charge', d3.forceManyBody().strength(-200))
-                        .force('center', d3.forceCenter(width / 2, height / 2))
-                        .force('collision', d3.forceCollide().radius(d => Math.sqrt(d.commit_count) + 5));
+                        .force('link', d3.forceLink(filteredData.edges).id(d => d.id).distance(110))
+                        .force('charge', d3.forceManyBody().strength(-600).distanceMax(1500))
+                        .force('x', d3.forceX(width / 2).strength(0.03))
+                        .force('y', d3.forceY(height / 2).strength(0.03))
+                        .force('collision', d3.forceCollide().radius(space).strength(1).iterations(3))
+                        .on('end', () => zoomToFit(width, height));
                     break;
                     
                 case 'circular':
