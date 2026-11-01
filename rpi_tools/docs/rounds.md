@@ -4,6 +4,30 @@ One entry per test round. Newest first.
 
 ---
 
+## Round 1b — 2026-11-02 — airkit5, reboot test
+
+Same card, rebooted, then `verify.sh` only.
+
+| Step | Result |
+|---|---|
+| reboot | back in ~20 s, on the N600's `10.1.1.9` only (temporary uplink gone, as designed) |
+| verify | 46 pass, **2 fail**: internet reachable and clock synced |
+
+Both failures are about the lab, not the kit. `net_ready` already requires
+them during every provisioning run, so they were moved out of `goss.yaml`. Its
+checks are now **kit state only** and must pass after a reboot with or
+without internet. Re-verify: **45 pass, 0 fail**, 1 skipped.
+
+Nothing cloud-init manages undid any setting. The updater service came back
+by itself.
+
+**Note for later:** with no internet at a venue, the kit's clock comes from
+the Pi 5's RTC. That only keeps time across power-off if an RTC battery is
+fitted. Without one, log file names in `~/logs` carry wrong dates. Not a
+functional problem; worth knowing.
+
+---
+
 ## Round 1 — 2026-11-02 — airkit5, test card
 
 **Card:** Raspberry Pi OS Trixie, image of 2026-10-06, kernel 6.18. Not a

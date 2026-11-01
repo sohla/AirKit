@@ -1,4 +1,6 @@
 # Run via ../verify.sh. {{.Vars.kit}} is the inventory name, e.g. airkit3.
+# Kit state only: must pass after a reboot, with or without internet.
+# Internet and clock are provisioning conditions, enforced by net_ready.
 
 command:
   hostname:
@@ -13,10 +15,6 @@ command:
     exec: ". /etc/os-release && echo $VERSION_CODENAME"
     exit-status: 0
     stdout: [trixie]
-  clock-synced:
-    exec: timedatectl show -p NTPSynchronized --value
-    exit-status: 0
-    stdout: ["yes"]
   updater-has-no-rt-limits:
     exec: systemctl show airkit-updater -p LimitRTPRIO --value
     exit-status: 0
@@ -96,8 +94,5 @@ interface:
 
 http:
   http://localhost:8080/:
-    status: 200
-    timeout: 5000
-  http://deb.debian.org/debian/:
     status: 200
     timeout: 5000
