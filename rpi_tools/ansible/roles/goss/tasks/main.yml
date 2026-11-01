@@ -1,0 +1,17 @@
+- name: goss binary directory
+  ansible.builtin.file:
+    path: /usr/local/lib/goss
+    state: directory
+    mode: "0755"
+
+- name: goss {{ goss_version }} downloaded
+  ansible.builtin.get_url:
+    url: "https://github.com/goss-org/goss/releases/download/{{ goss_version }}/goss-linux-arm64"
+    dest: "/usr/local/lib/goss/goss-{{ goss_version }}"
+    mode: "0755"
+
+- name: goss on PATH points at the pinned version
+  ansible.builtin.file:
+    src: "/usr/local/lib/goss/goss-{{ goss_version }}"
+    dest: /usr/local/bin/goss
+    state: link

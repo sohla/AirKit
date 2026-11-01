@@ -1,0 +1,38 @@
+- name: Hostname is {{ pi_hostname }}
+  ansible.builtin.hostname:
+    name: "{{ pi_hostname }}"
+
+- name: System fully upgraded
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+    upgrade: full
+    autoremove: true
+
+- name: Check whether a reboot is pending
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: reboot_flag
+
+- name: Reboot if the upgrade asked for it
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+  when: reboot_flag.stat.exists
+
+- name: Network ready again after the reboot
+  ansible.builtin.include_role:
+    name: net_ready
+  when: reboot_flag.stat.exists
+
+- name: Provision marker
+  ansible.builtin.template:
+    src: airkit-provision.j2
+    dest: /etc/airkit-provision
+    mode: "0644"
+
+- name: pi has passwordless sudo (bootstrap.sh sets it; this keeps it)
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/010_pi-nopasswd
+    content: "pi ALL=(ALL) NOPASSWD: ALL\n"
+    mode: "0440"
+    validate: visudo -cf %s

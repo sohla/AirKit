@@ -1,0 +1,15 @@
+- name: Configure an AirKit
+  hosts: airkits
+  become: true
+  vars:
+    tools_rev: "{{ lookup('pipe', 'git -C ' ~ playbook_dir ~ ' rev-parse --short HEAD') }}"
+  roles:
+    - net_ready
+    - base
+    - airkit_app
+    # supercollider_standalone   ~/supercolliderStandaloneRPI64 + sclang.yaml
+    # autostart                  what runs start_airkit.sh at login/boot
+    - updater
+    # tuning                     on hold — docs/requirements.md §9
+    - goss
+    # network_ap                 last: it takes wlan0

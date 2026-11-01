@@ -1,0 +1,28 @@
+- name: git installed
+  ansible.builtin.apt:
+    name: git
+    state: present
+
+# Cloned once and never pulled: after this the updater owns code3.0/,
+# personalities/ and lists/, and a pull would fight its installs.
+- name: AirKit app cloned ({{ airkit_branch }})
+  become: false
+  ansible.builtin.git:
+    repo: "{{ airkit_repo }}"
+    dest: "{{ airkit_dir }}"
+    version: "{{ airkit_branch }}"
+    update: false
+
+- name: ~/logs for start_airkit.sh
+  become: false
+  ansible.builtin.file:
+    path: /home/pi/logs
+    state: directory
+    mode: "0755"
+
+- name: start_airkit.sh launcher
+  become: false
+  ansible.builtin.copy:
+    src: start_airkit.sh
+    dest: /home/pi/start_airkit.sh
+    mode: "0755"

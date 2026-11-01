@@ -1,0 +1,3 @@
+airkit_repo: https://github.com/sohla/AirKit.git
+airkit_branch: Airsticks-RPI
+airkit_dir: /home/pi/Develop/SuperCollider/Projects/AirKit

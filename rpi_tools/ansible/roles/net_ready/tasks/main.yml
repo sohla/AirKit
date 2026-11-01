@@ -1,0 +1,49 @@
+# Plain http on purpose: it works even while the clock is wrong.
+- name: Internet reachable on the Pi's own route?
+  ansible.builtin.command: curl -4 -s -o /dev/null -m 8 http://deb.debian.org/debian/
+  register: direct
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Temporary uplink via the Mac ({{ uplink_gw }}), runtime only, gone on reboot
+  when: direct.rc != 0
+  ansible.builtin.shell: |
+    ip -4 addr show dev eth0 | grep -q " {{ uplink_addr }}/" || ip addr add {{ uplink_addr }}/24 dev eth0
+    ip route replace default via {{ uplink_gw }} dev eth0 src {{ uplink_addr }} metric 50
+  changed_when: false
+  check_mode: false
+
+- name: Internet reachable
+  ansible.builtin.command: curl -4 -s -o /dev/null -m 8 http://deb.debian.org/debian/
+  register: inet
+  until: inet.rc == 0
+  retries: 3
+  delay: 3
+  changed_when: false
+  check_mode: false
+
+# A fresh card's clock is the image date until NTP runs; TLS then rejects
+# every certificate newer than that ("certificate is not yet valid").
+- name: Is the clock synced?
+  ansible.builtin.command: timedatectl show -p NTPSynchronized --value
+  register: ntp
+  changed_when: false
+  check_mode: false
+
+- name: Kick timesyncd
+  when: ntp.stdout != 'yes'
+  ansible.builtin.systemd:
+    name: systemd-timesyncd
+    state: restarted
+  changed_when: false
+  check_mode: false
+
+- name: Clock synced
+  ansible.builtin.command: timedatectl show -p NTPSynchronized --value
+  register: ntp_wait
+  until: ntp_wait.stdout == 'yes'
+  retries: 15
+  delay: 2
+  changed_when: false
+  check_mode: false

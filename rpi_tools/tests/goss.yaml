@@ -1,0 +1,103 @@
+# Run via ../verify.sh. {{.Vars.kit}} is the inventory name, e.g. airkit3.
+
+command:
+  hostname:
+    exec: hostname
+    exit-status: 0
+    stdout: [pi]
+  arch-is-64bit:
+    exec: uname -m
+    exit-status: 0
+    stdout: [aarch64]
+  os-is-trixie:
+    exec: ". /etc/os-release && echo $VERSION_CODENAME"
+    exit-status: 0
+    stdout: [trixie]
+  clock-synced:
+    exec: timedatectl show -p NTPSynchronized --value
+    exit-status: 0
+    stdout: ["yes"]
+  updater-has-no-rt-limits:
+    exec: systemctl show airkit-updater -p LimitRTPRIO --value
+    exit-status: 0
+    stdout: ["/^0$/"]
+  no-pending-upgrades:
+    exec: "apt-get -s dist-upgrade | grep -c '^Inst ' ; true"
+    exit-status: 0
+    stdout: ["/^0$/"]
+
+file:
+  /proc/device-tree/model:
+    exists: true
+    contents: ["Raspberry Pi 5"]
+  /etc/airkit-provision:
+    exists: true
+    contents: ["kit: {{.Vars.kit}}"]
+  /var/run/reboot-required:
+    exists: false
+  /usr/local/bin/goss:
+    exists: true
+  /etc/sudoers.d/010_pi-nopasswd:
+    exists: true
+    mode: "0440"
+    contents: ["pi ALL=(ALL) NOPASSWD: ALL"]
+
+  # airkit_app
+  /home/pi/Develop/SuperCollider/Projects/AirKit/.git:
+    exists: true
+    filetype: directory
+  /home/pi/Develop/SuperCollider/Projects/AirKit/code3.0/main.sc:
+    exists: true
+  /home/pi/start_airkit.sh:
+    exists: true
+    owner: pi
+    mode: "0755"
+    contents: ["code3.0/main.sc"]
+  /home/pi/logs:
+    exists: true
+    filetype: directory
+    owner: pi
+  /home/pi/supercolliderStandaloneRPI64/sclang:
+    exists: true
+    skip: true    # until the supercollider_standalone role exists
+
+  # updater — and the June 2026 rule: no RT limits in its unit
+  /etc/systemd/system/airkit-updater.service:
+    exists: true
+    contents: ["User=pi"]
+
+user:
+  pi:
+    exists: true
+    groups:
+      contain-elements: [sudo]
+
+service:
+  ssh:
+    enabled: true
+    running: true
+  avahi-daemon:
+    enabled: true
+    running: true
+  NetworkManager:
+    enabled: true
+    running: true
+  airkit-updater:
+    enabled: true
+    running: true
+
+port:
+  tcp:8080:
+    listening: true
+
+interface:
+  eth0:
+    exists: true
+
+http:
+  http://localhost:8080/:
+    status: 200
+    timeout: 5000
+  http://deb.debian.org/debian/:
+    status: 200
+    timeout: 5000
