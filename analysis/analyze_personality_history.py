@@ -42,12 +42,12 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
-OUTPUT_DIR = HERE / 'output'
+OUTPUT_DIR = HERE / 'pages' / 'output'
 PERSONALITIES = REPO / 'personalities'
 
 # The scope invariant (README.md). Change it here and in every other analyzer
 # or the pages stop describing the same population of commits.
-GIT_SCOPE = ['--all', '--since=2024-01-01']
+GIT_SCOPE = ['--all', '--since=2024-01-01', '--no-merges']
 SINCE = '2024-01-01'
 
 # A commit gap wider than this starts a new "burst" in the evolution narrative.
@@ -193,13 +193,12 @@ class BlobCache:
             return
         process = subprocess.run(
             ['git', 'cat-file', '--batch'], cwd=REPO,
-            input='\n'.join(missing), capture_output=True, text=True,
-            errors='replace',
+            input='\n'.join(missing).encode(), capture_output=True,
         )
         out = process.stdout
         position = 0
         for sha in missing:
-            newline = out.find('\n', position)
+            newline = out.find(b'\n', position)
             if newline < 0:
                 break
             header = out[position:newline].split()
@@ -207,7 +206,7 @@ class BlobCache:
                 position = newline + 1
                 continue
             size = int(header[2])
-            body = out[newline + 1:newline + 1 + size]
+            body = out[newline + 1:newline + 1 + size].decode(errors='replace')
             self.lines[sha] = {l.strip() for l in body.splitlines() if l.strip()}
             position = newline + 1 + size + 1
 
@@ -1047,13 +1046,13 @@ def fetch_blobs(shas):
         return {}
     process = subprocess.run(
         ['git', 'cat-file', '--batch'], cwd=REPO,
-        input='\n'.join(shas), capture_output=True, text=True, errors='replace',
+        input='\n'.join(shas).encode(), capture_output=True,
     )
     out = process.stdout
     contents = {}
     position = 0
     for sha in shas:
-        newline = out.find('\n', position)
+        newline = out.find(b'\n', position)
         if newline < 0:
             break
         header = out[position:newline].split()
@@ -1061,7 +1060,7 @@ def fetch_blobs(shas):
             position = newline + 1
             continue
         size = int(header[2])
-        contents[header[0]] = out[newline + 1:newline + 1 + size]
+        contents[header[0].decode()] = out[newline + 1:newline + 1 + size].decode(errors='replace')
         position = newline + 1 + size + 1
     return contents
 

@@ -1,0 +1,144 @@
+/* Shared look for every analysis page: ink on off-white paper, hairlines, flat
+   discs of vermilion, cobalt, amber and sky. Link it after a page's own
+   <style> is removed, and colour marks from the --c-* tokens, never hex. */
+
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+    --paper:      #f5f5f2;
+    --paper-2:    #ebebe7;
+    --paper-3:    #dfdfda;
+    --ink:        #1d1d1b;
+    --ink-2:      #4a4741;
+    --ink-3:      #8a847a;
+    --hair:       rgba(29, 29, 27, 0.18);
+    --hair-2:     rgba(29, 29, 27, 0.08);
+
+    /* categorical, in this order - validated on --paper */
+    --c-1: #d14a2b;   /* vermilion */
+    --c-2: #33669c;   /* cobalt */
+    --c-3: #d99a1e;   /* amber */
+    --c-4: #1f9ccb;   /* sky */
+    --c-ink: #1d1d1b; /* a fifth category that is "both" or "mixed" */
+    --c-other: #9a948a;
+
+    /* sequential: one hue, paper to vermilion */
+    --seq-0: #e9bfa9;
+    --seq-1: #d14a2b;
+
+    --font: 'Jost', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font);
+    font-weight: 400;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--c-2); }
+code, .mono { font-family: var(--mono); }
+
+/* ---- page header ---- */
+.page-header {
+    position: relative;
+    padding: 28px 32px 18px;
+    border-bottom: 1px solid var(--ink);
+}
+.page-header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -0.3px;
+}
+.page-header h1::before {
+    content: '';
+    display: inline-block;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--c-1);
+    margin-right: 12px;
+    vertical-align: 2px;
+}
+.page-header p { margin: 6px 0 0; color: var(--ink-2); font-size: 14px; max-width: 900px; }
+
+h1, h2, h3, h4 { font-weight: 500; color: var(--ink); }
+h3, h4, .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: var(--ink-3);
+    font-weight: 500;
+}
+
+/* ---- controls ---- */
+.controls, .control-row {
+    display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+    padding: 12px 32px;
+    border-bottom: 1px solid var(--hair);
+}
+
+button, .btn {
+    font-family: var(--font);
+    font-size: 13px;
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    padding: 4px 14px;
+    cursor: pointer;
+    transition: background .12s, color .12s;
+}
+button:hover, .btn:hover { background: var(--paper-3); }
+button.active, .btn.active { background: var(--ink); color: var(--paper); }
+
+input[type=text], input[type=search], select {
+    font-family: var(--font);
+    font-size: 13px;
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    border-radius: 0;
+    padding: 5px 9px;
+}
+input[type=text]:focus, select:focus { outline: none; border-color: var(--c-1); }
+input[type=range] { accent-color: var(--ink); }
+input[type=checkbox] { accent-color: var(--ink); }
+
+/* ---- panels ---- */
+.panel {
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    padding: 14px 16px;
+}
+.stat-value { font-family: var(--mono); color: var(--ink); font-size: 18px; }
+.stat-label { color: var(--ink-3); font-size: 12px; }
+
+/* a category key: a small disc and a label in ink */
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: 0; margin-right: 6px; }
+
+/* ---- tooltips ---- */
+.tooltip, #tip {
+    position: fixed;
+    pointer-events: none;
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    border-radius: 0;
+    padding: 8px 11px;
+    font-size: 12px;
+    box-shadow: 4px 4px 0 var(--hair);
+    z-index: 20;
+}
+
+/* ---- svg defaults ---- */
+svg { fill: var(--ink-2); font-family: var(--font); }
+.axis path, .axis line, .domain, .tick line { stroke: var(--ink); stroke-opacity: .5; }
+.axis text, .tick text { fill: var(--ink-3); font-size: 10px; font-family: var(--mono); }
+.grid line { stroke: var(--hair-2); }

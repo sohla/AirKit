@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Commit Activity Timeline</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="timerange.js"></script>
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        body { overflow: hidden; }
+
+        .implementation { --cat: var(--c-2); }
+        .personality    { --cat: var(--c-1); }
+        .visual         { --cat: var(--c-3); }
+        .mixed          { --cat: var(--c-ink); }
+        .other          { --cat: var(--c-other); }
+
+        #container { display: flex; flex-direction: column; height: 100vh; }
+        .page-header { flex-shrink: 0; }
+
+        #controls {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+            padding: 14px 32px; border-bottom: 1px solid var(--ink); flex-shrink: 0;
+        }
+        #controls h3 { margin: 0 4px 0 0; }
+
+        .toggle-btn::before {
+            content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+            margin-right: 7px; vertical-align: 0; background: var(--cat);
+        }
+        .toggle-btn.active::before { box-shadow: 0 0 0 1.5px var(--paper); }
+        .toggle-btn:not(.active) { color: var(--ink-3); border-color: var(--ink-3); }
+
+        .granularity-controls {
+            display: flex; gap: 8px; align-items: center;
+            margin-left: 16px; padding-left: 18px; border-left: 1px solid var(--hair);
+        }
+
+        #time-range { flex: 1 1 100%; margin-top: 4px; }
+
+        #main-content { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+
+        #chart-container { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+
+        #stats {
+            display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 22px;
+            padding: 12px 32px; border-bottom: 1px solid var(--hair); font-size: 13px; flex-shrink: 0;
+        }
+        #stats .stat-value { font-size: 18px; margin-left: 6px; }
+        #stats .by-type { display: flex; gap: 18px; color: var(--ink-2); }
+        #stats .by-type span[id] { font-family: var(--mono); color: var(--ink); margin-left: 4px; }
+
+        #chart-area { flex: 1; min-height: 0; position: relative; }
+        #timeline-chart { position: absolute; inset: 0; }
+
+        #sidebar {
+            width: 450px; border-left: 1px solid var(--ink); overflow-y: auto;
+            padding: 24px; display: none; position: relative; background: var(--paper);
+        }
+        #sidebar.active { display: block; }
+        #sidebar h2 { margin: 0 0 6px; font-size: 22px; padding-right: 80px; }
+        #sidebar .period-info { padding-bottom: 14px; margin-bottom: 8px; border-bottom: 1px solid var(--ink); }
+        #sidebar .commit-count { font-family: var(--mono); color: var(--ink-2); font-size: 14px; }
+
+        .category-header {
+            margin: 16px 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px; color: var(--ink-3);
+        }
+        .category-header::before, .commit-type-badge::before {
+            content: ''; display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+            background: var(--cat); margin-right: 7px; vertical-align: 0;
+        }
+
+        .commit-item { padding: 12px 0; border-bottom: 1px solid var(--hair); cursor: pointer; }
+        .commit-item:hover { background: var(--paper-2); }
+        .commit-hash { color: var(--ink-3); font-family: var(--mono); font-size: 12px; }
+        .commit-date { color: var(--ink-3); font-size: 12px; margin-top: 3px; font-family: var(--mono); }
+        .commit-author { color: var(--ink-2); font-family: var(--font); }
+        .commit-subject { color: var(--ink); margin-top: 6px; line-height: 1.4; }
+        .commit-type-badge { margin-left: 10px; font-size: 11px; color: var(--ink-2); font-family: var(--font); }
+        .commit-files { margin-top: 6px; }
+        .commit-file { color: var(--ink-3); font-size: 11px; font-family: var(--mono); padding: 1px 0; }
+
+        #close-sidebar { position: absolute; top: 22px; right: 22px; font-size: 12px; }
+
+        .area-chart { fill: var(--cat); fill-opacity: .14; transition: opacity .3s; }
+        .line-chart { fill: none; stroke: var(--cat); stroke-width: 1.75px; transition: opacity .3s; }
+        .data-point { fill: var(--cat); stroke: var(--paper); stroke-width: 1.5px; cursor: pointer; }
+        .data-point:hover { r: 7; }
+        .data-point.selected { r: 8; stroke: var(--ink); stroke-width: 2px; }
+        .area-chart.hidden, .line-chart.hidden, .data-point.hidden { opacity: 0; pointer-events: none; }
+
+        .grid line { stroke: var(--hair-2); }
+        .grid path { display: none; }
+        .axis-label { fill: var(--ink-3); font-size: 12px; }
+
+        .tooltip { opacity: 0; transition: opacity .15s; }
+        .tooltip.visible { opacity: 1; }
+        .tooltip-date { font-weight: 500; margin-bottom: 3px; }
+        .tooltip-count { font-family: var(--mono); }
+        .tooltip-category { font-size: 12px; margin-top: 3px; color: var(--ink-2); }
+        .tooltip-category::before {
+            content: ''; display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+            background: var(--cat); margin-right: 6px; vertical-align: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <header class="page-header">
+            <h1>Commit Activity</h1>
+            <p>Commits per period, one line per commit type. Toggle types, change the grouping, and drag the range below to pick a window.</p>
+        </header>
+
+        <div id="controls">
+            <h3>Show</h3>
+            <button class="toggle-btn implementation active" data-category="implementation">Implementation</button>
+            <button class="toggle-btn personality active" data-category="personality">Personality</button>
+            <button class="toggle-btn visual active" data-category="visual">Visual</button>
+            <button class="toggle-btn mixed active" data-category="mixed">Mixed</button>
+            <button class="toggle-btn other active" data-category="other">Other</button>
+
+            <div class="granularity-controls">
+                <h3>Group by</h3>
+                <button class="granularity-btn" data-granularity="day">Day</button>
+                <button class="granularity-btn active" data-granularity="week">Week</button>
+                <button class="granularity-btn" data-granularity="month">Month</button>
+            </div>
+
+            <div id="time-range"></div>
+        </div>
+
+        <div id="main-content">
+            <div id="chart-container">
+                <div id="stats">
+                    <div><span class="stat-label">Total commits</span><span class="stat-value" id="total-commits">0</span></div>
+                    <div class="by-type">
+                        <div><span class="swatch implementation" style="background: var(--cat)"></span>Implementation <span id="stat-implementation">0</span></div>
+                        <div><span class="swatch personality" style="background: var(--cat)"></span>Personality <span id="stat-personality">0</span></div>
+                        <div><span class="swatch visual" style="background: var(--cat)"></span>Visual <span id="stat-visual">0</span></div>
+                        <div><span class="swatch mixed" style="background: var(--cat)"></span>Mixed <span id="stat-mixed">0</span></div>
+                        <div><span class="swatch other" style="background: var(--cat)"></span>Other <span id="stat-other">0</span></div>
+                    </div>
+                </div>
+
+                <div id="chart-area">
+                    <svg id="timeline-chart"></svg>
+                </div>
+                <div class="tooltip"></div>
+            </div>
+
+            <div id="sidebar">
+                <button id="close-sidebar">Close</button>
+                <div id="sidebar-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let data = null;
+        let allCommits = [];
+        const CATEGORIES = ['implementation', 'personality', 'visual', 'mixed', 'other'];
+        let visibleCategories = new Set(CATEGORIES);
+        let timeRange = null;
+        let currentGranularity = 'week';
+        let selectedPeriod = null;
+        let selectedCategory = null;
+
+        // Load and process data
+        d3.json('output/commits_data.json').then(function(loadedData) {
+            data = loadedData;
+
+            allCommits = data.commits_list
+                .map(commit => ({ ...commit, datetime: new Date(commit.datetime) }))
+                .sort((a, b) => a.datetime - b.datetime);
+
+            timeRange = TimeRange(document.getElementById('time-range'), {
+                dates: allCommits.map(c => c.datetime),
+                summary: extent => {
+                    const counts = countTypes(commitsInRange(extent));
+                    return `${d3.sum(Object.values(counts))} commits`;
+                },
+                onChange: () => updateVisualization(),
+            });
+
+            updateVisualization();
+        });
+
+        function commitsInRange([d0, d1]) {
+            return allCommits.filter(c => c.datetime >= d0 && c.datetime < d1);
+        }
+
+        function countTypes(commits) {
+            const counts = Object.fromEntries(CATEGORIES.map(c => [c, 0]));
+            commits.forEach(commit => {
+                if (commit.type in counts) counts[commit.type]++;
+            });
+            return counts;
+        }
+
+        function updateStats(commits) {
+            const counts = countTypes(commits);
+            document.getElementById('total-commits').textContent = commits.length;
+            CATEGORIES.forEach(c => {
+                document.getElementById(`stat-${c}`).textContent = counts[c];
+            });
+        }
+
+        // Set up toggle buttons
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const category = this.dataset.category;
+
+                if (visibleCategories.has(category)) {
+                    visibleCategories.delete(category);
+                    this.classList.remove('active');
+                } else {
+                    visibleCategories.add(category);
+                    this.classList.add('active');
+                }
+
+                updateVisualization();
+            });
+        });
+
+        // Set up granularity buttons
+        document.querySelectorAll('.granularity-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.granularity-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentGranularity = this.dataset.granularity;
+                updateVisualization();
+            });
+        });
+
+        function groupCommitsByPeriod(commits, granularity, periods) {
+            const groups = new Map(periods.map(p => [p.getTime(), []]));
+
+            commits.forEach(commit => {
+                let key;
+                const date = new Date(commit.datetime);
+
+                if (granularity === 'day') {
+                    key = d3.timeDay.floor(date).getTime();
+                } else if (granularity === 'week') {
+                    key = d3.timeWeek.floor(date).getTime();
+                } else if (granularity === 'month') {
+                    key = d3.timeMonth.floor(date).getTime();
+                }
+
+                if (!groups.has(key)) {
+                    groups.set(key, []);
+                }
+                groups.get(key).push(commit);
+            });
+
+            return Array.from(groups.entries()).map(([timestamp, commits]) => ({
+                date: new Date(timestamp),
+                commits: commits,
+                count: commits.length
+            })).sort((a, b) => a.date - b.date);
+        }
+
+        function groupCommitsByCategoryAndPeriod(commits, granularity) {
+            const categories = CATEGORIES;
+            const result = {};
+            const interval = { day: d3.timeDay, week: d3.timeWeek, month: d3.timeMonth }[granularity];
+            const [d0, d1] = timeRange.extent();
+            const periods = interval.range(interval.floor(d0), d1);
+
+            categories.forEach(category => {
+                const categoryCommits = commits.filter(c => c.type === category);
+                result[category] = groupCommitsByPeriod(categoryCommits, granularity, periods);
+            });
+
+            return result;
+        }
+
+        function updateVisualization() {
+            if (!timeRange) return;
+            const commits = commitsInRange(timeRange.extent());
+            updateStats(commits);
+            const groupedByCategory = groupCommitsByCategoryAndPeriod(commits, currentGranularity);
+            drawChart(groupedByCategory);
+        }
+
+        function drawChart(data) {
+            const area_ = document.getElementById('chart-area');
+            const width = area_.clientWidth;
+            const height = area_.clientHeight;
+            const margin = { top: 30, right: 40, bottom: 70, left: 64 };
+            const chartWidth = width - margin.left - margin.right;
+            const chartHeight = height - margin.top - margin.bottom;
+
+            const svg = d3.select('#timeline-chart')
+                .attr('width', width)
+                .attr('height', height);
+
+            svg.selectAll('*').remove();
+
+            // Get all unique dates across all categories
+            const allDates = new Set();
+            Object.values(data).forEach(categoryData => {
+                categoryData.forEach(d => allDates.add(d.date.getTime()));
+            });
+
+            if (allDates.size === 0) {
+                svg.append('text')
+                    .attr('x', width / 2)
+                    .attr('y', height / 2)
+                    .attr('text-anchor', 'middle')
+                    .attr('class', 'axis-label')
+                    .text('No commits found');
+                return;
+            }
+
+            const g = svg.append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            // Scales
+            const dateExtent = d3.extent(Array.from(allDates), d => new Date(d));
+            const xScale = d3.scaleTime()
+                .domain(dateExtent)
+                .range([0, chartWidth]);
+
+            const maxCount = d3.max(Object.values(data), categoryData =>
+                d3.max(categoryData, d => d.count)
+            ) || 1;
+
+            const yScale = d3.scaleLinear()
+                .domain([0, maxCount])
+                .nice()
+                .range([chartHeight, 0]);
+
+            // Grid
+            g.append('g')
+                .attr('class', 'grid')
+                .call(d3.axisLeft(yScale)
+                    .tickSize(-chartWidth)
+                    .tickFormat(''));
+
+            // Create area and line generators
+            const area = d3.area()
+                .x(d => xScale(d.date))
+                .y0(chartHeight)
+                .y1(d => yScale(d.count))
+                .curve(d3.curveMonotoneX);
+
+            const line = d3.line()
+                .x(d => xScale(d.date))
+                .y(d => yScale(d.count))
+                .curve(d3.curveMonotoneX);
+
+            // Draw areas and lines for each category
+            const categories = CATEGORIES;
+
+            categories.forEach(category => {
+                if (data[category].length === 0) return;
+
+                const isVisible = visibleCategories.has(category);
+
+                // Area
+                g.append('path')
+                    .datum(data[category])
+                    .attr('class', `area-chart ${category} ${!isVisible ? 'hidden' : ''}`)
+                    .attr('d', area);
+
+                // Line
+                g.append('path')
+                    .datum(data[category])
+                    .attr('class', `line-chart ${category} ${!isVisible ? 'hidden' : ''}`)
+                    .attr('d', line);
+            });
+
+            // Axes
+            const xAxis = d3.axisBottom(xScale)
+                .ticks(d3.timeMonth.every(1))
+                .tickFormat(d3.timeFormat('%b %Y'));
+
+            g.append('g')
+                .attr('class', 'axis')
+                .attr('transform', `translate(0,${chartHeight})`)
+                .call(xAxis)
+                .selectAll('text')
+                .attr('transform', 'rotate(-45)')
+                .style('text-anchor', 'end');
+
+            g.append('g')
+                .attr('class', 'axis')
+                .call(d3.axisLeft(yScale).ticks(5));
+
+            // Y-axis label
+            g.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', -45)
+                .attr('x', -chartHeight / 2)
+                .attr('text-anchor', 'middle')
+                .attr('class', 'axis-label')
+                .text('Commits');
+
+            // Data points for each category
+            const tooltip = d3.select('.tooltip');
+
+            categories.forEach(category => {
+                const isVisible = visibleCategories.has(category);
+
+                g.selectAll(`.data-point-${category}`)
+                    .data(data[category].filter(d => d.count > 0))
+                    .enter()
+                    .append('circle')
+                    .attr('class', `data-point ${category} ${!isVisible ? 'hidden' : ''}`)
+                    .attr('cx', d => xScale(d.date))
+                    .attr('cy', d => yScale(d.count))
+                    .attr('r', 5)
+                    .on('mouseover', function(event, d) {
+                        const periodLabel = currentGranularity === 'day' ? 'Day' :
+                                          currentGranularity === 'week' ? 'Week' : 'Month';
+                        tooltip
+                            .html(`
+                                <div class="tooltip-date">${periodLabel} of ${d.date.toLocaleDateString()}</div>
+                                <div class="tooltip-count">${d.count} commit${d.count !== 1 ? 's' : ''}</div>
+                                <div class="tooltip-category ${category}">${category}</div>
+                            `)
+                            .style('left', (event.clientX + 12) + 'px')
+                            .style('top', (event.clientY - 30) + 'px')
+                            .classed('visible', true);
+                    })
+                    .on('mouseout', function() {
+                        tooltip.classed('visible', false);
+                    })
+                    .on('click', function(event, d) {
+                        d3.selectAll('.data-point').classed('selected', false);
+                        d3.select(this).classed('selected', true);
+                        selectedPeriod = d;
+                        selectedCategory = category;
+                        showCommits(d, category);
+                    });
+            });
+        }
+
+        function showCommits(period, category) {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('sidebar-content');
+
+            const periodLabel = currentGranularity === 'day' ? 'Day' :
+                              currentGranularity === 'week' ? 'Week' : 'Month';
+
+            // Get commits from this period and category
+            const commits = period.commits.filter(c => c.type === category);
+
+            let html = `
+                <div class="period-info">
+                    <h2>${periodLabel} of ${period.date.toLocaleDateString()}</h2>
+                    <div class="commit-count" style="margin-top: 10px;">
+                        ${commits.length} ${category} commit${commits.length !== 1 ? 's' : ''}
+                    </div>
+                </div>
+            `;
+
+            // Sort commits by date (newest first)
+            const sortedCommits = [...commits].sort((a, b) =>
+                b.datetime - a.datetime
+            );
+
+            if (sortedCommits.length > 0) {
+                html += `<div class="category-header ${category}">${category.toUpperCase()}</div>`;
+
+                sortedCommits.forEach(commit => {
+                    const typeLabel = commit.type || 'other';
+                    html += `
+                        <div class="commit-item ${typeLabel}">
+                            <div class="commit-hash">${commit.hash}<span class="commit-type-badge ${typeLabel}">${typeLabel}</span></div>
+                            <div class="commit-date">${commit.date} • <span class="commit-author">${commit.author}</span></div>
+                            <div class="commit-subject">${commit.subject}</div>
+                            ${commit.files && commit.files.length > 0 ? `
+                                <div class="commit-files">
+                                    ${commit.files.slice(0, 5).map(f => `<div class="commit-file">${f}</div>`).join('')}
+                                    ${commit.files.length > 5 ? `<div class="commit-file">... and ${commit.files.length - 5} more</div>` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+            }
+
+            content.innerHTML = html;
+            sidebar.classList.add('active');
+            updateVisualization();
+        }
+
+        document.getElementById('close-sidebar').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.remove('active');
+            selectedPeriod = null;
+            selectedCategory = null;
+            d3.selectAll('.data-point').classed('selected', false);
+            updateVisualization();
+        });
+
+        window.addEventListener('resize', () => {
+            updateVisualization();
+        });
+    </script>
+</body>
+</html>

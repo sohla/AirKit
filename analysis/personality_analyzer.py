@@ -19,7 +19,7 @@ from collections import defaultdict, Counter
 # Generated data lands here and is gitignored - the scripts are the source of
 # truth, not their output. Anchored to this file rather than the working
 # directory so it does not matter where the script is invoked from.
-OUTPUT_DIR = Path(__file__).resolve().parent / 'output'
+OUTPUT_DIR = Path(__file__).resolve().parent / 'pages' / 'output'
 
 
 def jaccard(s1: Set, s2: Set) -> float:

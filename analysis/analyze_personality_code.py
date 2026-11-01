@@ -9,7 +9,7 @@ from pathlib import Path
 # Generated data lands here and is gitignored - the scripts are the source of
 # truth, not their output. Anchored to this file rather than the working
 # directory so it does not matter where the script is invoked from.
-OUTPUT_DIR = Path(__file__).resolve().parent / 'output'
+OUTPUT_DIR = Path(__file__).resolve().parent / 'pages' / 'output'
 
 # Regex patterns for classification
 SYNTHDEF_PATTERNS = [
@@ -125,7 +125,7 @@ def parse_unified_diff(diff_output):
 def get_personality_commits():
     """Get all commits that modified personality files."""
     result = subprocess.run(
-        ['git', 'log', '--all', '--since=2024-01-01',
+        ['git', 'log', '--all', '--since=2024-01-01', '--no-merges',
          '--pretty=format:%H|%ai|%an|%s', '--', 'personalities/*.sc'],
         capture_output=True,
         text=True,

@@ -9,12 +9,15 @@ import itertools
 # Generated data lands here and is gitignored - the scripts are the source of
 # truth, not their output. Anchored to this file rather than the working
 # directory so it does not matter where the script is invoked from.
-OUTPUT_DIR = Path(__file__).resolve().parent / 'output'
+OUTPUT_DIR = Path(__file__).resolve().parent / 'pages' / 'output'
+
+# Commit scope. Must stay identical across every analyzer in this directory.
+GIT_SCOPE = ['--all', '--since=2024-01-01', '--no-merges']
 
 def get_commit_files():
     """Extract all commits with their changed files."""
     result = subprocess.run(
-        ['git', 'log', '--all', '--since=2024-01-01', '--pretty=format:%H|%ai|%an|%s', '--name-only'],
+        ['git', 'log', *GIT_SCOPE, '--pretty=format:%H|%ai|%an|%s', '--name-only'],
         capture_output=True,
         text=True
     )

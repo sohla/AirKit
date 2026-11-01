@@ -10,13 +10,13 @@ from pathlib import Path
 # Generated data lands here and is gitignored - the scripts are the source of
 # truth, not their output. Anchored to this file rather than the working
 # directory so it does not matter where the script is invoked from.
-OUTPUT_DIR = Path(__file__).resolve().parent / 'output'
+OUTPUT_DIR = Path(__file__).resolve().parent / 'pages' / 'output'
 
 # Commit scope. Must stay identical across every analyzer in this directory,
 # or the timelines are drawn from different populations and cannot be read
 # against each other. This script was missing --all, so it saw only the
 # checked-out branch: 585 commits against the 801 the others analysed.
-GIT_SCOPE = ['--all', '--since=2024-01-01']
+GIT_SCOPE = ['--all', '--since=2024-01-01', '--no-merges']
 
 def get_git_log():
     """Get git log with file changes and dates"""
@@ -159,17 +159,27 @@ def parse_git_log(log_output):
     return commits
 
 def analyze_commits(commits):
-    """Analyze commits and categorize work types"""
-    timeline_data = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
-    
+    """Analyze commits and categorize work types.
+
+    Each commit counts once, split across categories by its share of files: a
+    commit touching three p-files and one core file adds 0.75 to Personalities
+    and 0.25 to Implementation. Totals are therefore commits, and a stacked
+    chart's height is the commit count, without hiding the minor categories a
+    winner-takes-all rule would drop.
+    """
+    timeline_data = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+    commit_counts = defaultdict(int)
+
     for commit in commits:
         date_key = commit['date'].strftime('%Y-%m')
-        
+        commit_counts[date_key] += 1
+
         # Categorize by files
-        file_categories = defaultdict(int)
+        file_categories = defaultdict(float)
+        share = 1 / len(commit['files']) if commit['files'] else 0
         for file_path in commit['files']:
             category, subcategory = categorize_file(file_path)
-            file_categories[(category, subcategory)] += 1
+            file_categories[(category, subcategory)] += share
         
         # If no file-based categorization, try message-based
         if not file_categories:
@@ -183,10 +193,10 @@ def analyze_commits(commits):
         # Add to timeline
         for (category, subcategory), count in file_categories.items():
             timeline_data[date_key][category][subcategory] += count
-    
-    return timeline_data
 
-def generate_visualization_data(timeline_data):
+    return timeline_data, commit_counts
+
+def generate_visualization_data(timeline_data, commit_counts):
     """Convert timeline data to format suitable for D3.js visualization"""
     
     # Get all categories and subcategories
@@ -206,6 +216,7 @@ def generate_visualization_data(timeline_data):
     for month in sorted_months:
         month_entry = {
             'date': month,
+            'commits': commit_counts[month],
             'categories': {}
         }
         
@@ -215,19 +226,19 @@ def generate_visualization_data(timeline_data):
             
             if category in timeline_data[month]:
                 for subcat, count in timeline_data[month][category].items():
-                    subcategories[subcat] = count
+                    subcategories[subcat] = round(count, 3)
                     category_total += count
-            
+
             month_entry['categories'][category] = {
-                'total': category_total,
+                'total': round(category_total, 3),
                 'subcategories': subcategories
             }
         
         time_series.append(month_entry)
     
     # Generate summary statistics
-    category_totals = defaultdict(int)
-    subcategory_totals = defaultdict(int)
+    category_totals = defaultdict(float)
+    subcategory_totals = defaultdict(float)
     
     for month_data in timeline_data.values():
         for category, subcats in month_data.items():
@@ -238,9 +249,9 @@ def generate_visualization_data(timeline_data):
     return {
         'timeline': time_series,
         'summary': {
-            'categories': dict(category_totals),
-            'subcategories': dict(subcategory_totals),
-            'total_commits': sum(category_totals.values()),
+            'categories': {k: round(v, 1) for k, v in category_totals.items()},
+            'subcategories': {k: round(v, 1) for k, v in subcategory_totals.items()},
+            'total_commits': sum(commit_counts.values()),
             'time_range': {
                 'start': sorted_months[0] if sorted_months else None,
                 'end': sorted_months[-1] if sorted_months else None
@@ -267,11 +278,11 @@ def main():
     
     # Analyze and categorize
     print("Categorizing work types...")
-    timeline_data = analyze_commits(commits)
+    timeline_data, commit_counts = analyze_commits(commits)
     
     # Generate visualization data
     print("Generating visualization data...")
-    viz_data = generate_visualization_data(timeline_data)
+    viz_data = generate_visualization_data(timeline_data, commit_counts)
     
     # Save to JSON
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)

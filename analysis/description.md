@@ -72,7 +72,6 @@ The visualization system performs three main types of analysis:
 ## Interactive Visualizations
 
 ### Timeline Visualizations
-- **3D Timeline** (`timeline_3d_flat.html`): Three-dimensional representation of development activity
 - **Standard Timelines** (`timeline_*.html`): Various timeline views of different data aspects
 - **Work Type Timeline** (`work_type_timeline.html`): Categorized development activity over time
 

@@ -7,7 +7,7 @@ liveSession/mball1 Project/Samples/*
 
 # Generated analysis data. Regenerate with analysis/update.py - the scripts
 # are the source of truth, not the JSON they emit.
-/analysis/output/
+/analysis/pages/output/
 /analysis/__pycache__/
 
 *.png

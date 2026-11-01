@@ -1,7 +1,7 @@
 # analysis/
 
-Eight Python scripts mine this repo's git history and its personality files,
-write JSON into `output/`, and eleven standalone D3 pages render it. Two
+Seven Python scripts mine this repo's git history and its personality files,
+write JSON into `pages/output/`, and nine standalone D3 pages in `pages/` render it. Two
 further modules support the archive page: `synthdef_graph.py` (a SuperCollider
 signal-flow parser, imported by the history analyzer) and
 `validate_synthdef_graph.py` (a development check for it — not part of the
@@ -16,11 +16,11 @@ This file is how to *run* it. For what the analyses mean, see
 
 ```sh
 cd analysis
-python3 update.py               # regenerate everything into output/  (~60s)
-python3 -m http.server 8000     # then open http://localhost:8000/timeline_10.html
+python3 update.py                      # regenerate everything into pages/output/
+python3 serve.py                       # then open http://localhost:8000/
 ```
 
-`update.py` runs all eight analyzers, prints how long each took, and ends with
+`update.py` runs all seven analyzers, prints how long each took, and ends with
 a freshness table — the newest commit date found inside each artefact. If those
 dates trail the repo HEAD printed at the top, something failed quietly and the
 pages are showing you old data. It exits non-zero if any analyzer fails.
@@ -37,25 +37,26 @@ them needs a network connection.
 Every page loads its data with `d3.json()` or `fetch()`. Both are XHR, and
 browsers block XHR against `file://` under the same-origin policy — opening a
 page by double-clicking it gets you a blank screen with a CORS error in the
-console and nothing else. Serve the directory.
+console and nothing else. Serve `pages/`, which holds the pages and their
+data together.
 
 ## What produces what
 
-| script | writes to `output/` | rendered by | cost |
+| script | writes to `pages/output/` | rendered by | cost |
 |---|---|---|---|
-| `analyze_git.py` | `commits_data.json` | `timeline_10`, `timeline_3d_flat`, `timeline_streamGraph`, `timeline_wordCloud`, `commit_activity` | ~20s |
+| `analyze_git.py` | `commits_data.json` | `timeline_streamGraph`, `timeline_wordCloud`, `commit_activity` | <1s |
 | `analyze_file_networks.py` | `file_networks.json` | `file_networks` | <1s |
 | `analyze_personality_code.py` | `personality_code_data.json` | `personality_synth_code_timeline` | ~20s |
 | `work_type_analyzer.py` | `work_type_data.json` | `work_type_timeline` | <1s |
-| `commit_imu_analyzer.py` | `commit_imu_analysis.json` | `personality_imu_timeline` | ~20s |
 | `personality_analyzer.py` | `personality_similarities.json` | `personality_similarities` | <1s |
 | `analyze_personality_history.py` | `personality_history.json` | `personality_archive` | ~19s |
-| `imu_type_analyzer.py` | `imu_type_analysis.json` | *(no page consumes this)* | <1s |
+| `analyze_sensor_matrix.py` | `sensor_matrix.json` | `sensor_matrix` | <1s |
 
-The three slow ones each shell out to `git show` once per commit. That is the
-whole of the cost. `analyze_personality_history.py` covers the same history in
-~2s by taking the entire diff in a single `git log -p` and splitting it in
-Python; the older three could be rewritten the same way.
+`analyze_personality_code.py` is the one slow analyzer left: it shells out to
+`git show` once per commit. `analyze_git.py` used to as well and now takes the
+whole history in a single `git log --name-only`; the same rewrite would apply.
+`analyze_personality_history.py` spends its time in the rival search, not in
+git.
 
 ## The archive page
 
@@ -251,7 +252,7 @@ One caveat worth knowing when reading the sound and gesture sections: they
 describe the file **as it stands now**, not as it was at any point in its
 history. Only the evolution narrative and the chart are historical.
 
-## `output/` is gitignored
+## `pages/output/` is gitignored
 
 The scripts are the source of truth; the JSON is disposable and is not
 committed. If a page looks wrong or empty, run `update.py` before reading
@@ -262,19 +263,22 @@ anything into it.
 Every analyzer must read the **same commit scope**, or the timelines describe
 different populations of commits and cannot be read against one another.
 
-It is currently `--all --since=2024-01-01`, declared at the top of each script
-as `GIT_SCOPE` (or `SINCE` in `commit_imu_analyzer.py`).
+It is currently `--all --since=2024-01-01 --no-merges`, declared at the top of
+each script as `GIT_SCOPE`. Merges are excluded because they carry no files of
+their own and their messages are boilerplate ("Merge branch ...").
 
 This has already gone wrong once: `work_type_analyzer.py` was missing `--all`
-and so analysed 585 commits while everything else analysed 801, and
-`commit_imu_analyzer.py` used a relative `"2 years ago"` window that slid
-forward on every run. If you change the scope, change it in all of them.
+and so analysed 585 commits while everything else analysed 801, and a
+since-removed analyzer used a relative `"2 years ago"` window that slid forward
+on every run. If you change the scope, change it in all of them.
 
 ## Known gaps
 
-- **`imu_type_analysis.json` has no consumer.** Nothing renders it. It is
-  also the one scope outlier — `--all` with no `--since`, so it reaches back
-  to 2017 while the rest stop at 2024.
+- **`sensor_matrix.json` describes the working tree, not the history.** Like
+  `personality_similarities.json` it reads the p-files as they are now, so
+  `GIT_SCOPE` does not apply; git is used only for each file's born and
+  last-modified dates. Commented-out lines are not counted, and reads inside
+  `~plot` are kept apart as probes.
 - **The `2024-01-01` floor excludes 317 commits**, all of 2017–2023, about a
   quarter of the repo's history. Deliberate, but easy to forget when reading
   a chart that starts abruptly in 2024.

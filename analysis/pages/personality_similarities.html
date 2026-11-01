@@ -5,295 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personality Similarities Explorer</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="theme.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #0a0a0a;
-            color: #e0e0e0;
-            overflow: hidden;
-        }
-        
-        #container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-        }
-        
-        #main-view {
-            flex: 1;
-            position: relative;
-            transition: margin-right 0.3s ease-in-out;
-        }
-        
-        #main-view.sidebar-open {
-            margin-right: 450px;
-        }
-        
-        #network-svg {
-            width: 100%;
-            height: 100%;
-            cursor: move;
-        }
-        
+        body { overflow: hidden; }
+        #container { position: relative; width: 100vw; height: 100vh; display: flex; }
+        #main-view { flex: 1; position: relative; transition: margin-right 0.3s ease-in-out; }
+        #main-view.sidebar-open { margin-right: 450px; }
+        #network-svg { width: 100%; height: 100%; cursor: move; }
+
         #controls {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(30, 30, 30, 0.95);
-            padding: 20px;
-            border-radius: 8px;
-            border: 2px solid #FF6B6B;
-            z-index: 100;
-            min-width: 220px;
-            width: 220px;
+            position: absolute; top: 20px; left: 20px; z-index: 100; width: 320px;
+            background: var(--paper); border: 1px solid var(--ink); padding: 0 18px 16px;
         }
-        
-        #controls h1 {
-            color: #FF6B6B;
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
-        
-        #controls p {
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 15px;
-            line-height: 1.4;
-        }
-        
-        .control-group {
-            margin-bottom: 15px;
-        }
-        
-        .control-group label {
-            display: block;
-            color: #ccc;
-            font-size: 13px;
-            margin-bottom: 5px;
-        }
-        
-        .control-group select, .control-group input {
-            width: 100%;
-            padding: 8px;
-            background: #333;
-            border: 1px solid #555;
-            border-radius: 4px;
-            color: #fff;
-            font-size: 13px;
-        }
-        
-        .control-group select:focus, .control-group input:focus {
-            border-color: #FF6B6B;
-            outline: none;
-        }
-        
-        .stats {
-            background: #222;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 15px;
-        }
-        
-        .stats .stat-item {
-            display: flex;
-            justify-content: space-between;
-            margin: 5px 0;
-            font-size: 12px;
-        }
-        
-        .stats .stat-label {
-            color: #888;
-        }
-        
-        .stats .stat-value {
-            color: #FF6B6B;
-            font-weight: bold;
-        }
-        
+        #controls .page-header { padding: 18px 0 12px; margin-bottom: 14px; }
+        #controls .page-header h1 { font-size: 22px; }
+        #controls .page-header p { font-size: 13px; }
+
+        .control-group { margin-bottom: 14px; }
+        .control-group label { display: block; color: var(--ink-2); font-size: 12px; margin-bottom: 5px; }
+        .control-group select { width: 100%; }
+        .control-group input[type=range] { width: calc(100% - 40px); vertical-align: middle; }
+        #min-similarity-value { font-family: var(--mono); font-size: 13px; margin-left: 6px; }
+
+        .stats { border-top: 1px solid var(--hair); padding-top: 10px; margin-top: 4px; }
+        .stats .stat-item { display: flex; gap: 8px; align-items: baseline; margin: 4px 0; }
+        .stats .stat-value { font-size: 15px; }
+
         #sidebar {
-            width: 0;
-            background: rgba(30, 30, 30, 0.98);
-            border-left: 2px solid #FF6B6B;
-            overflow-y: auto;
-            transition: width 0.3s ease-in-out;
-            z-index: 200;
+            width: 0; background: var(--paper); border-left: 1px solid var(--ink);
+            overflow-y: auto; transition: width 0.3s ease-in-out; z-index: 200;
         }
-        
-        #sidebar.active {
-            width: 450px;
-        }
-        
-        #sidebar-content {
-            padding: 20px;
-            min-height: 100vh;
-        }
-        
-        #sidebar h2 {
-            color: #FF6B6B;
-            margin-bottom: 15px;
-            font-size: 20px;
-            border-bottom: 2px solid #FF6B6B;
-            padding-bottom: 10px;
-        }
-        
-        .personality-info {
-            background: #222;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .personality-name {
-            font-family: monospace;
-            color: #FF6B6B;
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .feature-section {
-            margin: 15px 0;
-        }
-        
-        .feature-section h4 {
-            color: #4ECDC4;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        
-        .feature-list {
-            color: #ccc;
-            font-size: 12px;
-            line-height: 1.4;
-        }
-        
-        .similarity-item {
-            background: #333;
-            padding: 10px;
-            margin: 8px 0;
-            border-radius: 4px;
-            font-size: 13px;
-        }
-        
-        .similarity-name {
-            color: #4ECDC4;
-            font-weight: bold;
-        }
-        
-        .similarity-score {
-            color: #FF6B6B;
-            font-size: 12px;
-            margin-top: 3px;
-        }
-        
-        .similarity-breakdown {
-            color: #888;
-            font-size: 11px;
-            margin-top: 5px;
-        }
-        
-        #close-sidebar {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #444;
-            border: none;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        #close-sidebar:hover {
-            background: #555;
-        }
-        
-        /* Network styling */
-        .node {
-            cursor: pointer;
-            stroke-width: 2px;
-        }
-        
-        .node:hover {
-            stroke-width: 3px;
-            filter: brightness(1.3);
-        }
-        
-        .node.selected {
-            stroke: #fff;
-            stroke-width: 3px;
-        }
-        
-        .link {
-            stroke: #666;
-            stroke-opacity: 0.3;
-        }
-        
-        .link:hover {
-            stroke: #FF6B6B;
-            stroke-opacity: 0.8;
-        }
-        
-        .link.highlighted {
-            stroke: #FF6B6B;
-            stroke-opacity: 0.9;
-            stroke-width: 3px;
-        }
-        
-        .node-label {
-            fill: #fff;
-            font-size: 10px;
-            text-anchor: middle;
-            pointer-events: none;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-        
+        #sidebar.active { width: 450px; }
+        #sidebar-content { padding: 24px 22px; min-height: 100vh; }
+        #sidebar h3 { margin: 22px 0 8px; }
+        .personality-info { padding-bottom: 14px; border-bottom: 1px solid var(--ink); }
+        .personality-name { font-family: var(--mono); font-size: 20px; margin-bottom: 8px; }
+        .personality-technique { display: flex; align-items: center; font-size: 13px; margin-bottom: 4px; }
+        .personality-lines { color: var(--ink-3); font-size: 12px; font-family: var(--mono); }
+        .feature-section { margin-top: 18px; }
+        .feature-section h4 { margin: 0 0 6px; }
+        .feature-list { font-size: 13px; line-height: 1.6; color: var(--ink-2); }
+        .similarity-item { padding: 8px 0; border-bottom: 1px solid var(--hair-2); }
+        .similarity-name { font-family: var(--mono); font-size: 13px; }
+        .similarity-score { font-size: 12px; color: var(--c-1); }
+        .similarity-breakdown { font-size: 11px; color: var(--ink-3); }
+        #close-sidebar { position: absolute; top: 18px; right: 18px; font-size: 12px; }
+        #sidebar:not(.active) #close-sidebar { display: none; }
+
+        .node { cursor: pointer; stroke: var(--paper); stroke-width: 1.5px; }
+        .node.selected { stroke: var(--ink); stroke-width: 2px; }
+        .link { stroke: var(--ink); }
+        .link:hover, .link.highlighted { stroke: var(--c-1); stroke-opacity: 0.9 !important; }
+        .node-label { fill: var(--ink); text-anchor: middle; pointer-events: none; font-family: var(--font); paint-order: stroke; stroke: var(--paper); stroke-width: 3px; stroke-linejoin: round; }
+        .no-data { fill: var(--ink-3); }
+
         .legend {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(30, 30, 30, 0.95);
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            z-index: 100;
+            position: absolute; bottom: 20px; left: 20px; z-index: 100;
+            background: var(--paper); border: 1px solid var(--ink); padding: 12px 16px;
         }
-        
-        .legend h3 {
-            color: #FF6B6B;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin: 5px 0;
-            font-size: 12px;
-        }
-        
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
+        .legend h3 { margin: 0 0 8px; }
+        .legend-item { display: flex; align-items: center; margin: 4px 0; font-size: 12px; color: var(--ink); }
+        .legend .note { margin-top: 8px; font-size: 11px; color: var(--ink-3); }
     </style>
 </head>
 <body>
     <div id="container">
         <div id="main-view">
             <div id="controls">
-                <h1>Personality Similarities</h1>
-                <p>Explore similarity patterns between SuperCollider personality files based on IMU mappings, synthesis techniques, and overall approaches.</p>
+                <header class="page-header">
+                    <h1>Personality Similarities</h1>
+                    <p>How alike the p-files are in sensor mapping, synthesis and approach.</p>
+                </header>
                 
                 
                 <div class="control-group">
@@ -330,7 +112,7 @@
                 </div>
                 
                 <div class="control-group">
-                    <label for="min-similarity">Co-change Threshold:</label>
+                    <label for="min-similarity">Min. similarity:</label>
                     <input type="range" id="min-similarity" min="0" max="1" step="0.1" value="0.8">
                     <span id="min-similarity-value">0.8</span>
                 </div>
@@ -352,19 +134,9 @@
             </div>
             
             <div class="legend">
-                <h3>Node Size</h3>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #FF6B6B; width: 20px; height: 20px; border-radius: 50%;"></div>
-                    <span>High complexity (many connections)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #4ECDC4; width: 15px; height: 15px; border-radius: 50%;"></div>
-                    <span>Medium complexity</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #45B7D1; width: 10px; height: 10px; border-radius: 50%;"></div>
-                    <span>Low complexity</span>
-                </div>
+                <h3>Primary technique</h3>
+                <div id="legend-items"></div>
+                <div class="note">disc size = lines of code</div>
             </div>
             
             <svg id="network-svg"></svg>
@@ -379,19 +151,21 @@
     <script>
         let personalityData = null;
         let filteredData = null;
-        let svg, simulation, nodes, links, labels;
+        let svg, simulation, nodes, links, labels, zoom;
         let selectedNode = null;
         
         // Color scheme for different technique categories
-        const techniqueColors = {
-            'sample_playback': '#FF6B6B',
-            'sine_oscillator': '#4ECDC4',
-            'sawtooth': '#45B7D1',
-            'white_noise': '#96CEB4',
-            'pink_noise': '#FFEAA7',
-            'mixed': '#DDA0DD',
-            'other': '#95A5A6'
-        };
+        const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+        const techniqueKey = [
+            { key: 'sample_playback', label: 'sample playback', token: '--c-1' },
+            { key: 'sine_oscillator', label: 'sine oscillator', token: '--c-2' },
+            { key: 'sawtooth',        label: 'sawtooth',        token: '--c-3' },
+            { key: 'white_noise',     label: 'white noise',     token: '--c-4' },
+            { key: 'mixed',           label: 'mixed (3+ methods)', token: '--c-ink' },
+            { key: 'other',           label: 'other (pink noise, pulse, none)', token: '--c-other' },
+        ];
+        const techniqueColor = t => css((techniqueKey.find(k => k.key === t) || techniqueKey[techniqueKey.length - 1]).token);
         
         // Initialize visualization
         function initVisualization() {
@@ -402,7 +176,7 @@
             svg.attr('width', width).attr('height', height);
             
             // Add zoom behavior
-            const zoom = d3.zoom()
+            zoom = d3.zoom()
                 .scaleExtent([0.1, 4])
                 .on('zoom', (event) => {
                     svg.select('g').attr('transform', event.transform);
@@ -452,7 +226,7 @@
                 Object.keys(similarities[similarityType]).forEach(name1 => {
                     Object.keys(similarities[similarityType][name1]).forEach(name2 => {
                         const similarity = similarities[similarityType][name1][name2];
-                        if (similarity >= minSimilarity) {
+                        if (name1 < name2 && similarity >= minSimilarity) {
                             edges.push({
                                 source: name1,
                                 target: name2,
@@ -559,7 +333,6 @@
                     .attr('x', width / 2)
                     .attr('y', height / 2)
                     .attr('text-anchor', 'middle')
-                    .attr('fill', '#888')
                     .attr('font-size', '18px')
                     .text('No personalities match the current filter criteria');
                 return;
@@ -577,8 +350,8 @@
                 .enter()
                 .append('line')
                 .attr('class', 'link')
-                .style('stroke-width', d => Math.max(0.5, d.similarity * 2.5))
-                .style('stroke-opacity', d => 0.3 + (d.similarity * 0.7));
+                .style('stroke-width', d => 0.4 + d.similarity * 0.8)
+                .style('stroke-opacity', d => 0.05 + d.similarity * 0.25);
             
             // Create nodes
             nodes = svg.select('.nodes')
@@ -588,8 +361,7 @@
                 .append('circle')
                 .attr('class', 'node')
                 .attr('r', d => (Math.sqrt(d.complexity) * 0.5 + 5) * 0.5)
-                .style('fill', d => techniqueColors[d.primaryTechnique] || techniqueColors['other'])
-                .style('stroke', d => d3.rgb(techniqueColors[d.primaryTechnique] || techniqueColors['other']).darker(2))
+                .style('fill', d => techniqueColor(d.primaryTechnique))
                 .on('click', function(event, d) {
                     selectNode(d);
                     showPersonalityDetails(d);
@@ -639,7 +411,7 @@
                 if (labels) {
                     labels
                         .attr('x', d => d.x)
-                        .attr('y', d => d.y + 3);
+                        .attr('y', d => d.y - (Math.sqrt(d.complexity) * 0.5 + 5) * 0.5 - 5);
                 }
             });
         }
@@ -650,20 +422,21 @@
             
             switch (layoutType) {
                 case 'force':
+                    const degree = new Map(filteredData.nodes.map(n => [n.id, 0]));
+                    filteredData.edges.forEach(e => {
+                        degree.set(e.source.id ?? e.source, degree.get(e.source.id ?? e.source) + 1);
+                        degree.set(e.target.id ?? e.target, degree.get(e.target.id ?? e.target) + 1);
+                    });
+                    const pull = d => degree.get(d.id) ? 0.04 : 0.15;
                     sim = d3.forceSimulation(filteredData.nodes)
-                        .force('link', d3.forceLink(filteredData.edges).id(d => d.id).distance(80))
-                        .force('charge', d3.forceManyBody().strength(-300))
-                        .force('center', d3.forceCenter(width / 2, height / 2))
-                        .force('collision', d3.forceCollide().radius(d => (Math.sqrt(d.complexity) * 0.5 + 5) * 0.5 + 5))
-                        .force('x', d3.forceX(width / 2).strength(0.1))
-                        .force('y', d3.forceY(height / 2).strength(0.1))
-                        .force('bounds', () => {
-                            filteredData.nodes.forEach(node => {
-                                const radius = (Math.sqrt(node.complexity) * 0.5 + 5) * 0.5;
-                                node.x = Math.max(radius + 50, Math.min(width - radius - 50, node.x));
-                                node.y = Math.max(radius + 50, Math.min(height - radius - 50, node.y));
-                            });
-                        });
+                        .force('link', d3.forceLink(filteredData.edges).id(d => d.id)
+                            .distance(d => 30 + (1 - d.similarity) * 150)
+                            .strength(d => d.similarity / Math.min(degree.get(d.source.id ?? d.source), degree.get(d.target.id ?? d.target))))
+                        .force('charge', d3.forceManyBody().strength(-80).distanceMax(300))
+                        .force('collision', d3.forceCollide().radius(d => (Math.sqrt(d.complexity) * 0.5 + 5) * 0.5 + 3))
+                        .force('x', d3.forceX(width / 2).strength(pull))
+                        .force('y', d3.forceY(height / 2).strength(pull))
+                        .on('end', () => zoomToFit(width, height));
                     break;
                     
                 case 'circular':
@@ -700,6 +473,16 @@
             return sim;
         }
         
+        function zoomToFit(width, height) {
+            const xs = filteredData.nodes.map(n => n.x), ys = filteredData.nodes.map(n => n.y);
+            const x0 = d3.min(xs), x1 = d3.max(xs), y0 = d3.min(ys), y1 = d3.max(ys);
+            if (!isFinite(x0)) return;
+            const scale = Math.min(4, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height, 1e-6));
+            const t = d3.zoomIdentity.translate(width / 2, height / 2).scale(scale)
+                .translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
+            svg.transition().duration(600).call(zoom.transform, t);
+        }
+
         // Highlight connections when hovering over a node
         function highlightConnections(node) {
             const connectedEdges = filteredData.edges.filter(edge => 
@@ -727,7 +510,6 @@
             const content = document.getElementById('sidebar-content');
             
             const p = node.data;
-            const techniqueColor = techniqueColors[node.primaryTechnique] || techniqueColors['other'];
             
             // Find similar personalities
             const similarityType = document.getElementById('similarity-type').value + '_similarity';
@@ -739,12 +521,8 @@
             let html = `
                 <div class="personality-info">
                     <div class="personality-name">${node.name}</div>
-                    <div style="color: ${techniqueColor}; font-weight: bold; margin-bottom: 10px;">
-                        Primary: ${node.primaryTechnique.replace('_', ' ')}
-                    </div>
-                    <div style="color: #888; font-size: 12px;">
-                        ${p.complexity_metrics.code_lines} lines of code
-                    </div>
+                    <div class="personality-technique"><span class="swatch" style="background:${techniqueColor(node.primaryTechnique)}"></span>Primary: ${node.primaryTechnique.replace('_', ' ')}</div>
+                    <div class="personality-lines">${p.complexity_metrics.code_lines} lines of code</div>
                 </div>
                 
                 <div class="feature-section">
@@ -788,7 +566,7 @@
                     </div>
                 </div>
                 
-                <h3 style="color: #FF6B6B; margin: 20px 0 10px;">Most Similar (${document.getElementById('similarity-type').selectedOptions[0].text})</h3>
+                <h3>Most Similar (${document.getElementById('similarity-type').selectedOptions[0].text})</h3>
             `;
             
             topSimilar.forEach(([name, score]) => {
@@ -834,6 +612,9 @@
             document.getElementById('similarity-type').addEventListener('change', filterData);
             document.getElementById('technique-filter').addEventListener('change', filterData);
             document.getElementById('approach-filter').addEventListener('change', filterData);
+            document.getElementById('min-similarity-value').textContent = document.getElementById('min-similarity').value;
+            document.getElementById('legend-items').innerHTML = techniqueKey.map(k =>
+                `<div class="legend-item"><span class="swatch" style="background:${css(k.token)}"></span><span>${k.label}</span></div>`).join('');
             document.getElementById('min-similarity').addEventListener('input', function() {
                 document.getElementById('min-similarity-value').textContent = this.value;
                 filterData();

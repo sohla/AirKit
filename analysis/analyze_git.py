@@ -3,18 +3,18 @@ import subprocess
 import re
 import json
 from collections import defaultdict, Counter
-from datetime import datetime
 from pathlib import Path
 
 # Generated data lands here and is gitignored - the scripts are the source of
 # truth, not their output. Anchored to this file rather than the working
 # directory so it does not matter where the script is invoked from.
-OUTPUT_DIR = Path(__file__).resolve().parent / 'output'
+OUTPUT_DIR = Path(__file__).resolve().parent / 'pages' / 'output'
+REPO = Path(__file__).resolve().parent.parent
 
 # Commit scope. Must stay identical across every analyzer in this directory,
 # or the timelines are drawn from different populations and cannot be read
 # against each other.
-GIT_SCOPE = ['--all', '--since=2024-01-01']
+GIT_SCOPE = ['--all', '--since=2024-01-01', '--no-merges']
 
 # Field and record separators for `git log --pretty`. A commit body spans
 # multiple lines and may itself contain '|', so neither a newline nor a pipe
@@ -30,188 +30,124 @@ GIT_SCOPE = ['--all', '--since=2024-01-01']
 FIELD_FMT, FIELD_SEP = '%x00', '\x00'
 RECORD_FMT, RECORD_SEP = '%x01', '\x01'
 
-def get_commit_files(commit_hash):
-    """Get list of files changed in a commit."""
-    result = subprocess.run(
-        ['git', 'show', '--name-only', '--pretty=format:', commit_hash],
-        capture_output=True,
-        text=True
-    )
-    files = [f.strip() for f in result.stdout.strip().split('\n') if f.strip()]
-    return files
+TYPES = ['implementation', 'personality', 'visual', 'mixed', 'other']
+
+# Matched against the start of the path, so a vendored copy such as
+# sc_osx_standalone-3.7.0-template/personalities/ is not mistaken for ours.
+VISUAL = re.compile(r'^(visuals/|code[\d.]+/.*(visual|vdef|shapeLib|render))', re.IGNORECASE)
+PERSONALITY = re.compile(r'^(personalities/|lists/|synths/)')
+IMPLEMENTATION = re.compile(r'^(code[\d.]+/|machines/)')
+
+TRAILER = re.compile(r'^[A-Za-z][\w-]*: .+$')
+GENERATED = re.compile(r'generated with \[?claude code', re.IGNORECASE)
+
+STOPWORDS = {
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+    'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during',
+    'i', 'me', 'my', 'we', 'our', 'you', 'your', 'it', 'its', 'they', 'them',
+    'this', 'that', 'these', 'those', 'is', 'are', 'was', 'were', 'be', 'been',
+    'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'should',
+    'can', 'could', 'may', 'might', 'must', 'shall',
+    'github', 'sohla', 'com', 'https', 'http', 'www', 'scbounce', 'oscmusicmachine',
+    'airkit', 'airsticks', 'cotf',
+}
+
+
+def file_category(path):
+    if VISUAL.match(path):
+        return 'visual'
+    if PERSONALITY.match(path):
+        return 'personality'
+    if IMPLEMENTATION.match(path):
+        return 'implementation'
+    return None
+
 
 def categorize_commit(files):
-    """Categorize commit based on files changed."""
-    if not files:
+    """The dominant category if it holds two thirds of the categorised files."""
+    counts = Counter(c for c in map(file_category, files) if c)
+    if not counts:
         return 'other'
+    category, n = counts.most_common(1)[0]
+    return category if n * 3 >= sum(counts.values()) * 2 else 'mixed'
 
-    personality_patterns = ['personalities/', 'lists/', 'personalityController']
-    code_patterns = ['code2.0/', 'code3.0/']
 
-    has_personality = any(any(pattern in f for pattern in personality_patterns) for f in files)
-    has_code = any(any(pattern in f for pattern in code_patterns) for f in files)
+def message_text(subject, body):
+    """Subject and body with trailers and the generated-by line removed."""
+    lines = body.rstrip().splitlines()
+    while lines and (TRAILER.match(lines[-1].strip()) or not lines[-1].strip()):
+        lines.pop()
+    lines = [l for l in lines if not GENERATED.search(l)]
+    return subject + '\n' + '\n'.join(lines)
 
-    # If it has both, check the ratio
-    if has_personality and has_code:
-        personality_count = sum(1 for f in files if any(pattern in f for pattern in personality_patterns))
-        code_count = sum(1 for f in files if any(pattern in f for pattern in code_patterns))
-
-        # Calculate ratio (smaller / larger) to get a value between 0 and 1
-        ratio = min(personality_count, code_count) / max(personality_count, code_count)
-
-        # If ratio is >= 0.5, consider it mixed (e.g., 1:2, 2:3, 3:4 are mixed)
-        if ratio >= 0.5:
-            return 'mixed'
-        else:
-            return 'personality' if personality_count > code_count else 'implementation'
-    elif has_personality:
-        return 'personality'
-    elif has_code:
-        return 'implementation'
-    else:
-        return 'other'
 
 def get_all_commits():
-    """Extract all commits with their metadata."""
-    fmt = FIELD_FMT.join(['%H', '%ai', '%an', '%s', '%b']) + RECORD_FMT
+    """Every commit in scope with its files, from a single git log."""
+    fmt = RECORD_FMT + FIELD_FMT.join(['%H', '%ai', '%an', '%s', '%b']) + FIELD_FMT
     result = subprocess.run(
-        ['git', 'log', *GIT_SCOPE, '--pretty=format:' + fmt],
-        capture_output=True,
-        text=True
+        ['git', 'log', *GIT_SCOPE, '--name-only', '--pretty=format:' + fmt],
+        cwd=REPO, capture_output=True, text=True, errors='replace',
     )
 
     commits = []
     for record in result.stdout.split(RECORD_SEP):
-        # `format:` joins records with a newline, so every record after the
-        # first arrives with one leading.
-        record = record.lstrip('\n')
-        if not record.strip():
-            continue
-
         parts = record.split(FIELD_SEP)
-        if len(parts) < 5:
+        if len(parts) < 6:
             continue
-
-        commit_hash = parts[0]
-        files = get_commit_files(commit_hash)
-
+        files = [f.strip() for f in parts[5].splitlines() if f.strip()]
         commits.append({
-            'hash': commit_hash,
-            'date': parts[1],
+            'hash': parts[0][:8],
+            'datetime': parts[1],
+            'date': parts[1][:10],
             'author': parts[2],
             'subject': parts[3],
-            'body': parts[4],
             'files': files,
-            'type': categorize_commit(files)
+            'type': categorize_commit(files),
+            'text': message_text(parts[3], parts[4]),
         })
-
     return commits
 
-def analyze_word_frequency(commits):
-    """Build word frequency data with commit associations."""
-    
-    # Stopwords to exclude
-    stopwords = {
-        'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-        'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during',
-        'i', 'me', 'my', 'we', 'our', 'you', 'your', 'it', 'its', 'they', 'them',
-        'this', 'that', 'these', 'those', 'is', 'are', 'was', 'were', 'be', 'been',
-        'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'should',
-        'can', 'could', 'may', 'might', 'must', 'shall',
-        'github','sohla','com','https','http','www','scbounce','oscmusicmachine'
-    }
-    
-    # Track which commits contain which words
-    word_to_commits = defaultdict(list)
-    word_counts = Counter()
-    
-    for commit in commits:
-        # Combine subject and body
-        text = commit['subject'] + ' ' + commit['body']
-        
-        # Extract words
-        words = re.findall(r'\b[a-z]{3,}\b', text.lower())
-        
-        # Filter and count
-        unique_words_in_commit = set()
-        for word in words:
-            if word not in stopwords:
-                unique_words_in_commit.add(word)
-        
-        # Associate commits with words
-        for word in unique_words_in_commit:
-            word_counts[word] += 1
-            word_to_commits[word].append({
-                'hash': commit['hash'][:8],
-                'date': commit['date'][:10],
-                'datetime': commit['date'],  # Full datetime for timeline
-                'author': commit['author'],
-                'subject': commit['subject'],
-                'files': commit.get('files', []),
-                'type': commit.get('type', 'other')
-            })
-    
-    return word_counts, word_to_commits
 
-def generate_json_data(word_counts, word_to_commits, top_n=200):
-    """Generate JSON data for visualization."""
-    
-    # Get top words
-    top_words = word_counts.most_common(top_n)
-    
-    # Calculate date range
-    all_dates = []
-    for commits in word_to_commits.values():
-        for commit in commits:
-            try:
-                date_obj = datetime.fromisoformat(commit['datetime'].replace('Z', '+00:00'))
-                all_dates.append(date_obj)
-            except:
-                continue
-    
-    min_date = min(all_dates) if all_dates else datetime.now()
-    max_date = max(all_dates) if all_dates else datetime.now()
-    
-    # Build data structure
-    data = {
-        'words': [],
-        'commits': {},
-        'timeline': {
-            'min_date': min_date.isoformat(),
-            'max_date': max_date.isoformat()
-        }
-    }
-    
-    for word, count in top_words:
-        data['words'].append({
-            'text': word,
-            'size': count
-        })
-        data['commits'][word] = word_to_commits[word]
-    
-    return data
+def analyze_word_frequency(commits):
+    """{word: [hash, ...]} - each commit counted once per word."""
+    word_to_commits = defaultdict(list)
+    for commit in commits:
+        words = set(re.findall(r'\b[a-z]{3,}\b', commit['text'].lower())) - STOPWORDS
+        for word in words:
+            word_to_commits[word].append(commit['hash'])
+    return word_to_commits
+
 
 def main():
     print("Analyzing git repository...")
-    
-    # Get commits
     commits = get_all_commits()
     print(f"Found {len(commits)} commits")
-    
-    # Analyze word frequency
-    word_counts, word_to_commits = analyze_word_frequency(commits)
-    print(f"Found {len(word_counts)} unique words")
-    
-    # Generate JSON
-    data = generate_json_data(word_counts, word_to_commits, top_n=200)
-    
-    # Save to file
+
+    word_to_commits = analyze_word_frequency(commits)
+    top = sorted(word_to_commits.items(), key=lambda kv: (-len(kv[1]), kv[0]))[:200]
+    print(f"Found {len(word_to_commits)} unique words")
+
+    dates = sorted(c['datetime'] for c in commits)
+    data = {
+        'types': TYPES,
+        'commits_list': [{k: v for k, v in c.items() if k != 'text'} for c in commits],
+        'words': [{'text': w, 'size': len(h), 'commits': h} for w, h in top],
+        'timeline': {
+            'min_date': dates[0] if dates else None,
+            'max_date': dates[-1] if dates else None,
+        },
+    }
+
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     output_file = OUTPUT_DIR / 'commits_data.json'
     with open(output_file, 'w') as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=1)
 
+    counts = Counter(c['type'] for c in commits)
+    print('  ' + '  '.join(f'{t}: {counts[t]}' for t in TYPES))
+    print('  top words: ' + ', '.join(f'{w} {len(h)}' for w, h in top[:20]))
     print(f"Wrote {output_file}")
+
 
 if __name__ == '__main__':
     main()

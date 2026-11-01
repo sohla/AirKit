@@ -5,294 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Change Network Explorer</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="theme.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #0a0a0a;
-            color: #e0e0e0;
-            overflow: hidden;
-        }
-        
-        #container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-        }
-        
-        #main-view {
-            flex: 1;
-            position: relative;
-            transition: margin-right 0.3s ease-in-out;
-        }
-        
-        #main-view.sidebar-open {
-            margin-right: 400px;
-        }
-        
-        #network-svg {
-            width: 100%;
-            height: 100%;
-            cursor: move;
-        }
-        
+        body { overflow: hidden; }
+        #container { position: relative; width: 100vw; height: 100vh; display: flex; }
+        #main-view { flex: 1; position: relative; transition: margin-right 0.3s ease-in-out; }
+        #main-view.sidebar-open { margin-right: 400px; }
+        #network-svg { width: 100%; height: 100%; cursor: move; }
+
         #controls {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(30, 30, 30, 0.95);
-            padding: 20px;
-            border-radius: 8px;
-            border: 2px solid #4CAF50;
-            z-index: 100;
-            min-width: 300px;
+            position: absolute; top: 20px; left: 20px; z-index: 100; width: 320px;
+            background: var(--paper); border: 1px solid var(--ink); padding: 0 18px 16px;
         }
-        
-        #controls h1 {
-            color: #4CAF50;
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
-        
-        #controls p {
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 15px;
-            line-height: 1.4;
-        }
-        
-        .control-group {
-            margin-bottom: 15px;
-        }
-        
-        .control-group label {
-            display: block;
-            color: #ccc;
-            font-size: 13px;
-            margin-bottom: 5px;
-        }
-        
-        .control-group select, .control-group input {
-            width: 100%;
-            padding: 8px;
-            background: #333;
-            border: 1px solid #555;
-            border-radius: 4px;
-            color: #fff;
-            font-size: 13px;
-        }
-        
-        .control-group select:focus, .control-group input:focus {
-            border-color: #4CAF50;
-            outline: none;
-        }
-        
-        .stats {
-            background: #222;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 15px;
-        }
-        
-        .stats .stat-item {
-            display: flex;
-            justify-content: space-between;
-            margin: 5px 0;
-            font-size: 12px;
-        }
-        
-        .stats .stat-label {
-            color: #888;
-        }
-        
-        .stats .stat-value {
-            color: #4CAF50;
-            font-weight: bold;
-        }
-        
+        #controls .page-header { padding: 18px 0 12px; margin-bottom: 14px; }
+        #controls .page-header h1 { font-size: 22px; }
+        #controls .page-header p { font-size: 13px; }
+
+        .control-group { margin-bottom: 14px; }
+        .control-group label { display: block; color: var(--ink-2); font-size: 12px; margin-bottom: 5px; }
+        .control-group select { width: 100%; }
+        .control-group input[type=range] { width: calc(100% - 36px); vertical-align: middle; }
+        #min-connections-value { font-family: var(--mono); font-size: 13px; margin-left: 6px; }
+
+        .stats { border-top: 1px solid var(--hair); padding-top: 10px; margin-top: 4px; }
+        .stats .stat-item { display: flex; gap: 8px; align-items: baseline; margin: 4px 0; }
+        .stats .stat-value { font-size: 15px; }
+
         #sidebar {
-            width: 0;
-            background: rgba(30, 30, 30, 0.98);
-            border-left: 2px solid #4CAF50;
-            overflow-y: auto;
-            transition: width 0.3s ease-in-out;
-            z-index: 200;
+            width: 0; background: var(--paper); border-left: 1px solid var(--ink);
+            overflow-y: auto; transition: width 0.3s ease-in-out; z-index: 200;
         }
-        
-        #sidebar.active {
-            width: 400px;
-        }
-        
-        #sidebar-content {
-            padding: 20px;
-            min-height: 100vh;
-        }
-        
-        #sidebar h2 {
-            color: #4CAF50;
-            margin-bottom: 15px;
-            font-size: 20px;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-        
-        #sidebar .file-info {
-            background: #222;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        #sidebar .file-path {
-            font-family: monospace;
-            color: #4CAF50;
-            font-size: 14px;
-            word-break: break-all;
-            margin-bottom: 10px;
-        }
-        
-        #sidebar .file-category {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .commit-item {
-            background: #333;
-            padding: 10px;
-            margin: 8px 0;
-            border-radius: 4px;
-            border-left: 3px solid #4CAF50;
-            font-size: 13px;
-        }
-        
-        .commit-hash {
-            font-family: monospace;
-            color: #888;
-            font-size: 11px;
-        }
-        
-        .commit-date {
-            color: #999;
-            font-size: 12px;
-            margin-top: 3px;
-        }
-        
-        .commit-author {
-            color: #4CAF50;
-            font-size: 12px;
-        }
-        
-        .commit-subject {
-            color: #e0e0e0;
-            margin-top: 5px;
-            line-height: 1.3;
-        }
-        
-        #close-sidebar {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #444;
-            border: none;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        #close-sidebar:hover {
-            background: #555;
-        }
-        
-        /* Network styling */
-        .node {
-            cursor: pointer;
-            stroke-width: 2px;
-        }
-        
-        .node:hover {
-            stroke-width: 3px;
-            filter: brightness(1.3);
-        }
-        
-        .node.selected {
-            stroke: #fff;
-            stroke-width: 3px;
-        }
-        
-        .link {
-            stroke: #666;
-            stroke-opacity: 0.6;
-        }
-        
-        .link:hover {
-            stroke: #4CAF50;
-            stroke-opacity: 0.8;
-        }
-        
-        .link.highlighted {
-            stroke: #4CAF50;
-            stroke-opacity: 0.9;
-            stroke-width: 3px;
-        }
-        
-        .node-label {
-            fill: #fff;
-            font-size: 10px;
-            text-anchor: middle;
-            pointer-events: none;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-        
+        #sidebar.active { width: 400px; }
+        #sidebar-content { padding: 24px 22px; min-height: 100vh; }
+        #sidebar h2 { font-size: 20px; margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--ink); }
+        #sidebar h3 { margin: 22px 0 8px; }
+        #sidebar .file-info { padding: 0 0 14px; border-bottom: 1px solid var(--hair); }
+        #sidebar .file-path { font-family: var(--mono); font-size: 13px; word-break: break-all; margin-bottom: 10px; }
+        #sidebar .file-category { display: inline-flex; align-items: center; font-size: 12px; color: var(--ink); margin-bottom: 8px; }
+        #sidebar .file-commits { font-family: var(--mono); font-size: 13px; margin-top: 8px; }
+        .conn-item { padding: 6px 0; border-bottom: 1px solid var(--hair-2); font-size: 12px; }
+        .conn-item .muted, .commit-files { color: var(--ink-3); font-size: 11px; }
+        .commit-item { padding: 8px 0 8px 12px; margin: 6px 0; border-left: 2px solid var(--ink); font-size: 13px; }
+        .commit-hash { font-family: var(--mono); color: var(--ink-3); font-size: 11px; }
+        .commit-date { color: var(--ink-2); font-size: 12px; margin-top: 2px; }
+        .commit-author { color: var(--ink); }
+        .commit-subject { margin-top: 4px; line-height: 1.35; }
+        #close-sidebar { position: absolute; top: 18px; right: 18px; font-size: 12px; }
+        #sidebar:not(.active) #close-sidebar { display: none; }
+
+        .node { cursor: pointer; stroke: var(--paper); stroke-width: 1.5px; }
+        .node.selected { stroke: var(--ink); stroke-width: 2px; }
+        .link { stroke: var(--ink); stroke-opacity: 0.12; }
+        .link:hover, .link.highlighted { stroke: var(--c-1); stroke-opacity: 0.85; }
+        .node-label { fill: var(--ink); font-size: 10px; text-anchor: middle; pointer-events: none; font-family: var(--font); paint-order: stroke; stroke: var(--paper); stroke-width: 3px; stroke-linejoin: round; }
+        .no-data { fill: var(--ink-3); }
+
         .legend {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(30, 30, 30, 0.95);
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            z-index: 100;
+            position: absolute; bottom: 20px; left: 20px; z-index: 100;
+            background: var(--paper); border: 1px solid var(--ink); padding: 12px 16px;
         }
-        
-        .legend h3 {
-            color: #4CAF50;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin: 5px 0;
-            font-size: 12px;
-        }
-        
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
+        .legend h3 { margin: 0 0 8px; }
+        .legend-item { display: flex; align-items: center; margin: 4px 0; font-size: 12px; color: var(--ink); }
     </style>
 </head>
 <body>
     <div id="container">
         <div id="main-view">
             <div id="controls">
-                <h1>File Networks</h1>
-                <p>Explore which files are frequently modified together in your git history.</p>
+                <header class="page-header">
+                    <h1>File Networks</h1>
+                    <p>Which files change together in the same commits.</p>
+                </header>
                 
                 <div class="control-group">
                     <label for="layout-select">Layout Algorithm:</label>
@@ -322,7 +105,7 @@
                 </div>
                 
                 <div class="control-group">
-                    <label for="min-connections">Co-change Threshold:</label>
+                    <label for="min-connections" title="Two files are linked when they changed in at least this many of the same commits. Files left with no link are hidden.">Min. shared commits:</label>
                     <input type="range" id="min-connections" min="2" max="18" value="2">
                     <span id="min-connections-value">2</span>
                 </div>
@@ -331,6 +114,7 @@
                     <div class="stat-item">
                         <span class="stat-label">Files:</span>
                         <span class="stat-value" id="stat-files">0</span>
+                        <span class="stat-label" id="stat-files-split"></span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Connections:</span>
@@ -344,7 +128,7 @@
             </div>
             
             <div class="legend">
-                <h3>File Types</h3>
+                <h3>Files</h3>
                 <div id="legend-items"></div>
             </div>
             
@@ -364,18 +148,17 @@
         let selectedNode = null;
         
         // Color scheme for file categories
-        const categoryColors = {
-            'SuperCollider': '#FF6B6B',
-            'JavaScript': '#4ECDC4',
-            'Python': '#45B7D1',
-            'HTML': '#96CEB4',
-            'CSS': '#FFEAA7',
-            'Config': '#DDA0DD',
-            'Documentation': '#98D8C8',
-            'Audio': '#F7DC6F',
-            'Root': '#4CAF50',
-            'Other': '#95A5A6'
-        };
+        const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+        const groups = [
+            { key: 'p-files',  label: 'p-files (personalities/)', token: '--c-1', match: p => p.startsWith('personalities/') },
+            { key: 'core',     label: 'core code (code3.0/)',     token: '--c-2', match: p => p.startsWith('code3.0/') },
+            { key: 'lists',    label: 'lists (lists/)',           token: '--c-3', match: p => p.startsWith('lists/') },
+            { key: 'legacy',   label: 'legacy code (code2.0/)',   token: '--c-4', match: p => p.startsWith('code2.0/') },
+            { key: 'other',    label: 'other files',              token: '--c-other', match: () => true },
+        ];
+        const groupOf = node => groups.find(g => g.match(node.full_path || node.id));
+        const nodeColor = node => css(groupOf(node).token);
         
         // Initialize visualization
         function initVisualization() {
@@ -511,7 +294,9 @@
         function updateStats() {
             if (!filteredData) return;
             
+            const pfiles = filteredData.nodes.filter(n => n.full_path.startsWith('personalities/')).length;
             document.getElementById('stat-files').textContent = filteredData.nodes.length;
+            document.getElementById('stat-files-split').textContent = `(${pfiles} p-files, ${filteredData.nodes.length - pfiles} other)`;
             document.getElementById('stat-connections').textContent = filteredData.edges.length;
             document.getElementById('stat-commits').textContent = networkData.statistics.total_commits;
         }
@@ -543,7 +328,7 @@
                     .attr('x', width / 2)
                     .attr('y', height / 2)
                     .attr('text-anchor', 'middle')
-                    .attr('fill', '#888')
+                    
                     .attr('font-size', '18px')
                     .text('No connections match the current filter criteria');
                 
@@ -574,7 +359,7 @@
                 .enter()
                 .append('line')
                 .attr('class', 'link')
-                .style('stroke-width', d => Math.sqrt(d.weight))
+                .style('stroke-width', d => 0.5 + Math.sqrt(d.weight) * 0.35)
                 .on('mouseover', function(event, d) {
                     d3.select(this).classed('highlighted', true);
                     showLinkTooltip(event, d);
@@ -592,8 +377,7 @@
                 .append('circle')
                 .attr('class', 'node')
                 .attr('r', d => Math.sqrt(d.commit_count) + 3)
-                .style('fill', d => categoryColors[d.category] || categoryColors['Other'])
-                .style('stroke', d => d3.rgb(categoryColors[d.category] || categoryColors['Other']).darker(2))
+                .style('fill', d => nodeColor(d))
                 .on('click', function(event, d) {
                     selectNode(d);
                     showFileDetails(d);
@@ -642,7 +426,7 @@
                 if (labels) {
                     labels
                         .attr('x', d => d.x)
-                        .attr('y', d => d.y + 3);
+                        .attr('y', d => d.y - Math.sqrt(d.commit_count) - 7);
                 }
             });
         }
@@ -723,7 +507,7 @@
             const sidebar = document.getElementById('sidebar');
             const content = document.getElementById('sidebar-content');
             
-            const categoryColor = categoryColors[node.category] || categoryColors['Other'];
+            const group = groupOf(node);
             
             // Find connected files
             const connections = filteredData.edges
@@ -737,27 +521,25 @@
             let html = `
                 <div class="file-info">
                     <div class="file-path">${node.full_path}</div>
-                    <span class="file-category" style="background-color: ${categoryColor}20; color: ${categoryColor}; border: 1px solid ${categoryColor};">
+                    <span class="file-category"><span class="swatch" style="background:${css(group.token)}"></span>${group.label} · 
                         ${node.category}
                     </span>
-                    <div style="color: #4CAF50; font-weight: bold; margin-top: 10px;">
-                        ${node.commit_count} commits
-                    </div>
+                    <div class="file-commits">${node.commit_count} commits</div>
                 </div>
                 
-                <h3 style="color: #4CAF50; margin-bottom: 10px;">Connected Files (${connections.length})</h3>
+                <h3>Connected Files (${connections.length})</h3>
             `;
             
             connections.slice(0, 10).forEach(conn => {
                 html += `
-                    <div style="background: #333; padding: 8px; margin: 5px 0; border-radius: 4px; font-size: 12px;">
-                        <div style="color: #4CAF50;">${conn.file.label}</div>
-                        <div style="color: #888;">${conn.weight} shared commits</div>
+                    <div class="conn-item">
+                        <div><span class="swatch" style="background:${nodeColor(conn.file)}"></span>${conn.file.label}</div>
+                        <div class="muted">${conn.weight} shared commits</div>
                     </div>
                 `;
             });
             
-            html += `<h3 style="color: #4CAF50; margin: 20px 0 10px;">Recent Commits</h3>`;
+            html += `<h3>Recent Commits</h3>`;
             
             node.commits.slice(0, 10).forEach(commit => {
                 html += `
@@ -765,7 +547,7 @@
                         <div class="commit-hash">${commit.hash}</div>
                         <div class="commit-date">${commit.date} • <span class="commit-author">${commit.author}</span></div>
                         <div class="commit-subject">${commit.subject}</div>
-                        <div style="color: #666; font-size: 11px; margin-top: 3px;">${commit.files_count} files changed</div>
+                        <div class="commit-files">${commit.files_count} files changed</div>
                     </div>
                 `;
             });
@@ -808,13 +590,12 @@
             const legendItems = document.getElementById('legend-items');
             legendItems.innerHTML = '';
             
-            const categories = [...new Set(networkData.nodes.map(n => n.category))];
-            categories.forEach(category => {
-                const color = categoryColors[category] || categoryColors['Other'];
+            const present = new Set(networkData.nodes.map(n => groupOf(n).key));
+            groups.filter(g => present.has(g.key)).forEach(g => {
                 legendItems.innerHTML += `
                     <div class="legend-item">
-                        <div class="legend-color" style="background-color: ${color};"></div>
-                        <span>${category}</span>
+                        <span class="swatch" style="background:${css(g.token)}"></span>
+                        <span>${g.label}</span>
                     </div>
                 `;
             });
@@ -856,6 +637,7 @@
         // Load data and initialize
         d3.json('output/file_networks.json').then(function(data) {
             networkData = data;
+            document.getElementById('min-connections').max = d3.max(data.edges, e => e.weight);
             
             console.log('Raw data loaded:', data.nodes.length, 'nodes,', data.edges.length, 'edges');
             console.log('Edge weight range:', Math.min(...data.edges.map(e => e.weight)), 'to', Math.max(...data.edges.map(e => e.weight)));

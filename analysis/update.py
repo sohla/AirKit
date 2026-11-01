@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Regenerate every analysis artefact in output/.
+"""Regenerate every analysis artefact in pages/output/.
 
-The JSON in output/ is gitignored: these scripts are the source of truth and
+The JSON in pages/output/ is gitignored: these scripts are the source of truth and
 the data they emit is disposable. Run this after any stretch of work you want
 the visualisations to reflect, then serve the directory - the pages fetch
 their data over XHR, so opening them as file:// gets you a blank page.
 
     python3 update.py
-    python3 -m http.server 8000
+    python3 serve.py
 
-Every analyzer reads the same commit scope (GIT_SCOPE / SINCE, declared at the
+Every analyzer reads the same commit scope (GIT_SCOPE, declared at the
 top of each one). That is what makes the timelines comparable to each other -
 if you widen or narrow it, do so in all of them or the pages start describing
 different populations of commits.
@@ -26,14 +26,13 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-OUTPUT_DIR = HERE / 'output'
+OUTPUT_DIR = HERE / 'pages' / 'output'
 
 # analyzer -> the artefact it writes.
 ANALYZERS = [
     ('analyze_file_networks.py',    'file_networks.json'),
     ('work_type_analyzer.py',       'work_type_data.json'),
-    ('imu_type_analyzer.py',        'imu_type_analysis.json'),
-    ('commit_imu_analyzer.py',      'commit_imu_analysis.json'),
+    ('analyze_sensor_matrix.py',    'sensor_matrix.json'),
     ('analyze_personality_code.py', 'personality_code_data.json'),
     ('personality_analyzer.py',     'personality_similarities.json'),
     ('analyze_personality_history.py', 'personality_history.json'),
@@ -127,7 +126,7 @@ def main():
         print(f"\n{len(failed)} analyzer(s) failed: {', '.join(failed)}")
         return 1
 
-    print("\nServe with:  python3 -m http.server 8000")
+    print("\nServe with:  python3 serve.py")
     return 0
 
 

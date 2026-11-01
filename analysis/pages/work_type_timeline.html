@@ -5,361 +5,133 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Repository Work Type Timeline - SCbounce Evolution</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="timerange.js"></script>
+    <link rel="stylesheet" href="theme.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        body { overflow: hidden; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #0a0a0a;
-            color: #e0e0e0;
-            overflow: hidden;
-        }
+        #container { display: flex; flex-direction: column; height: 100vh; }
 
-        #container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
+        .page-header { flex-shrink: 0; padding-bottom: 14px; }
 
         #timeline-controls {
-            background: #1a1a1a;
-            padding: 20px;
-            border-bottom: 2px solid #333;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex-shrink: 0;
-            flex-wrap: wrap;
+            display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+            padding: 12px 32px; border-bottom: 1px solid var(--hair); flex-shrink: 0;
         }
-
-        #timeline-controls h3 {
-            color: #4CAF50;
-            margin-right: 20px;
-            min-width: 150px;
-            font-size: 18px;
-        }
-
-        #timeline-slider {
-            flex: 1;
-            height: 10px;
-            background: #333;
-            border-radius: 5px;
-            outline: none;
-            cursor: pointer;
-            min-width: 300px;
-        }
-
-        #timeline-slider::-webkit-slider-thumb {
-            appearance: none;
-            width: 24px;
-            height: 24px;
-            background: #4CAF50;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
-        }
-
-        #timeline-slider::-moz-range-thumb {
-            width: 24px;
-            height: 24px;
-            background: #4CAF50;
-            border-radius: 50%;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
-        }
-
-        .date-label {
-            color: #888;
-            font-size: 14px;
-            min-width: 100px;
-            text-align: center;
-        }
-
-        #current-date {
-            color: #4CAF50;
-            font-weight: bold;
-            font-size: 16px;
-        }
+        #time-range { flex: 1; min-width: 300px; }
 
         #filter-controls {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            padding: 15px 20px;
-            background: #111;
-            border-bottom: 2px solid #333;
-            flex-wrap: wrap;
+            display: flex; gap: 10px 14px; align-items: center; flex-wrap: wrap;
+            padding: 12px 32px; border-bottom: 1px solid var(--ink); flex-shrink: 0;
         }
-
-        #filter-controls h4 {
-            color: #4CAF50;
-            font-size: 14px;
-            margin-right: 10px;
-        }
+        #filter-controls h4 { margin: 0 6px 0 0; }
+        #category-filters { display: flex; gap: 8px; flex-wrap: wrap; }
 
         .category-filter {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
-            border-radius: 25px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            font-size: 13px;
-            user-select: none;
-            min-width: 120px;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 3px 12px; border: 1px solid var(--ink); border-radius: 999px;
+            cursor: pointer; user-select: none; font-size: 13px;
         }
+        .category-filter:hover { background: var(--paper-2); }
+        .category-filter.inactive { opacity: .35; }
+        .category-filter.inactive label { text-decoration: line-through; }
+        .category-filter input { display: none; }
+        .category-filter label { cursor: pointer; margin: 0; color: var(--ink); }
 
-        .category-filter:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
+        #visualization-area { flex: 1; display: flex; min-height: 0; }
+        #chart-column { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        #view-controls { display: flex; gap: 8px; padding: 14px 32px 0; flex-shrink: 0; }
+        #chart-container { flex: 1; min-height: 0; }
 
-        .category-filter.active {
-            border-color: rgba(255,255,255,0.3);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        #side-column {
+            flex: 0 0 260px; border-left: 1px solid var(--ink);
+            padding: 18px 20px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 22px;
         }
+        #side-column h4 { margin: 0 0 10px; }
 
-        .category-filter.inactive {
-            opacity: 0.4;
-            filter: grayscale(70%);
-        }
+        .stat-item { display: flex; justify-content: space-between; align-items: baseline; margin: 6px 0; font-size: 13px; }
+        .stat-category { color: var(--ink-2); }
+        .stat-item .stat-value { font-size: 13px; }
+        .stat-item.total { border-bottom: 1px solid var(--hair); padding-bottom: 8px; margin-bottom: 10px; }
+        .stat-item.total .stat-value { font-size: 18px; }
 
-        .category-filter input {
-            display: none;
-        }
-
-        .category-filter label {
-            font-size: 13px;
-            cursor: pointer;
-            margin: 0;
-            color: #000;
-            text-shadow: none;
-            font-weight: 600;
-        }
-
-        .category-color-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 4px;
-            border: 2px solid rgba(255,255,255,0.8);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-        }
-
-        #visualization-area {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-
-        #chart-container {
-            width: 100%;
-            height: 100%;
-        }
-
-        #stats-panel {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(26, 26, 26, 0.95);
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 15px;
-            min-width: 250px;
-            backdrop-filter: blur(10px);
-        }
-
-        #stats-panel h4 {
-            color: #4CAF50;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            margin: 8px 0;
-            font-size: 14px;
-        }
-
-        .stat-category {
-            color: #ccc;
-        }
-
-        .stat-value {
-            color: #4CAF50;
-            font-weight: bold;
-        }
+        .legend-item { display: flex; align-items: center; margin: 6px 0; font-size: 13px; color: var(--ink); }
+        .legend-item .note { color: var(--ink-3); font-size: 11px; margin-left: 6px; }
 
         .chart-tooltip {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.9);
-            color: #fff;
-            padding: 10px;
-            border-radius: 5px;
-            pointer-events: none;
-            font-size: 12px;
-            border: 1px solid #666;
-            z-index: 1000;
+            position: absolute; pointer-events: none; z-index: 20;
+            background: var(--paper); color: var(--ink); border: 1px solid var(--ink);
+            padding: 8px 11px; font-size: 12px; box-shadow: 4px 4px 0 var(--hair);
         }
 
-        .legend {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(26, 26, 26, 0.95);
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 15px;
-            backdrop-filter: blur(10px);
-        }
-
-        .legend h5 {
-            color: #4CAF50;
-            margin-bottom: 10px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin: 5px 0;
-            font-size: 12px;
-        }
-
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            margin-right: 8px;
-            border-radius: 3px;
-        }
-
-        #view-controls {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            display: flex;
-            gap: 10px;
-        }
-
-        .view-button {
-            background: #333;
-            border: 1px solid #666;
-            color: #fff;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s ease;
-        }
-
-        .view-button:hover {
-            background: #444;
-        }
-
-        .view-button.active {
-            background: #4CAF50;
-            color: #000;
-        }
+        .chart-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px; fill: var(--ink-3); font-weight: 500; }
+        .bubble text { fill: var(--ink); font-weight: 500; paint-order: stroke; stroke: var(--paper); stroke-width: 3px; stroke-linejoin: round; }
     </style>
 </head>
 <body>
     <div id="container">
+        <header class="page-header">
+            <h1>Work Type Timeline</h1>
+            <p>Commits per month, each split across the kinds of work its files belong to.</p>
+        </header>
+
         <div id="timeline-controls">
-            <h3>Work Type Timeline</h3>
-            <span class="date-label" id="start-date">2024-03</span>
-            <input type="range" id="timeline-slider" min="0" max="100" value="100">
-            <span class="date-label" id="end-date">2026-03</span>
-            <div id="current-date">2026-03</div>
+            <div id="time-range"></div>
         </div>
-        
+
         <div id="filter-controls">
-            <h4>Categories:</h4>
+            <h4>Categories</h4>
             <div id="category-filters"></div>
         </div>
 
         <div id="visualization-area">
-            <div id="view-controls">
-                <button class="view-button active" data-view="stacked">Stacked Area</button>
-                <button class="view-button" data-view="bubbles">Category Bubbles</button>
-                <button class="view-button" data-view="stream">Stream Graph</button>
+            <div id="chart-column">
+                <div id="view-controls">
+                    <button class="view-button active" data-view="stacked">Stacked Area</button>
+                    <button class="view-button" data-view="bubbles">Category Bubbles</button>
+                    <button class="view-button" data-view="stream">Stream Graph</button>
+                </div>
+                <div id="chart-container"></div>
             </div>
 
-            <div id="stats-panel">
-                <h4>Current Period Stats</h4>
-                <div id="stats-content"></div>
-            </div>
+            <div id="side-column">
+                <div id="stats-panel">
+                    <h4>Selected Period</h4>
+                    <div id="stats-content"></div>
+                </div>
 
-            <div class="legend">
-                <h5>Work Categories</h5>
-                <div id="legend-content"></div>
+                <div class="legend">
+                    <h4>Work Categories</h4>
+                    <div id="legend-content"></div>
+                </div>
             </div>
-
-            <div id="chart-container"></div>
         </div>
     </div>
 
     <script>
         // Global variables
         let timelineData = [];
-        let currentTimeIndex = 0;
+        let selectedRange = null;
         let activeCategories = new Set();
         let currentView = 'stacked';
         let previousView = 'stacked'; // Track previous view
         let bubbleStore = new Map(); // Persistent bubble store
         let bubbleSimulation = null; // Store simulation instance
         
-        // Color scheme for categories
-        const categoryColors = {
-            'Implementation': '#FF6B6B',
-            'Personalities': '#4ECDC4', 
-            'Visual': '#9B59B6',
-            'Experimentation': '#45B7D1',
-            'Analysis': '#96CEB4',
-            'Performance': '#FFEAA7',
-            'Infrastructure': '#DDA0DD',
-            'Other': '#95A5A6'
-        };
+        const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-        const subcategoryColors = {
-            // Implementation subcategories
-            'Communications': '#FF8E8E',
-            'Logic': '#FF4444',
-            'IMU Data Processing': '#FF1111',
-            'Core System': '#CC0000',
-            'Mapping': '#FF7777',
-            'Bug Fixes': '#AA0000',
-            
-            // Visual subcategories
-            'System': '#B19CD9',
-            'Code': '#A569BD',
-            
-            // Personalities subcategories  
-            'Synth Design': '#6BEBE8',
-            'Documentation': '#8AF4F1',
-            'Data Analysis': '#2BD9D3',
-            
-            // Analysis subcategories
-            'Scripts': '#B8E6B8', 
-            'Visualization': '#A6DFA6',
-            'Data': '#85D685',
-            'Other': '#6BBF6B',
-            
-            // Others
-            'Legacy Code': '#6BC4F1',
-            'Live Session': '#FFED7A',
-            'Version Control': '#E8B8E8'
+        const categoryColors = {
+            'Implementation': css('--c-2'),
+            'Personalities': css('--c-1'),
+            'Visual': css('--c-3'),
+            'Experimentation': css('--c-other'),
+            'Analysis': css('--c-ink'),
+            'Performance': css('--c-other'),
+            'Infrastructure': css('--c-4'),
+            'Other': css('--c-other')
         };
+        const foldedIntoOther = ['Performance', 'Experimentation'];
 
         // Load and initialize
         async function loadData() {
@@ -378,26 +150,43 @@
             }
         }
 
+        function monthStart(entry) {
+            return d3.timeParse('%Y-%m')(entry.date);
+        }
+
+        function monthsInRange(extent = selectedRange) {
+            if (!extent) return timelineData;
+            const [d0, d1] = extent;
+            return timelineData.filter(d => monthStart(d) < d1 && d3.timeMonth.offset(monthStart(d), 1) > d0);
+        }
+
+        const commitCount = d3.format(',.1~f');
+
+        function aggregate(months) {
+            const categories = {};
+            months.forEach(d => Object.entries(d.categories).forEach(([category, data]) => {
+                const sum = categories[category] || (categories[category] = {total: 0, subcategories: {}});
+                sum.total += data.total;
+                Object.entries(data.subcategories).forEach(([sub, n]) => {
+                    sum.subcategories[sub] = (sum.subcategories[sub] || 0) + n;
+                });
+            }));
+            return {categories, commits: d3.sum(months, d => d.commits)};
+        }
+
         function setupControls() {
-            const slider = document.getElementById('timeline-slider');
-            const startDate = document.getElementById('start-date');
-            const endDate = document.getElementById('end-date');
-            const currentDate = document.getElementById('current-date');
-            
             if (timelineData.length > 0) {
-                startDate.textContent = timelineData[0].date;
-                endDate.textContent = timelineData[timelineData.length - 1].date;
-                slider.max = timelineData.length - 1;
-                slider.value = timelineData.length - 1;
-                currentTimeIndex = timelineData.length - 1;
-                currentDate.textContent = timelineData[currentTimeIndex].date;
+                const dates = timelineData.flatMap(d => Array(d.commits).fill(monthStart(d)));
+                const range = TimeRange(document.getElementById('time-range'), {
+                    dates,
+                    summary: extent => `${aggregate(monthsInRange(extent)).commits} commits`,
+                    onChange: extent => {
+                        selectedRange = extent;
+                        updateVisualization();
+                    },
+                });
+                selectedRange = range.extent();
             }
-            
-            slider.addEventListener('input', (e) => {
-                currentTimeIndex = parseInt(e.target.value);
-                currentDate.textContent = timelineData[currentTimeIndex].date;
-                updateVisualization();
-            });
 
             // View control buttons
             document.querySelectorAll('.view-button').forEach(button => {
@@ -420,11 +209,9 @@
             allCategories.forEach(category => {
                 const filterDiv = document.createElement('div');
                 filterDiv.className = 'category-filter active';
-                filterDiv.style.backgroundColor = categoryColors[category];
-                
-                // Create color dot
-                const colorDot = document.createElement('div');
-                colorDot.className = 'category-color-dot';
+
+                const colorDot = document.createElement('span');
+                colorDot.className = 'swatch';
                 colorDot.style.backgroundColor = categoryColors[category];
                 
                 // Hidden checkbox for state tracking
@@ -463,9 +250,10 @@
         }
 
         function updateVisualization() {
-            if (!timelineData[currentTimeIndex]) return;
+            const months = monthsInRange();
+            if (!months.length) return;
             
-            const currentData = timelineData[currentTimeIndex];
+            const currentData = aggregate(months);
             updateStats(currentData);
             updateLegend();
             
@@ -510,10 +298,10 @@
             
             // Add total
             const totalDiv = document.createElement('div');
-            totalDiv.className = 'stat-item';
+            totalDiv.className = 'stat-item total';
             totalDiv.innerHTML = `
-                <span class="stat-category">Total Commits:</span>
-                <span class="stat-value">${totalCommits}</span>
+                <span class="stat-category">Total Commits</span>
+                <span class="stat-value">${commitCount(totalCommits)}</span>
             `;
             statsContent.appendChild(totalDiv);
             
@@ -526,8 +314,8 @@
                         const div = document.createElement('div');
                         div.className = 'stat-item';
                         div.innerHTML = `
-                            <span class="stat-category">${category}:</span>
-                            <span class="stat-value">${data.total}</span>
+                            <span class="stat-category"><span class="swatch" style="background:${categoryColors[category]}"></span>${category}</span>
+                            <span class="stat-value">${commitCount(data.total)}</span>
                         `;
                         statsContent.appendChild(div);
                     }
@@ -538,15 +326,17 @@
             const legendContent = document.getElementById('legend-content');
             legendContent.innerHTML = '';
             
-            activeCategories.forEach(category => {
-                const item = document.createElement('div');
-                item.className = 'legend-item';
-                item.innerHTML = `
-                    <div class="legend-color" style="background-color: ${categoryColors[category]}"></div>
-                    <span>${category}</span>
-                `;
-                legendContent.appendChild(item);
-            });
+            const folded = foldedIntoOther.filter(c => activeCategories.has(c));
+            Object.keys(categoryColors)
+                .filter(category => activeCategories.has(category) || (category === 'Other' && folded.length))
+                .filter(category => !foldedIntoOther.includes(category))
+                .forEach(category => {
+                    const item = document.createElement('div');
+                    item.className = 'legend-item';
+                    const note = category === 'Other' && folded.length ? `<span class="note">incl. ${folded.join(', ')}</span>` : '';
+                    item.innerHTML = `<span class="swatch" style="background:${categoryColors[category]}"></span><span>${category}</span>${note}`;
+                    legendContent.appendChild(item);
+                });
         }
 
         function createBubbleChart(currentData) {
@@ -572,13 +362,9 @@
                 
                 // Create title
                 svg.append("text")
-                    .attr("class", "bubble-title")
-                    .attr("x", width / 2)
-                    .attr("y", 25)
-                    .attr("text-anchor", "middle")
-                    .style("fill", "#4CAF50")
-                    .style("font-size", "18px")
-                    .style("font-weight", "bold");
+                    .attr("class", "bubble-title chart-title")
+                    .attr("x", 32)
+                    .attr("y", 25);
                 
                 // Create tooltip only once
                 if (d3.select(".bubble-tooltip").empty()) {
@@ -648,15 +434,15 @@
             enteringBubbles.append("circle")
                 .attr("r", 0)
                 .attr("fill", d => categoryColors[d.category])
-                .attr("fill-opacity", 0.7)
-                .attr("stroke", d => categoryColors[d.category])
+                .attr("fill-opacity", 0.9)
+                .attr("stroke", css('--paper'))
                 .attr("stroke-width", 2)
                 .on("mouseover", function(event, d) {
                     if (d.total > 0) {
                         tooltip.transition().duration(200).style("opacity", .9);
-                        let tooltipContent = `<strong>${d.category}</strong><br/>Total: ${d.total} commits<br/>`;
+                        let tooltipContent = `<strong>${d.category}</strong><br/>Total: ${commitCount(d.total)} commits<br/>`;
                         Object.entries(d.subcategories).forEach(([sub, count]) => {
-                            if (count > 0) tooltipContent += `${sub}: ${count}<br/>`;
+                            if (count > 0) tooltipContent += `${sub}: ${commitCount(count)}<br/>`;
                         });
                         tooltip.html(tooltipContent)
                             .style("left", (event.pageX + 10) + "px")
@@ -671,8 +457,6 @@
             enteringBubbles.append("text")
                 .attr("text-anchor", "middle")
                 .attr("dy", ".35em")
-                .style("fill", "#fff")
-                .style("font-weight", "bold")
                 .style("pointer-events", "none")
                 .style("font-size", "0px")
                 .text(d => d.category);
@@ -692,7 +476,7 @@
                 .transition()
                 .duration(600)
                 .ease(d3.easeElasticOut.amplitude(1).period(0.5))
-                .style("font-size", d => d.total > 0 ? Math.max(10, sizeScale(d.total) / 4) + "px" : "0px");
+                .style("font-size", d => sizeScale(d.total) > 24 ? Math.max(10, sizeScale(d.total) / 4) + "px" : "0px");
             
             // Create or update simulation with all bubbles
             if (bubbleSimulation) {
@@ -715,7 +499,7 @@
             
             // Update title
             svg.select(".bubble-title")
-                .text(`Work Categories - ${currentData.date}`);
+                .text('Work categories in the selected period');
         }
 
         function createStackedArea() {
@@ -733,7 +517,7 @@
                 .attr("transform", `translate(${margin.left},${margin.top})`);
             
             // Prepare data for stacked area
-            const stackData = timelineData.slice(0, currentTimeIndex + 1).map(d => {
+            const stackData = monthsInRange().map(d => {
                 const row = {date: d.date};
                 Object.keys(categoryColors).forEach(category => {
                     row[category] = activeCategories.has(category) ? (d.categories[category]?.total || 0) : 0;
@@ -774,23 +558,19 @@
                 .attr("class", "area")
                 .attr("d", area)
                 .attr("fill", d => categoryColors[d.key])
-                .attr("fill-opacity", 0.7)
-                .attr("stroke", d => categoryColors[d.key])
+                .attr("fill-opacity", 0.85)
+                .attr("stroke", css('--paper'))
                 .attr("stroke-width", 1);
             
             // Add axes
             g.append("g")
                 .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
-                .call(d3.axisBottom(xScale).tickValues(xScale.domain().filter((d, i) => i % 3 === 0)))
-                .selectAll("text")
-                .style("fill", "#ccc")
-                .style("font-size", "12px");
-            
+                .attr("class", "axis")
+                .call(d3.axisBottom(xScale).tickValues(xScale.domain().filter((d, i) => i % 3 === 0)));
+
             g.append("g")
-                .call(d3.axisLeft(yScale))
-                .selectAll("text")
-                .style("fill", "#ccc")
-                .style("font-size", "12px");
+                .attr("class", "axis")
+                .call(d3.axisLeft(yScale).ticks(6));
             
             // Add axis labels
             g.append("text")
@@ -799,18 +579,16 @@
                 .attr("x", 0 - (height - margin.top - margin.bottom) / 2)
                 .attr("dy", "1em")
                 .style("text-anchor", "middle")
-                .style("fill", "#ccc")
+                .style("fill", css('--ink-3'))
+                .style("font-size", "12px")
                 .text("Commits");
             
             // Add title
             svg.append("text")
-                .attr("x", width / 2)
+                .attr("class", "chart-title")
+                .attr("x", margin.left)
                 .attr("y", 25)
-                .attr("text-anchor", "middle")
-                .style("fill", "#4CAF50")
-                .style("font-size", "18px")
-                .style("font-weight", "bold")
-                .text("Repository Evolution Timeline");
+                .text("Commits per month, stacked by work type");
         }
 
         function createStreamGraph() {
@@ -828,7 +606,7 @@
                 .attr("transform", `translate(${margin.left},${margin.top})`);
             
             // Prepare data for stream graph
-            const streamData = timelineData.slice(0, currentTimeIndex + 1).map(d => {
+            const streamData = monthsInRange().map(d => {
                 const row = {date: d.date};
                 Object.keys(categoryColors).forEach(category => {
                     row[category] = activeCategories.has(category) ? (d.categories[category]?.total || 0) : 0;
@@ -869,26 +647,22 @@
                 .attr("class", "stream")
                 .attr("d", area)
                 .attr("fill", d => categoryColors[d.key])
-                .attr("fill-opacity", 0.8)
-                .attr("stroke", "none");
+                .attr("fill-opacity", 0.85)
+                .attr("stroke", css('--paper'))
+                .attr("stroke-width", 1);
             
             // Add x-axis
             g.append("g")
-                .attr("transform", `translate(0,${(height - margin.top - margin.bottom) / 2})`)
-                .call(d3.axisBottom(xScale).tickValues(xScale.domain().filter((d, i) => i % 3 === 0)))
-                .selectAll("text")
-                .style("fill", "#ccc")
-                .style("font-size", "12px");
+                .attr("class", "axis")
+                .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
+                .call(d3.axisBottom(xScale).tickValues(xScale.domain().filter((d, i) => i % 3 === 0)));
             
             // Add title
             svg.append("text")
-                .attr("x", width / 2)
+                .attr("class", "chart-title")
+                .attr("x", margin.left)
                 .attr("y", 25)
-                .attr("text-anchor", "middle")
-                .style("fill", "#4CAF50")
-                .style("font-size", "18px")
-                .style("font-weight", "bold")
-                .text("Work Flow Stream - Repository Evolution");
+                .text("Work flow, centred stream");
         }
 
         // Initialize the application

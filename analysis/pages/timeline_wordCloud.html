@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commit Words</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="timerange.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/compromise@14.9.0/builds/compromise.min.js"></script>
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        body { overflow: hidden; }
+
+        .implementation { --cat: var(--c-2); }
+        .personality    { --cat: var(--c-1); }
+        .visual         { --cat: var(--c-3); }
+        .mixed          { --cat: var(--c-ink); }
+        .other          { --cat: var(--c-other); }
+
+        #container { display: flex; flex-direction: column; height: 100vh; }
+        .page-header { flex-shrink: 0; }
+
+        #timeline-controls {
+            display: flex; align-items: center; gap: 24px;
+            padding: 14px 32px 10px; flex-shrink: 0;
+        }
+        #timeline-controls h3 { margin: 0; }
+        #time-range { flex: 1; min-width: 300px; }
+        .timeline-info { text-align: right; }
+        .timeline-info .value { font-family: var(--mono); font-size: 22px; }
+
+        #filter-controls {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px;
+            padding: 6px 32px 14px; border-bottom: 1px solid var(--ink); flex-shrink: 0;
+        }
+        #filter-controls h3 { margin: 0 4px 0 0; }
+        .filter-btn:not(.all)::before {
+            content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+            margin-right: 7px; vertical-align: 0; background: var(--cat);
+        }
+        .filter-btn.active::before { box-shadow: 0 0 0 1.5px var(--paper); }
+
+        #main-content { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+        #cloud-container { flex: 1; min-width: 0; position: relative; }
+        #word-cloud { position: absolute; inset: 0; }
+
+        #side-panels {
+            width: 240px; flex-shrink: 0; border-left: 1px solid var(--hair);
+            padding: 20px; display: flex; flex-direction: column; gap: 22px; overflow-y: auto;
+        }
+        #side-panels h3 { margin: 0 0 8px; }
+        #stats { font-size: 13px; }
+        #stats .row { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 0; color: var(--ink-2); }
+        #stats .row span[id] { font-family: var(--mono); color: var(--ink); }
+        #stats .stat-value { font-size: 18px; }
+        #stats .types { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hair); }
+
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 2px 0; color: var(--ink); }
+        .legend-color { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+        .legend-percentage { margin-left: auto; font-family: var(--mono); color: var(--ink-2); font-size: 12px; }
+
+        #sidebar {
+            width: 450px; border-left: 1px solid var(--ink); overflow-y: auto;
+            padding: 24px; display: none; position: relative; background: var(--paper);
+        }
+        #sidebar.active { display: block; }
+        #sidebar h2 { margin: 0 0 8px; font-size: 26px; padding-right: 80px; }
+        #sidebar .word-info { padding-bottom: 14px; margin-bottom: 8px; border-bottom: 1px solid var(--ink); }
+        #sidebar .word-type { font-size: 12px; color: var(--ink-2); }
+        #sidebar .word-type::before {
+            content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+            background: var(--pos); margin-right: 7px; vertical-align: 0;
+        }
+        #sidebar .commit-count { font-family: var(--mono); color: var(--ink-2); font-size: 13px; }
+        #sidebar .word-sub { color: var(--ink-3); font-size: 13px; margin-top: 5px; }
+        #sidebar .empty { color: var(--ink-3); font-style: italic; }
+
+        .commit-item { padding: 12px 0; border-bottom: 1px solid var(--hair); cursor: pointer; }
+        .commit-item:hover { background: var(--paper-2); }
+        .commit-hash { color: var(--ink-3); font-family: var(--mono); font-size: 12px; }
+        .commit-date { color: var(--ink-3); font-size: 12px; margin-top: 3px; font-family: var(--mono); }
+        .commit-author { color: var(--ink-2); font-family: var(--font); }
+        .commit-subject { color: var(--ink); margin-top: 6px; line-height: 1.4; }
+        .commit-type-badge { margin-left: 10px; font-size: 11px; color: var(--ink-2); font-family: var(--font); }
+        .commit-type-badge::before {
+            content: ''; display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+            background: var(--cat); margin-right: 6px; vertical-align: 0;
+        }
+        .commit-files { margin-top: 6px; }
+        .commit-file { color: var(--ink-3); font-size: 11px; font-family: var(--mono); padding: 1px 0; }
+
+        #close-sidebar { position: absolute; top: 22px; right: 22px; font-size: 12px; }
+
+        .word-circle { cursor: pointer; }
+        .word-circle-bg { fill-opacity: .92; transition: fill-opacity .15s; }
+        .word-circle-bg.pos-Other { stroke: var(--ink); stroke-width: 1px; }
+        .legend-color.pos-Other, .word-type.pos-Other::before { box-shadow: inset 0 0 0 1px var(--ink); }
+        .word-circle-border { stroke: none; }
+        .word-circle:hover .word-circle-bg { fill-opacity: 1; }
+        .word-circle:hover .word-circle-border { stroke: var(--ink); stroke-width: 1px; }
+        .word-circle.selected .word-circle-border { stroke: var(--ink); stroke-width: 2px; }
+        .word-text { pointer-events: none; font-family: var(--font); font-weight: 400; font-size: 13px; user-select: none; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <header class="page-header">
+            <h1>Commit Words</h1>
+            <p>The 200 most common words in commit messages, one disc per word, sized by how many commits use it. Pick a window and a commit type; click a word to list its commits.</p>
+        </header>
+
+        <div id="timeline-controls">
+            <div id="time-range"></div>
+            <div class="timeline-info">
+                <div class="label">Words shown</div>
+                <div class="value" id="words-count">0</div>
+            </div>
+        </div>
+
+        <div id="filter-controls">
+            <h3>Commit type</h3>
+            <button class="filter-btn all active" data-filter="all">All</button>
+            <button class="filter-btn implementation" data-filter="implementation">Implementation</button>
+            <button class="filter-btn personality" data-filter="personality">Personality</button>
+            <button class="filter-btn visual" data-filter="visual">Visual</button>
+            <button class="filter-btn other" data-filter="other">Other</button>
+        </div>
+
+        <div id="main-content">
+            <div id="cloud-container">
+                <svg id="word-cloud"></svg>
+            </div>
+
+            <div id="side-panels">
+                <div id="stats">
+                    <h3>All time</h3>
+                    <div class="row">Words <span class="stat-value" id="total-words">0</span></div>
+                    <div class="row">Commits <span class="stat-value" id="total-commits">0</span></div>
+                    <div class="types">
+                        <div class="row"><span><span class="swatch implementation" style="background: var(--cat)"></span>Implementation</span><span id="stat-implementation">0</span></div>
+                        <div class="row"><span><span class="swatch personality" style="background: var(--cat)"></span>Personality</span><span id="stat-personality">0</span></div>
+                        <div class="row"><span><span class="swatch visual" style="background: var(--cat)"></span>Visual</span><span id="stat-visual">0</span></div>
+                        <div class="row"><span><span class="swatch mixed" style="background: var(--cat)"></span>Mixed</span><span id="stat-mixed">0</span></div>
+                        <div class="row"><span><span class="swatch other" style="background: var(--cat)"></span>Other</span><span id="stat-other">0</span></div>
+                    </div>
+                </div>
+
+                <div id="legend">
+                    <div class="legend-section">
+                        <h3>Word types</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sidebar">
+                <button id="close-sidebar">Close</button>
+                <div id="sidebar-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let data = null;
+        let commitsByWord = {};
+        let selectedWord = null;
+        let timeRange = null;
+        let filteredData = null;
+        let currentFilter = 'all';
+
+        const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+        // Part of speech colour tokens, and the ink that reads on each
+        const posTokens = {
+            'Noun': '--ink',
+            'Verb': '--ink-3',
+            'Adjective': '--paper-3',
+            'Adverb': '--c-4',
+            'Other': '--paper'
+        };
+        const posInk = { 'Noun': '--paper', 'Verb': '--paper', 'Adjective': '--ink', 'Adverb': '--ink', 'Other': '--ink' };
+
+        // Detect part of speech using compromise
+        function getPartOfSpeech(word) {
+            const doc = nlp(word);
+
+            if (doc.nouns().length > 0) return 'Noun';
+            if (doc.verbs().length > 0) return 'Verb';
+            if (doc.adjectives().length > 0) return 'Adjective';
+            if (doc.adverbs().length > 0) return 'Adverb';
+
+            return 'Other';
+        }
+
+        // Calculate radius based on frequency
+        function getRadius(frequency, maxFreq, minFreq) {
+            const minRadius = 30;
+            const maxRadius = 100;
+
+            if (maxFreq === minFreq) return minRadius;
+
+            const scale = (frequency - minFreq) / (maxFreq - minFreq);
+            return minRadius + (scale * (maxRadius - minRadius));
+        }
+
+        // Filter data based on timeline date and commit type
+        function filterDataByDate([startDate, endDate]) {
+            if (!data) return null;
+
+            const filteredWords = [];
+            const filteredCommits = {};
+
+            data.words.forEach(word => {
+                const wordCommits = commitsByWord[word.text] || [];
+                const timelineCommits = wordCommits.filter(commit => {
+                    const commitDate = new Date(commit.datetime);
+                    const dateMatch = commitDate >= startDate && commitDate < endDate;
+                    const typeMatch = currentFilter === 'all' || commit.type === currentFilter;
+                    return dateMatch && typeMatch;
+                });
+
+                if (timelineCommits.length > 0) {
+                    filteredWords.push({
+                        text: word.text,
+                        size: timelineCommits.length
+                    });
+                    filteredCommits[word.text] = timelineCommits;
+                }
+            });
+
+            return {
+                words: filteredWords,
+                commits: filteredCommits
+            };
+        }
+
+        // Calculate word type percentages
+        function calculateWordTypePercentages(words) {
+            const typeCounts = {
+                'Noun': 0,
+                'Verb': 0,
+                'Adjective': 0,
+                'Adverb': 0,
+                'Other': 0
+            };
+
+            words.forEach(word => {
+                if (word.pos && typeCounts.hasOwnProperty(word.pos)) {
+                    typeCounts[word.pos]++;
+                }
+            });
+
+            const total = words.length;
+            const typePercentages = {};
+
+            Object.keys(typeCounts).forEach(type => {
+                typePercentages[type] = total > 0 ? ((typeCounts[type] / total) * 100).toFixed(1) : '0.0';
+            });
+
+            return typePercentages;
+        }
+
+        // Update legend with percentages
+        function updateLegendWithPercentages(percentages) {
+            const legendItems = Object.keys(posTokens).map(type => ({ type, color: `var(${posTokens[type]})` }));
+
+            let legendHTML = '<h3>Word types</h3>';
+            legendItems.forEach(item => {
+                const percentage = percentages[item.type] || '0.0';
+                legendHTML += `
+                    <div class="legend-item">
+                        <div class="legend-color pos-${item.type}" style="background-color: ${item.color};"></div>
+                        <span>${item.type}</span>
+                        <span class="legend-percentage">${percentage}%</span>
+                    </div>
+                `;
+            });
+
+            document.querySelector('#legend .legend-section').innerHTML = legendHTML;
+        }
+
+        // Update timeline display
+        function updateTimeline() {
+            // Filter data
+            filteredData = filterDataByDate(timeRange.extent());
+
+            if (filteredData) {
+                // Update stats
+                document.getElementById('words-count').textContent = filteredData.words.length;
+
+                // Analyze part of speech for filtered words
+                const maxFreq = Math.max(...filteredData.words.map(w => w.size), 1);
+                const minFreq = Math.min(...filteredData.words.map(w => w.size), 1);
+
+                filteredData.words.forEach(word => {
+                    word.pos = getPartOfSpeech(word.text);
+                    word.color = css(posTokens[word.pos]);
+                    word.ink = css(posInk[word.pos]);
+                    word.radius = getRadius(word.size, maxFreq, minFreq);
+                });
+
+                // Calculate and update percentages
+                const percentages = calculateWordTypePercentages(filteredData.words);
+                updateLegendWithPercentages(percentages);
+
+                // Redraw visualization
+                createPackedCircles();
+            }
+        }
+
+        // Load data
+        d3.json('output/commits_data.json').then(function(loadedData) {
+            data = loadedData;
+
+            const byHash = new Map(data.commits_list.map(commit => [commit.hash, commit]));
+            data.words.forEach(word => {
+                commitsByWord[word.text] = word.commits.map(hash => byHash.get(hash));
+            });
+
+            const commitTypes = Object.fromEntries(data.types.map(t => [t, 0]));
+            data.commits_list.forEach(commit => commitTypes[commit.type]++);
+
+            document.getElementById('total-words').textContent = data.words.length;
+            document.getElementById('total-commits').textContent = data.commits_list.length;
+            data.types.forEach(t => {
+                document.getElementById(`stat-${t}`).textContent = commitTypes[t];
+            });
+
+            const commitDates = data.commits_list.map(commit => ({ commit, date: new Date(commit.datetime) }));
+
+            timeRange = TimeRange(document.getElementById('time-range'), {
+                dates: commitDates.map(c => c.date),
+                summary: ([d0, d1]) => {
+                    const inRange = commitDates.filter(c => c.date >= d0 && c.date < d1 &&
+                        (currentFilter === 'all' || c.commit.type === currentFilter));
+                    const words = data.words.filter(word => (commitsByWord[word.text] || []).some(commit => {
+                        const date = new Date(commit.datetime);
+                        return date >= d0 && date < d1 && (currentFilter === 'all' || commit.type === currentFilter);
+                    }));
+                    return `${inRange.length} commits · ${words.length} words`;
+                },
+                onChange: updateTimeline,
+            });
+
+            // Initialize timeline (showing all data)
+            updateTimeline();
+        });
+
+        // Set up filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Update active state
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                // Update filter
+                currentFilter = this.dataset.filter;
+
+                // Refresh visualization
+                timeRange.set(timeRange.extent());
+                updateTimeline();
+            });
+        });
+
+        function createPackedCircles() {
+            if (!filteredData || filteredData.words.length === 0) {
+                // Clear the visualization if no data
+                d3.select('#word-cloud').selectAll('*').remove();
+                return;
+            }
+
+            const container = document.getElementById('cloud-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            const svg = d3.select('#word-cloud')
+                .attr('width', width)
+                .attr('height', height);
+
+            // Clear previous
+            svg.selectAll('*').remove();
+
+            // Sort words by size (largest first) to ensure largest circles are placed first
+            const sortedWords = [...filteredData.words].sort((a, b) => b.size - a.size);
+
+            // Create pack layout
+            const pack = d3.pack()
+                .size([width * 0.9, height * 0.9])
+                .padding(3);
+
+            // Create hierarchy with sorted data
+            const root = d3.hierarchy({children: sortedWords})
+                .sum(d => d.radius * d.radius);
+
+            // Apply pack layout
+            pack(root);
+
+            // Create container group centered
+            const g = svg.append('g')
+                .attr('transform', `translate(${width * 0.05},${height * 0.05})`);
+
+            // Create word groups
+            const nodes = g.selectAll('.word-circle')
+                .data(root.leaves())
+                .enter()
+                .append('g')
+                .attr('class', 'word-circle')
+                .attr('transform', d => `translate(${d.x},${d.y})`)
+                .on('click', function(event, d) {
+                    // Remove previous selection
+                    d3.selectAll('.word-circle').classed('selected', false);
+                    // Add selection to clicked
+                    d3.select(this).classed('selected', true);
+
+                    selectedWord = d.data.text;
+                    showCommits(d.data.text, d.data.pos, d.data.size);
+                });
+
+            // Add filled background circle
+            nodes.append('circle')
+                .attr('class', d => `word-circle-bg pos-${d.data.pos}`)
+                .attr('r', d => d.r)
+                .attr('fill', d => d.data.color);
+
+            // Add selection ring
+            nodes.append('circle')
+                .attr('class', 'word-circle-border')
+                .attr('r', d => d.r + 1.5)
+                .attr('fill', 'none');
+
+            // Add text
+            nodes.append('text')
+                .attr('class', 'word-text')
+                .attr('text-anchor', 'middle')
+                .attr('dominant-baseline', 'central')
+                .style('fill', d => d.data.ink)
+                .style('font-size', d => `${Math.max(10, Math.min(18, d.r / 3))}px`)
+                .text(d => d.data.text)
+                .each(function(d) {
+                    // Wrap text if too long for circle
+                    const text = d3.select(this);
+                    const words = d.data.text.split(/\s+/);
+
+                    if (words.length > 1) {
+                        text.text('');
+                        words.forEach((word, i) => {
+                            text.append('tspan')
+                                .attr('x', 0)
+                                .attr('dy', i === 0 ? '-0.3em' : '1.1em')
+                                .text(word);
+                        });
+                    }
+                });
+        }
+
+        function showCommits(word, pos, frequency) {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('sidebar-content');
+
+            const commits = filteredData.commits[word] || [];
+            const color = `var(${posTokens[pos]})`;
+
+            let html = `
+                <div class="word-info">
+                    <h2>${word}</h2>
+                    <span class="word-type" style="--pos: ${color};">
+                        ${pos}
+                    </span>
+                    <div class="commit-count" style="margin-top: 10px;">
+                        ${commits.length} commit${commits.length !== 1 ? 's' : ''} from ${d3.timeFormat('%Y-%m-%d')(timeRange.extent()[0])} to ${d3.timeFormat('%Y-%m-%d')(d3.timeDay.offset(timeRange.extent()[1], -1))}
+                    </div>
+                    <div class="word-sub">
+                        Timeline Frequency: ${frequency}
+                    </div>
+                </div>
+            `;
+
+            if (commits.length === 0) {
+                html += '<p class="empty">No commits found for this word in the selected timeframe.</p>';
+            } else {
+                // Sort commits by date (newest first)
+                const sortedCommits = [...commits].sort((a, b) =>
+                    new Date(b.datetime) - new Date(a.datetime)
+                );
+
+                sortedCommits.forEach(commit => {
+                    const typeLabel = commit.type || 'other';
+                    html += `
+                        <div class="commit-item ${typeLabel}">
+                            <div class="commit-hash">${commit.hash}<span class="commit-type-badge ${typeLabel}">${typeLabel}</span></div>
+                            <div class="commit-date">${commit.date} • <span class="commit-author">${commit.author}</span></div>
+                            <div class="commit-subject">${commit.subject}</div>
+                            ${commit.files && commit.files.length > 0 ? `
+                                <div class="commit-files">
+                                    ${commit.files.slice(0, 5).map(f => `<div class="commit-file">${f}</div>`).join('')}
+                                    ${commit.files.length > 5 ? `<div class="commit-file">... and ${commit.files.length - 5} more</div>` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+            }
+
+            content.innerHTML = html;
+            sidebar.classList.add('active');
+
+            // Resize word cloud to accommodate sidebar
+            createPackedCircles();
+        }
+
+        document.getElementById('close-sidebar').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.remove('active');
+            selectedWord = null;
+            d3.selectAll('.word-circle').classed('selected', false);
+            createPackedCircles();
+        });
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            createPackedCircles();
+            // Restore sidebar if it was open
+            if (selectedWord && filteredData) {
+                const wordData = filteredData.words.find(w => w.text === selectedWord);
+                if (wordData) {
+                    showCommits(selectedWord, wordData.pos, wordData.size);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

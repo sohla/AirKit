@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commit Stream</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="timerange.js"></script>
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        body { overflow: hidden; }
+
+        .implementation { --cat: var(--c-2); }
+        .personality    { --cat: var(--c-1); }
+        .visual         { --cat: var(--c-3); }
+        .mixed          { --cat: var(--c-ink); }
+        .other          { --cat: var(--c-other); }
+
+        #container { display: flex; flex-direction: column; height: 100vh; }
+        .page-header { flex-shrink: 0; }
+
+        #controls {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+            padding: 14px 32px; border-bottom: 1px solid var(--ink); flex-shrink: 0;
+        }
+        #controls h3 { margin: 0 4px 0 0; }
+
+        .legend {
+            display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center;
+            margin-left: 16px; padding-left: 18px; border-left: 1px solid var(--hair);
+        }
+        .legend-item { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink); cursor: pointer; user-select: none; }
+        .legend-item:hover span { text-decoration: underline; text-underline-offset: 3px; }
+        .legend-color-box { width: 11px; height: 11px; border-radius: 50%; background: var(--cat); }
+        .legend-item.disabled { color: var(--ink-3); }
+        .legend-item.disabled .legend-color-box { background: transparent; box-shadow: inset 0 0 0 1px var(--ink-3); }
+
+        #time-range { flex: 1 1 100%; margin-top: 4px; }
+
+        #main-content { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+        #chart-container { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+
+        #stats {
+            display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 22px;
+            padding: 12px 32px; border-bottom: 1px solid var(--hair); font-size: 13px; flex-shrink: 0;
+        }
+        #stats .stat-value { font-size: 18px; margin-left: 6px; }
+        #stats .by-type { display: flex; flex-wrap: wrap; gap: 18px; color: var(--ink-2); }
+        #stats .by-type span[id] { font-family: var(--mono); color: var(--ink); margin-left: 4px; }
+        #stats .peak { color: var(--ink-2); margin-left: auto; }
+        #stats .peak span { font-family: var(--mono); color: var(--ink); }
+
+        #chart-area { flex: 1; min-height: 0; position: relative; }
+        #timeline-chart { position: absolute; inset: 0; }
+
+        #sidebar {
+            width: 450px; border-left: 1px solid var(--ink); overflow-y: auto;
+            padding: 24px; display: none; position: relative; background: var(--paper);
+        }
+        #sidebar.active { display: block; }
+        #sidebar h2 { margin: 0 0 6px; font-size: 22px; padding-right: 80px; }
+        #sidebar .period-info { padding-bottom: 14px; margin-bottom: 8px; border-bottom: 1px solid var(--ink); }
+        #sidebar .commit-count { font-family: var(--mono); color: var(--ink-2); font-size: 14px; }
+        #sidebar .period-sub { color: var(--ink-3); font-size: 13px; margin-top: 5px; }
+
+        .category-header {
+            margin: 16px 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px; color: var(--ink-3);
+        }
+        .category-header::before, .commit-type-badge::before, .tooltip-cat::before {
+            content: ''; display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+            background: var(--cat); margin-right: 7px; vertical-align: 0;
+        }
+
+        .commit-item { padding: 12px 0; border-bottom: 1px solid var(--hair); cursor: pointer; }
+        .commit-item:hover { background: var(--paper-2); }
+        .commit-hash { color: var(--ink-3); font-family: var(--mono); font-size: 12px; }
+        .commit-date { color: var(--ink-3); font-size: 12px; margin-top: 3px; font-family: var(--mono); }
+        .commit-author { color: var(--ink-2); font-family: var(--font); }
+        .commit-subject { color: var(--ink); margin-top: 6px; line-height: 1.4; }
+        .commit-type-badge { margin-left: 10px; font-size: 11px; color: var(--ink-2); font-family: var(--font); }
+        .commit-files { margin-top: 6px; }
+        .commit-file { color: var(--ink-3); font-size: 11px; font-family: var(--mono); padding: 1px 0; }
+
+        #close-sidebar { position: absolute; top: 22px; right: 22px; font-size: 12px; }
+
+        .stack-layer { fill: var(--cat); fill-opacity: .85; stroke: var(--paper); stroke-width: 1px; cursor: pointer; transition: fill-opacity .15s; }
+        .stack-layer:hover { fill-opacity: 1; }
+
+        .grid line { stroke: var(--hair-2); }
+        .grid path { display: none; }
+        .axis-label { fill: var(--ink-3); font-size: 12px; }
+
+        .tooltip { opacity: 0; transition: opacity .15s; }
+        .tooltip.visible { opacity: 1; }
+        .tooltip-date { font-weight: 500; margin-bottom: 3px; }
+        .tooltip-total { font-family: var(--mono); margin-bottom: 4px; }
+        .tooltip-cat { font-size: 12px; color: var(--ink-2); }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <header class="page-header">
+            <h1>Commit Stream</h1>
+            <p>Commits per period stacked by type around a centre line. Click a stream to list its commits.</p>
+        </header>
+
+        <div id="controls">
+            <h3>Group by</h3>
+            <button class="granularity-btn" data-granularity="day">Day</button>
+            <button class="granularity-btn active" data-granularity="week">Week</button>
+            <button class="granularity-btn" data-granularity="month">Month</button>
+
+            <div class="legend">
+                <h3>Show</h3>
+                <div class="legend-item implementation">
+                    <div class="legend-color-box"></div>
+                    <span>Implementation</span>
+                </div>
+                <div class="legend-item personality">
+                    <div class="legend-color-box"></div>
+                    <span>Personality</span>
+                </div>
+                <div class="legend-item visual">
+                    <div class="legend-color-box"></div>
+                    <span>Visual</span>
+                </div>
+                <div class="legend-item mixed">
+                    <div class="legend-color-box"></div>
+                    <span>Mixed</span>
+                </div>
+                <div class="legend-item other">
+                    <div class="legend-color-box"></div>
+                    <span>Other</span>
+                </div>
+            </div>
+
+            <div id="time-range"></div>
+        </div>
+
+        <div id="main-content">
+            <div id="chart-container">
+                <div id="stats">
+                    <div><span class="stat-label">Total commits</span><span class="stat-value" id="total-commits">0</span></div>
+                    <div class="by-type">
+                        <div><span class="swatch implementation" style="background: var(--cat)"></span>Implementation <span id="stat-implementation">0</span></div>
+                        <div><span class="swatch personality" style="background: var(--cat)"></span>Personality <span id="stat-personality">0</span></div>
+                        <div><span class="swatch visual" style="background: var(--cat)"></span>Visual <span id="stat-visual">0</span></div>
+                        <div><span class="swatch mixed" style="background: var(--cat)"></span>Mixed <span id="stat-mixed">0</span></div>
+                        <div><span class="swatch other" style="background: var(--cat)"></span>Other <span id="stat-other">0</span></div>
+                    </div>
+                    <div class="peak">Peak <span id="peak-activity">-</span></div>
+                </div>
+
+                <div id="chart-area">
+                    <svg id="timeline-chart"></svg>
+                </div>
+                <div class="tooltip"></div>
+            </div>
+
+            <div id="sidebar">
+                <button id="close-sidebar">Close</button>
+                <div id="sidebar-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let data = null;
+        let allCommits = [];
+        let currentGranularity = 'week';
+        let selectedPeriod = null;
+        let selectedCategory = null;
+        const CATEGORIES = ['implementation', 'personality', 'visual', 'mixed', 'other'];
+        let visibleCategories = Object.fromEntries(CATEGORIES.map(c => [c, true]));
+        let timeRange = null;
+
+        // Load and process data
+        d3.json('output/commits_data.json').then(function(loadedData) {
+            data = loadedData;
+
+            allCommits = data.commits_list
+                .map(commit => ({ ...commit, datetime: new Date(commit.datetime) }))
+                .sort((a, b) => a.datetime - b.datetime);
+
+            timeRange = TimeRange(document.getElementById('time-range'), {
+                dates: allCommits.map(c => c.datetime),
+                summary: extent => `${commitsInRange(extent).length} commits`,
+                onChange: () => updateVisualization(),
+            });
+
+            updateVisualization();
+        });
+
+        function commitsInRange([d0, d1]) {
+            return allCommits.filter(c => c.datetime >= d0 && c.datetime < d1);
+        }
+
+        function updateStats(commits) {
+            const counts = Object.fromEntries(CATEGORIES.map(c => [c, 0]));
+            commits.forEach(commit => {
+                if (commit.type in counts) counts[commit.type]++;
+            });
+            document.getElementById('total-commits').textContent = commits.length;
+            CATEGORIES.forEach(c => {
+                document.getElementById(`stat-${c}`).textContent = counts[c];
+            });
+        }
+
+        // Set up granularity buttons
+        document.querySelectorAll('.granularity-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.granularity-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentGranularity = this.dataset.granularity;
+                updateVisualization();
+            });
+        });
+
+        // Set up legend toggle buttons
+        document.querySelectorAll('.legend-item').forEach(item => {
+            const category = item.classList[1]; // Get category class (implementation, personality, etc.)
+            item.addEventListener('click', function() {
+                visibleCategories[category] = !visibleCategories[category];
+                this.classList.toggle('disabled', !visibleCategories[category]);
+                updateVisualization();
+            });
+        });
+
+        function groupCommitsByPeriod(commits, granularity) {
+            const interval = { day: d3.timeDay, week: d3.timeWeek, month: d3.timeMonth }[granularity];
+            const [d0, d1] = timeRange.extent();
+            const groups = new Map(interval.range(interval.floor(d0), d1).map(p =>
+                [p.getTime(), Object.fromEntries(CATEGORIES.map(c => [c, []]))]));
+
+            commits.forEach(commit => {
+                const key = interval.floor(commit.datetime).getTime();
+                groups.get(key)?.[commit.type || 'other'].push(commit);
+            });
+
+            return Array.from(groups.entries()).map(([timestamp, categoryCommits]) => ({
+                date: new Date(timestamp),
+                ...Object.fromEntries(CATEGORIES.map(c => [c, categoryCommits[c].length])),
+                commits: categoryCommits,
+                total: d3.sum(CATEGORIES, c => categoryCommits[c].length)
+            })).sort((a, b) => a.date - b.date);
+        }
+
+        function updateVisualization() {
+            if (!timeRange) return;
+            const commits = commitsInRange(timeRange.extent());
+            updateStats(commits);
+            const groupedData = groupCommitsByPeriod(commits, currentGranularity);
+
+            // Find peak activity
+            if (groupedData.length > 0) {
+                const peak = groupedData.reduce((max, d) => d.total > max.total ? d : max);
+                const periodLabel = currentGranularity === 'day' ? 'Day' :
+                                  currentGranularity === 'week' ? 'Week' : 'Month';
+                document.getElementById('peak-activity').textContent =
+                    `${peak.total} commits (${periodLabel} of ${peak.date.toLocaleDateString()})`;
+            }
+
+            drawChart(groupedData);
+        }
+
+        function drawChart(data) {
+            const area_ = document.getElementById('chart-area');
+            const width = area_.clientWidth;
+            const height = area_.clientHeight;
+            const margin = { top: 30, right: 40, bottom: 70, left: 40 };
+            const chartWidth = width - margin.left - margin.right;
+            const chartHeight = height - margin.top - margin.bottom;
+
+            const svg = d3.select('#timeline-chart')
+                .attr('width', width)
+                .attr('height', height);
+
+            svg.selectAll('*').remove();
+
+            if (data.length === 0) {
+                svg.append('text')
+                    .attr('x', width / 2)
+                    .attr('y', height / 2)
+                    .attr('text-anchor', 'middle')
+                    .attr('class', 'axis-label')
+                    .text('No commits found');
+                return;
+            }
+
+            const g = svg.append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            // Scales
+            const xScale = d3.scaleTime()
+                .domain(d3.extent(data, d => d.date))
+                .range([0, chartWidth]);
+
+            // Create stack with only visible categories
+            const allCategories = ['other', 'mixed', 'visual', 'personality', 'implementation'];
+            const categories = allCategories.filter(cat => visibleCategories[cat]);
+            
+            // Keep consistent order to prevent flipping when toggling
+            const stack = d3.stack()
+                .keys(categories)
+                .order(d3.stackOrderNone) // Fixed order instead of InsideOut
+                .offset(d3.stackOffsetSilhouette);
+
+            const stackedData = stack(data);
+            
+            // Calculate y domain from stacked data extent  
+            const yExtent = d3.extent(stackedData.flat().flat());
+            const yScale = d3.scaleLinear()
+                .domain(yExtent)
+                .nice()
+                .range([chartHeight, 0]);
+
+            // Grid
+            g.append('g')
+                .attr('class', 'grid')
+                .call(d3.axisLeft(yScale)
+                    .tickSize(-chartWidth)
+                    .tickFormat(''));
+
+            // Create area generator
+            const area = d3.area()
+                .x(d => xScale(d.data.date))
+                .y0(d => yScale(d[0]))
+                .y1(d => yScale(d[1]))
+                .curve(d3.curveBasisOpen);
+
+            const tooltip = d3.select('.tooltip');
+
+            // Draw stacked areas
+            g.selectAll('.stack-layer')
+                .data(stackedData)
+                .enter()
+                .append('path')
+                .attr('class', d => `stack-layer ${d.key}`)
+                .attr('d', area)
+                .style('display', d => visibleCategories[d.key] ? 'block' : 'none')
+                .on('mousemove', function(event, d) {
+                    // Find closest data point
+                    const [mouseX] = d3.pointer(event);
+                    const xDate = xScale.invert(mouseX);
+                    const bisect = d3.bisector(p => p.data.date).left;
+                    const idx = bisect(d, xDate);
+                    const closestData = d[idx] || d[d.length - 1];
+
+                    if (closestData) {
+                        const periodLabel = currentGranularity === 'day' ? 'Day' :
+                                          currentGranularity === 'week' ? 'Week' : 'Month';
+
+                        tooltip.html(`
+                            <div class="tooltip-date">${periodLabel} of ${closestData.data.date.toLocaleDateString()}</div>
+                            <div class="tooltip-total">Total: ${closestData.data.total} commits</div>
+                            <div class="tooltip-breakdown">
+                                ${closestData.data.implementation > 0 ? `<div class="tooltip-cat implementation">Implementation: ${closestData.data.implementation}</div>` : ''}
+                                ${closestData.data.personality > 0 ? `<div class="tooltip-cat personality">Personality: ${closestData.data.personality}</div>` : ''}
+                                ${closestData.data.visual > 0 ? `<div class="tooltip-cat visual">Visual: ${closestData.data.visual}</div>` : ''}
+                                ${closestData.data.mixed > 0 ? `<div class="tooltip-cat mixed">Mixed: ${closestData.data.mixed}</div>` : ''}
+                                ${closestData.data.other > 0 ? `<div class="tooltip-cat other">Other: ${closestData.data.other}</div>` : ''}
+                            </div>
+                        `)
+                        .style('left', (event.clientX + 12) + 'px')
+                        .style('top', (event.clientY - 30) + 'px')
+                        .classed('visible', true);
+                    }
+                })
+                .on('mouseout', function() {
+                    tooltip.classed('visible', false);
+                })
+                .on('click', function(event, d) {
+                    // Find closest data point
+                    const [mouseX] = d3.pointer(event);
+                    const xDate = xScale.invert(mouseX);
+                    const bisect = d3.bisector(p => p.data.date).left;
+                    const idx = bisect(d, xDate);
+                    const closestData = d[idx] || d[d.length - 1];
+
+                    if (closestData) {
+                        selectedPeriod = closestData.data;
+                        selectedCategory = d.key;
+                        showCommits(closestData.data, d.key);
+                    }
+                });
+
+            // Axes
+            const xAxis = d3.axisBottom(xScale)
+                .ticks(d3.timeMonth.every(1))
+                .tickFormat(d3.timeFormat('%b %Y'));
+
+            g.append('g')
+                .attr('class', 'axis')
+                .attr('transform', `translate(0,${chartHeight})`)
+                .call(xAxis)
+                .selectAll('text')
+                .attr('transform', 'rotate(-45)')
+                .style('text-anchor', 'end');
+
+            // Hide Y-axis for stream graph (wiggle offset creates meaningless negative positions)
+            // g.append('g')
+            //     .attr('class', 'axis')
+            //     .call(d3.axisLeft(yScale).ticks(5));
+
+            // Y-axis label (hide for stream graph)
+            // g.append('text')
+            //     .attr('transform', 'rotate(-90)')
+            //     .attr('y', -45)
+            //     .attr('x', -chartHeight / 2)
+            //     .attr('text-anchor', 'middle')
+            //     .attr('fill', '#888')
+            //     .attr('font-size', '14px')
+            //     .text('Number of Commits');
+
+        }
+
+        function showCommits(period, category) {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('sidebar-content');
+
+            const periodLabel = currentGranularity === 'day' ? 'Day' :
+                              currentGranularity === 'week' ? 'Week' : 'Month';
+
+            // Get commits from this period and category
+            const commits = period.commits[category] || [];
+
+            let html = `
+                <div class="period-info">
+                    <h2>${periodLabel} of ${period.date.toLocaleDateString()}</h2>
+                    <div class="commit-count" style="margin-top: 10px;">
+                        Total: ${period.total} commits
+                    </div>
+                    <div class="period-sub">
+                        ${category}: ${commits.length} commit${commits.length !== 1 ? 's' : ''}
+                    </div>
+                </div>
+            `;
+
+            // Sort commits by date (newest first)
+            const sortedCommits = [...commits].sort((a, b) =>
+                b.datetime - a.datetime
+            );
+
+            if (sortedCommits.length > 0) {
+                html += `<div class="category-header ${category}">${category.toUpperCase()}</div>`;
+
+                sortedCommits.forEach(commit => {
+                    const typeLabel = commit.type || 'other';
+                    html += `
+                        <div class="commit-item ${typeLabel}">
+                            <div class="commit-hash">${commit.hash}<span class="commit-type-badge ${typeLabel}">${typeLabel}</span></div>
+                            <div class="commit-date">${commit.date} • <span class="commit-author">${commit.author}</span></div>
+                            <div class="commit-subject">${commit.subject}</div>
+                            ${commit.files && commit.files.length > 0 ? `
+                                <div class="commit-files">
+                                    ${commit.files.slice(0, 5).map(f => `<div class="commit-file">${f}</div>`).join('')}
+                                    ${commit.files.length > 5 ? `<div class="commit-file">... and ${commit.files.length - 5} more</div>` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+            }
+
+            content.innerHTML = html;
+            sidebar.classList.add('active');
+            updateVisualization();
+        }
+
+        document.getElementById('close-sidebar').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.remove('active');
+            selectedPeriod = null;
+            selectedCategory = null;
+            updateVisualization();
+        });
+
+        window.addEventListener('resize', () => {
+            updateVisualization();
+        });
+    </script>
+</body>
+</html>
