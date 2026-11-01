@@ -41,21 +41,6 @@ var blendNow = 0.5;
 
 var step = 0;
 
-// Speakers. Each stereo voice writes its left to outBus and its right to
-// outBus + spread, wrapping at numChans - so 0 and 3 is front left and
-// back left on a quad rig, and outBus 3 with spread 1 is 3 and 0.
-//
-// Other ways to place a voice, kept here for reference:
-//  - rotate when the SynthDef is built:
-//      Out.ar(0, (sig ++ (0 ! (numChans - 2))).rotate(offset));
-//    wraps, but offset and numChans are fixed at build time, not per note.
-//  - pad with silent channels: Out.ar(0, (0 ! offset) ++ sig);
-//    adjacent channels only, and never wraps.
-//  - PanAz.ar(numChans, mono, pos) : a continuous position round a ring of
-//    speakers. Wraps naturally, mono in, suits IMU-driven movement.
-var outBus = 0;
-var spread = 3;
-var numChans = s.options.numOutputBusChannels;
 
 m.accelMassFilteredAttack = 0.7;
 m.accelMassFilteredDecay = 0.2;
@@ -116,6 +101,21 @@ SynthDef(\mellowPad11, { |out = 0, spread = 1, numChans = 2, freq = 130, amp = 0
 
 //------------------------------------------------------------
 ~init = ~init <> {
+	// Speakers. Each stereo voice writes its left to outBus and its right to
+	// outBus + spread, wrapping at numChans - so 0 and 3 is front left and
+	// back left on a quad rig, and outBus 3 with spread 1 is 3 and 0.
+	//
+	// Other ways to place a voice, kept here for reference:
+	//  - rotate when the SynthDef is built:
+	//      Out.ar(0, (sig ++ (0 ! (numChans - 2))).rotate(offset));
+	//    wraps, but offset and numChans are fixed at build time, not per note.
+	//  - pad with silent channels: Out.ar(0, (0 ! offset) ++ sig);
+	//    adjacent channels only, and never wraps.
+	//  - PanAz.ar(numChans, mono, pos) : a continuous position round a ring of
+	//    speakers. Wraps naturally, mono in, suits IMU-driven movement.
+	var outBus = 0;
+	var spread = 3;
+	var numChans = s.options.numOutputBusChannels;
 	var folder = PathName(kitFolder);
 
 	// Sample loading and nearest-sample lookup, both from

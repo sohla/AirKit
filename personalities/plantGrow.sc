@@ -2,12 +2,6 @@ var m = ~model;
 var dev = ~device;
 var group, synth, buffer;
 
-var samplePath = "~/Downloads/yourDNASamples/plant/plant grow_2.wav";
-// var samplePath = "~/Downloads/yourDNASamples/planetRadiation/The Planets_RADIATION_16.wav";
-// var samplePath = "~/Downloads/yourDNASamples/planetSong/The Planets_magnetic storm song_8.wav";
-
-var pushRate = 0.25;
-var sinkRate = 0.03;
 var grow = 0;
 var lastNow;
 
@@ -36,6 +30,10 @@ SynthDef(\plantGrow, { |out = 0, buf = 0, amp = 0, gate = 1,
 
 //------------------------------------------------------------
 ~init = ~init <> {
+	var samplePath = "~/Downloads/yourDNASamples/plant/plant grow_2.wav";
+	// var samplePath = "~/Downloads/yourDNASamples/planetRadiation/The Planets_RADIATION_16.wav";
+	// var samplePath = "~/Downloads/yourDNASamples/planetSong/The Planets_magnetic storm song_8.wav";
+
 	group = Group.new;
 
 	buffer = Buffer.readChannel(s, PathName(samplePath).fullPath, channels: [0], action: { |b|
@@ -74,6 +72,8 @@ SynthDef(\plantGrow, { |out = 0, buf = 0, amp = 0, gate = 1,
 
 //------------------------------------------------------------
 ~next = { |d|
+	var pushRate = 0.25;
+	var sinkRate = 0.03;
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var energy = m.accelMassFiltered;

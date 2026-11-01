@@ -2,9 +2,6 @@ var m = ~model;
 var dev = ~device;
 var group, synth, buffer;
 
-var samplePath = "~/Downloads/yourDNASamples/planets/The Planets__10.wav";
-
-var pitchRange = 7;
 
 m.accelMassFilteredAttack = 0.9;
 m.accelMassFilteredDecay = 0.06;
@@ -35,6 +32,8 @@ SynthDef(\spaceship, { |out = 0, buf = 0, amp = 0, gate = 1,
 
 //------------------------------------------------------------
 ~init = ~init <> {
+	var samplePath = "~/Downloads/yourDNASamples/planets/The Planets__10.wav";
+
 	group = Group.new;
 
 	buffer = Buffer.read(s, PathName(samplePath).fullPath, action: { |b|
@@ -73,6 +72,7 @@ SynthDef(\spaceship, { |out = 0, buf = 0, amp = 0, gate = 1,
 
 //------------------------------------------------------------
 ~next = { |d|
+	var pitchRange = 7;
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var energy = m.accelMassFiltered;

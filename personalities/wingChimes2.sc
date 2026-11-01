@@ -27,10 +27,12 @@ var group;
 		Pbind(
 			\instrument, \wingChimes2,
 			\group, group,
-			\note, Prand([0,7,14,21], inf),
-			\octave, Pseq([3,4], inf),
-			\pulseFreq, Pwhite(1, 3),
-			\numHarms, 30,
+			\note, Prand([0,7,11,16], inf),
+			\octave, Pseq([4,5,6], inf),
+			// \root, Pseq([0,5].stutter(20), inf),
+			\root, 0,
+			\pulseFreq, Pwhite(1, 12),
+			\numHarms, 8,
 			\func, Pfunc({|e| ~onEvent.(e)}),
 			\args, #[],
 		);
@@ -66,7 +68,7 @@ var group;
 
 	Pdef(m.ptn).set(\dur, dur);
 	// Pdef(m.ptn).set(\rq, rq);
-	Pdef(m.ptn).set(\amp, amp * 4);
+	Pdef(m.ptn).set(\amp, amp * 10);
 
 	if(m.accelMass > 0.1,{
 		if( Pdef(m.ptn).isPlaying.not,{

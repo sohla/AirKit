@@ -3,7 +3,7 @@ var group;
 var fxBus;
 var verbSynth;
 
-var beat = 0.8;
+var beat = 1.0;
 var divs = [1, 4, 6,8];
 var notes = [2,4,0,-1,-3].stutter(4);
 
@@ -79,6 +79,8 @@ SynthDef(\dropletVerb, {
 			\div,  Pswitch(divs.collect({ |n| Pn(n, n) }),             Pkey(\divIdx)),
 			\step, Pswitch(divs.collect({ |n| Pseries(0, 1, n) }),     Pkey(\divIdx)),
 			\dur,  Pkey(\div).reciprocal * beat,
+			\root, Pseq([0,5,-2,2,0].stutter(64), inf),
+			\func, Pfunc({ |e| m.com.root = e[\root] }),
 
 			\accent, Pfunc({ |e|
 				var st = e[\step] ? 0, dv = e[\div] ? 1;
@@ -90,7 +92,7 @@ SynthDef(\dropletVerb, {
 			\scale, Scale.minor,
 			\pick, Pfunc({ |e| if(e[\step] == 0, { 0 }, { (e[\pal] ? 1).rand }) }),
 			\note, Pfunc({ |e| notes[e[\pick].clip(0, notes.size - 1)] }),
-			\octave, Pfunc({ |e| if(e[\step] == 0, { 4}, { [5,6,7].choose }) }),
+			\octave, Pfunc({ |e| if(e[\step] == 0, { 3 }, { [3,4,5].choose }) }),
 
 			\attack, 0.001,
 			\filterRQ, Pwhite(0.5, 1.5),
@@ -145,6 +147,8 @@ SynthDef(\dropletVerb, {
 	Pdef(m.ptn).set(\wobble, 10);
 
 	Pdef(m.ptn).play(quant: beat);
+
+	m.com.root = 0;
 };
 
 //------------------------------------------------------------

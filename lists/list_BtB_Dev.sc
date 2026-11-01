@@ -82,6 +82,9 @@
 		"temp_input14",
 		"temp_input15",
 
+		"birdsong",
+		"whipbird",
+		"birdy",
 
 		"silence",
 	]
