@@ -189,7 +189,7 @@ SynthDef(\dropletVerb, {
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);
 	Pdef(m.ptn).set(\pal, pal);
-	Pdef(m.ptn).set(\gestAmp, amp.dbamp * vol);
+	Pdef(m.ptn).set(\gestAmp, amp.dbamp * vol * 0.5);
 	Pdef(m.ptn).set(\filterFreq, cut);
 	Pdef(m.ptn).set(\decay, ring);
 	Pdef(m.ptn).set(\wobble, wob);

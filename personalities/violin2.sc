@@ -164,7 +164,7 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, 
 
 	buffer = Buffer.read(s, path.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		synth = Synth(\pullstretchMonoQ,[\buffer,buf,\pch,-12.midiratio, \amp,0.4, \div, 10]);
+		synth = Synth(\pullstretchMonoQ,[\buffer,buf,\pch,0.midiratio, \amp,0.4, \div, 10]);
 	});
 };
 
@@ -185,7 +185,7 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, 
 
 	if(amp < 0.01, {amp = 0});
 
-	synth.set(\rate, rate/2);
+	synth.set(\rate, (rate/2) + 0.158);
 	synth.set(\speed, speed);
 	synth.set(\amp, amp * 12 * vol);
 	synth.set(\pan, pan);

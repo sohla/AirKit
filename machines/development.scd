@@ -17,9 +17,11 @@
 	// list: "list_Mel_26.sc",
 	// list: "list_alon26.sc",
 	// list: "list_ITR_Nic.sc",
-	// list: "list_yourDNA26.sc",
-	list: "list_BtB_Dev.sc",
+	// list: "list_yourDNA26.sc",	
+	// list: "list_BtB_Dev.sc",
 	// list: "list_glenroy.sc",
+	
+	list: "list_yarraGallery.sc",
 
 	secs: 0.01,
 	latency: 0.1,
