@@ -62,13 +62,15 @@ var group;
 //------------------------------------------------------------
 ~next = {|d|
 
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var dur = 0.3;// * 2.pow(m.accelMassFiltered.linlin(0,4,0,4).floor).reciprocal;
 	// var rq = m.accelMassFiltered.linexp(0,4,0.01,0.0001);
-	var amp = m.accelMassFiltered.linexp(0,2,1,30);
+	var amp = m.accelMassFiltered.linexp(0, 2 * sens, 1, 30);
 
 	Pdef(m.ptn).set(\dur, dur);
 	// Pdef(m.ptn).set(\rq, rq);
-	Pdef(m.ptn).set(\amp, amp * 10);
+	Pdef(m.ptn).set(\amp, amp * 10 * vol);
 
 	if(m.accelMass > 0.1,{
 		if( Pdef(m.ptn).isPlaying.not,{

@@ -5,9 +5,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 :root {
-    --paper:      #f5f5f2;
-    --paper-2:    #ebebe7;
-    --paper-3:    #dfdfda;
+    --paper:      #eef1f5;
+    --paper-2:    #e2e7ed;
+    --paper-3:    #d3dae3;
     --ink:        #1d1d1b;
     --ink-2:      #4a4741;
     --ink-3:      #8a847a;

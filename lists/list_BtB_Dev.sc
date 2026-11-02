@@ -86,6 +86,8 @@
 		"whipbird",
 		"birdy",
 
+		"insects2",
+
 		"silence",
 	]
 )

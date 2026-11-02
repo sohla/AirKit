@@ -94,7 +94,7 @@ SynthDef(\celesteVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 
 			\dur, Pseq([0.5, Rest(0.5), 0.25, 0.25, 0.5, Rest(0.25), 0.75, 0.25, Rest(0.5), 0.5, 0.25] * 0.5, inf),
 			\note, Pseq([0, 2, 4, 7, 9], inf),
-			\octave, Pseq([6, 6, 7, 6, 5, 6, 7], inf),
+			// \octave, Pseq([6, 6, 7, 6, 5, 6, 7], inf),
 			// \root, 0,
 			\legato, 0.4,
 			\pan, Pwhite(-1.0, 1.0),
@@ -166,8 +166,9 @@ SynthDef(\celesteVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var amp = m.accelMassFiltered.lincurve(0, 1.4 * sens, -30, -4, -1);
+	var amp = m.accelMassFiltered.lincurve(0, 1.4 * sens, -30, -10, -1);
 	var release = m.accelMassFiltered.lincurve(0, 1.4 * sens, 2.6, 0.5, 2);
+	var oct = ((d.sensors.gyroEvent.y / pi).fold(-0.5,0.5) * 2.0).linlin(-1, 1, 4, 7).round.asInteger;
 
 	if(amp < 29.neg, { amp = 90.neg });
 
@@ -175,6 +176,7 @@ SynthDef(\celesteVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\release, release);
 	Pdef(m.ptn).set(\root, m.com.root ? 0);
+	Pdef(m.ptn).set(\octave, oct);
 
 	if(m.accelMassFiltered > 0.03, {
 		if(Pdef(m.ptn).isPlaying.not, {

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sound Vocabulary</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<link rel="stylesheet" href="theme.css">
+<style>
+    #controls { display: flex; flex-wrap: wrap; gap: 14px 20px; align-items: center; margin-top: 16px; font-size: 13px; color: var(--ink-2); }
+    #controls label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+    #count { color: var(--ink-3); font-size: 12px; font-family: var(--mono); }
+    #legend { display: flex; gap: 14px; align-items: center; font-size: 12px; color: var(--ink-2); }
+    #legend .swatch { border-radius: 2px; }
+    #groups { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+    #groups .n { font-family: var(--mono); font-size: 11px; opacity: .7; margin-left: 4px; }
+
+    #shell { display: flex; align-items: flex-start; }
+    #matrixWrap { flex: 0 1 auto; overflow: auto; max-height: 100vh; padding: 0 0 20px 32px; }
+    #detail {
+        flex: 1; min-width: 360px; position: sticky; top: 0; max-height: 100vh;
+        overflow-y: auto; padding: 22px 32px 60px; border-left: 1px solid var(--ink);
+    }
+
+    svg text { font-size: 11px; }
+    .rowLabel { cursor: pointer; font-family: var(--mono); fill: var(--ink-2); }
+    .rowLabel:hover, .rowLabel.active { fill: var(--ink); font-weight: 500; }
+    .rowHit { fill: transparent; cursor: pointer; }
+    .rowHit:hover { fill: var(--paper-2); }
+    .rowHit.active { fill: var(--paper-3); }
+    .colLabel { font-family: var(--mono); fill: var(--ink); cursor: default; }
+    .groupLabel { fill: var(--ink-3); font-size: 10px; text-transform: uppercase; letter-spacing: 1.4px; }
+    .colCount { fill: var(--ink-3); font-size: 10px; }
+
+    #tip { display: none; max-width: 340px; }
+    #tip .k { color: var(--ink-3); }
+
+    #empty { color: var(--ink-3); padding-top: 30px; font-size: 14px; }
+    h2 { font-size: 24px; margin: 0; }
+    .meta { color: var(--ink-3); font-size: 12px; margin: 4px 0 18px; font-family: var(--mono); }
+    #detail h3 { margin: 22px 0 8px; }
+    .dflt { color: var(--ink-3); }
+
+    table.ugens { border-collapse: collapse; font-size: 13px; }
+    table.ugens td { padding: 2px 14px 2px 0; vertical-align: top; }
+    table.ugens td.g { color: var(--ink-3); font-family: var(--font); font-size: 12px; }
+
+    .section { margin-top: 14px; }
+    .section .name { color: var(--ink-2); font-size: 12px; }
+    .line { display: flex; gap: 10px; font-size: 12px; padding: 2px 0; }
+    .line .n { color: var(--ink-3); flex: 0 0 34px; text-align: right; }
+    .line code { white-space: pre-wrap; word-break: break-word; color: var(--ink); }
+    .line code mark { background: none; color: var(--c-1); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+    <h1>Sound Vocabulary</h1>
+    <p class="blurb">One row per p-file, one column per UGen. Each cell shows how many times the file's live (uncommented) code calls that UGen.
+        Columns are grouped by the job the UGen does, most-used first; the number after each name is how many p-files use it.
+        Click a group to hide or show it, and a row to see the lines behind it.</p>
+    <div id="controls">
+        <label>sort
+            <select id="sort">
+                <option value="profile">by UGen profile</option>
+                <option value="name">by name</option>
+                <option value="born">by date born</option>
+                <option value="modified">by last modified</option>
+                <option value="distinct">by distinct UGens</option>
+            </select>
+        </label>
+        <input type="text" id="search" placeholder="filter p-files…">
+        <label><input type="checkbox" id="hideEmpty" checked> hide files with no UGens</label>
+        <span id="count"></span>
+        <span id="legend"></span>
+    </div>
+    <div id="groups"></div>
+</header>
+
+<div id="shell">
+    <div id="matrixWrap"><svg id="matrix"></svg></div>
+    <div id="detail"><p id="empty">Click a row to see the lines behind it.</p></div>
+</div>
+
+<div id="tip"></div>
+
+<script>
+const CELL = 14, GAP = 2, LABEL_W = 170, HEAD_H = 130, GROUP_GAP = 12;
+
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const tip = d3.select('#tip');
+function showTip(event, html) {
+    tip.html(html).style('display', 'block');
+    const w = tip.node().offsetWidth;
+    const x = event.clientX + 14 + w > window.innerWidth ? event.clientX - w - 14 : event.clientX + 14;
+    tip.style('left', x + 'px').style('top', (event.clientY + 14) + 'px');
+}
+function hideTip() { tip.style('display', 'none'); }
+
+function escapeHtml(s) {
+    return s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+d3.json('output/sound_vocabulary.json').then(data => {
+    const files = data.files;
+    const groups = data.groups.filter(g => data.columns.some(c => c.group === g));
+    const hidden = new Set();
+    let active = null;
+
+    const maxCount = d3.max(files, f => d3.max(Object.values(f.counts).concat([1])));
+    const shade = d3.scaleSequentialSqrt([1, Math.min(maxCount, 10)],
+        d3.interpolateRgb(css('--seq-0'), css('--seq-1'))).clamp(true);
+
+    d3.select('#legend').html(
+        [1, 2, 4, 10].map(n => `<span><span class="swatch" style="background:${shade(n)}"></span>${n}${n === 10 ? '+' : ''}</span>`).join('')
+    );
+
+    d3.select('#groups').selectAll('button').data(groups).join('button')
+        .classed('active', true)
+        .html(g => `${g}<span class="n">${data.columns.filter(c => c.group === g).length}</span>`)
+        .on('click', function (e, g) {
+            hidden.has(g) ? hidden.delete(g) : hidden.add(g);
+            d3.select(this).classed('active', !hidden.has(g));
+            render();
+        });
+
+    const svg = d3.select('#matrix');
+    const head = svg.append('g');
+    const body = svg.append('g').attr('transform', `translate(0,${HEAD_H})`);
+
+    function layout(columns) {
+        const colX = new Map(), spans = [];
+        let x = LABEL_W, prev = null;
+        columns.forEach(c => {
+            if (c.group !== prev) {
+                if (prev !== null) x += GROUP_GAP;
+                spans.push({ group: c.group, x0: x });
+                prev = c.group;
+            }
+            colX.set(c.key, x);
+            spans[spans.length - 1].x1 = x + CELL;
+            x += CELL + GAP;
+        });
+        return { colX, spans, width: x + 10 };
+    }
+
+    function render() {
+        const columns = data.columns.filter(c => !hidden.has(c.group));
+        const keys = new Set(columns.map(c => c.key));
+        const { colX, spans, width } = layout(columns);
+        const hideEmpty = d3.select('#hideEmpty').property('checked');
+        const query = d3.select('#search').property('value').trim().toLowerCase();
+        const sort = d3.select('#sort').property('value');
+
+        const shown = f => Object.keys(f.counts).filter(k => keys.has(k));
+        const profile = f => { const s = new Set(shown(f)); return columns.map(c => s.has(c.key) ? '1' : '0').join(''); };
+
+        let rows = files.filter(f => !query || f.name.toLowerCase().includes(query));
+        if (hideEmpty) rows = rows.filter(f => shown(f).length > 0);
+
+        const byName = (a, b) => d3.ascending(a.name.toLowerCase(), b.name.toLowerCase());
+        const sorters = {
+            name: byName,
+            born: (a, b) => d3.ascending(a.born || '9', b.born || '9') || byName(a, b),
+            modified: (a, b) => d3.descending(a.date || '', b.date || '') || byName(a, b),
+            distinct: (a, b) => d3.descending(shown(a).length, shown(b).length) || byName(a, b),
+            profile: (a, b) => d3.descending(profile(a), profile(b)) || byName(a, b),
+        };
+        rows.sort(sorters[sort]);
+
+        d3.select('#count').text(`${rows.length} of ${files.length} p-files · ${columns.length} UGens`);
+        svg.attr('width', width + 90).attr('height', HEAD_H + rows.length * (CELL + GAP) + 10);
+
+        head.selectAll('*').remove();
+        spans.forEach(s => {
+            head.append('line').attr('x1', s.x0).attr('x2', s.x1).attr('y1', 14).attr('y2', 14).attr('stroke', css('--ink'));
+            head.append('text').attr('class', 'groupLabel').attr('x', s.x0).attr('y', 10)
+                .text(s.group.length * 7 < s.x1 - s.x0 + GROUP_GAP ? s.group : s.group.split(' ')[0]);
+        });
+        columns.forEach(c => {
+            const users = files.filter(f => f.counts[c.key]).map(f => f.name);
+            head.append('text').attr('class', 'colLabel')
+                .attr('transform', `translate(${colX.get(c.key) + CELL / 2 + 4},${HEAD_H - 8}) rotate(-60)`)
+                .text(c.key)
+                .on('mousemove', e => showTip(e,
+                    `<b class="mono">${c.key}</b> <span class="k">${c.group}</span><br>` +
+                    `<b>${c.files}</b> p-file${c.files > 1 ? 's' : ''}: <span class="mono">${users.slice(0, 30).join(', ')}${users.length > 30 ? ', …' : ''}</span>`))
+                .on('mouseleave', hideTip)
+                .append('tspan').attr('class', 'colCount').text(`  ${c.files}`);
+        });
+
+        const row = body.selectAll('g.row').data(rows, f => f.name)
+            .join(enter => {
+                const g = enter.append('g').attr('class', 'row');
+                g.append('rect').attr('class', 'rowHit').attr('x', 0).attr('y', -1).attr('height', CELL + GAP);
+                g.append('text').attr('class', 'rowLabel').attr('x', LABEL_W - 10).attr('y', CELL - 3)
+                    .attr('text-anchor', 'end').text(f => f.name);
+                g.on('click', (e, f) => select(f));
+                return g;
+            })
+            .attr('transform', (f, i) => `translate(0,${i * (CELL + GAP)})`);
+
+        row.select('.rowHit').attr('width', width).classed('active', f => f === active);
+        row.select('.rowLabel').classed('active', f => f === active);
+
+        row.selectAll('rect.cell')
+            .data(f => columns.filter(c => f.counts[c.key]).map(c => ({ f, c, n: f.counts[c.key] })), d => d.c.key)
+            .join('rect')
+            .attr('class', 'cell')
+            .attr('x', d => colX.get(d.c.key)).attr('y', 0)
+            .attr('width', CELL).attr('height', CELL).attr('rx', 2)
+            .attr('fill', d => shade(d.n))
+            .on('mousemove', (e, d) => showTip(e,
+                `<b class="mono">${d.f.name}</b> · <span class="mono">${d.c.key}</span><br>` +
+                `<span class="k">calls</span> ${d.n}`))
+            .on('mouseleave', hideTip);
+    }
+
+    function select(f) {
+        active = f;
+        render();
+        const detail = d3.select('#detail').html('');
+        detail.append('h2').attr('class', 'mono').text(f.name);
+        detail.append('div').attr('class', 'meta')
+            .text(`born ${f.born || '?'} · last modified ${f.date || '?'} · ${f.synthdefs} SynthDef${f.synthdefs === 1 ? '' : 's'} · ${Object.keys(f.counts).length} distinct UGens`);
+
+        detail.append('h3').text('UGens by job');
+        const table = detail.append('table').attr('class', 'ugens mono');
+        groups.forEach(g => {
+            const used = data.columns.filter(c => c.group === g && f.counts[c.key]);
+            if (used.length) table.append('tr').html(`<td class="g">${g}</td><td>${used.map(c => `${c.key}${f.counts[c.key] > 1 ? ' ×' + f.counts[c.key] : ''}`).join(', ')}</td>`);
+        });
+        if (!Object.keys(f.counts).length) detail.append('div').attr('class', 'dflt').text('none');
+
+        detail.append('h3').text('lines that call a UGen');
+        if (!f.lines.length) detail.append('div').attr('class', 'dflt').text('none');
+        d3.groups(f.lines, l => l.section).forEach(([section, lines]) => {
+            const s = detail.append('div').attr('class', 'section');
+            s.append('div').attr('class', 'name mono').text(`~${section}`);
+            lines.forEach(l => {
+                let html = escapeHtml(l.text);
+                l.keys.forEach(k => {
+                    html = html.replace(new RegExp(`\\b${k}\\.(ar|kr|ir)\\b`, 'g'), m => `<mark>${m}</mark>`);
+                });
+                s.append('div').attr('class', 'line mono').html(`<span class="n">${l.line}</span><code>${html}</code>`);
+            });
+        });
+    }
+
+    d3.selectAll('#sort, #hideEmpty').on('change', render);
+    d3.select('#search').on('input', render);
+    render();
+});
+</script>
+</body>
+</html>

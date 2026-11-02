@@ -33,6 +33,7 @@ ANALYZERS = [
     ('analyze_file_networks.py',    'file_networks.json'),
     ('work_type_analyzer.py',       'work_type_data.json'),
     ('analyze_sensor_matrix.py',    'sensor_matrix.json'),
+    ('analyze_sound_vocabulary.py', 'sound_vocabulary.json'),
     ('analyze_personality_code.py', 'personality_code_data.json'),
     ('personality_analyzer.py',     'personality_similarities.json'),
     ('analyze_personality_history.py', 'personality_history.json'),

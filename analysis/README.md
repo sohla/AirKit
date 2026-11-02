@@ -51,6 +51,7 @@ data together.
 | `personality_analyzer.py` | `personality_similarities.json` | `personality_similarities` | <1s |
 | `analyze_personality_history.py` | `personality_history.json` | `personality_archive` | ~19s |
 | `analyze_sensor_matrix.py` | `sensor_matrix.json` | `sensor_matrix` | <1s |
+| `analyze_sound_vocabulary.py` | `sound_vocabulary.json` | `sound_vocabulary` | <1s |
 
 `analyze_personality_code.py` is the one slow analyzer left: it shells out to
 `git show` once per commit. `analyze_git.py` used to as well and now takes the
@@ -279,6 +280,10 @@ on every run. If you change the scope, change it in all of them.
   `GIT_SCOPE` does not apply; git is used only for each file's born and
   last-modified dates. Commented-out lines are not counted, and reads inside
   `~plot` are kept apart as probes.
+- **`sound_vocabulary.json` likewise reads the working tree.** It counts live
+  `Name.ar/kr/ir` calls only, so commented-out UGens are left out. The job
+  groups are a hand-written table in the analyser; a UGen missing from it
+  lands under "other" until it is filed.
 - **The `2024-01-01` floor excludes 317 commits**, all of 2017–2023, about a
   quarter of the repo's history. Deliberate, but easy to forget when reading
   a chart that starts abruptly in 2024.

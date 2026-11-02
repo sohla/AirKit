@@ -2,8 +2,9 @@ var m  = ~model;
 
 var group;
 var clock;
-var eventTypeName = (\birdy_ ++ m.ptn).asSymbol;
-var whipPtn       = (m.ptn ++ "whip").asSymbol;
+var chirpPtn  = m.ptn;
+var chirpType = (\birdy_ ++ m.ptn).asSymbol;
+var whipPtn   = (m.ptn ++ "whip").asSymbol;
 
 var energy    = 0;
 var prevEnergy = 0;
@@ -13,31 +14,17 @@ var restFloor = 0.25;
 var urgent    = false;
 var lastFlick = 0;
 var muted     = false;
+var birdPan   = 0;
+var 1nding = false;
 
-var idlePcs   = [0, 2, 4, 7, 9];
-var flickPending = false;
-var ampFloor  = -60.dbamp;
+var whipGap   = 8;
 
-var whipBase      = 61+12;
-var whipIdleNotes = [0, 4, 7, 11, 14];
-var whipGap       = 8;
+var chirpQueue = [];
+var chirpNote  = nil;
+var gapLeft    = 0;
+var lastMidi   = 95;
 
-
-var queue   = [];
-var cur     = nil;
-var gapLeft = 0;
-var lastMidi = 95;
-
-var midiLo = 86, midiHi = 100;
-
-var motifTrillLo     = 0.003, motifTrillHi     = 0.007;
-var motifTrillLongLo = 0.008, motifTrillLongHi = 0.014;
-var motifTrateLo     = 2.75,  motifTrateHi     = 4.5;
-
-var shrillTrillLo    = 0.035, shrillTrillHi    = 0.07;
-var shrillTrateLo    = 7.5,  shrillTrateHi    = 15;
-
-var freqComp, scaleNotes, unitBeats, shrillRun, buildPhrase, gapFor, step, sense;
+var freqComp, scaleNotes, unitBeats, shrillRun, buildPhrase, gapFor, chirpStep, sense;
 
 //------------------------------------------------------------
 m.accelMassFilteredAttack = 0.95;
@@ -131,11 +118,11 @@ SynthDef(\birdyWhip, {
 //------------------------------------------------------------
 freqComp = { |freq| (2000 / freq).sqrt.clip(0.45, 1.3) };
 
-scaleNotes = { |pcsIn|
-	var lo = midiLo + tiltOct, hi = midiHi + tiltOct;
-	var use = if (pcsIn.isNil or: { pcsIn.isEmpty }) { idlePcs } { pcsIn };
+scaleNotes = { |chirpPcs|
+	var chirpLo = 86, chirpHi = 100;
+	var lo = chirpLo + tiltOct, hi = chirpHi + tiltOct;
 	var notes = [];
-	(lo..hi).do { |n| if (use.includes(n % 12)) { notes = notes.add(n) } };
+	(lo..hi).do { |n| if (chirpPcs.includes(n % 12)) { notes = notes.add(n) } };
 	if (notes.isEmpty) { notes = [lo + 9] };
 	notes
 };
@@ -146,6 +133,8 @@ unitBeats = {
 };
 
 shrillRun = { |fromMidi, k|
+	var shrillTrillLo = 0.035, shrillTrillHi = 0.07;
+	var shrillTrateLo = 7.5,   shrillTrateHi = 15;
 	var u = unitBeats.();
 	var sb = (u * 0.5).max(0.25) * rrand(0.5, 1.5);
 	var base = (fromMidi + 12 + 5.rand).clip(100, 112);
@@ -167,8 +156,11 @@ shrillRun = { |fromMidi, k|
 	}
 };
 
-buildPhrase = { |pcsIn, maxN, shrillOK|
-	var notes = scaleNotes.(pcsIn);
+buildPhrase = { |chirpPcs, maxN, shrillOK|
+	var motifTrillLo     = 0.003, motifTrillHi     = 0.007;
+	var motifTrillLongLo = 0.008, motifTrillLongHi = 0.014;
+	var motifTrateLo     = 2.75,  motifTrateHi     = 4.5;
+	var notes = scaleNotes.(chirpPcs);
 	var u = unitBeats.();
 	var n, idx, out = [];
 	var e = energy.clip(restFloor, 1.5);
@@ -207,40 +199,41 @@ gapFor = { |gMin, gMax|
 	energy.clip(restFloor, 1.3).linlin(restFloor, 1.3, gMax, gMin).round.asInteger
 };
 
-step = { |e|
+chirpStep = { |e|
+	var ampFloor = -60.dbamp;
 	var beats   = 0.5;
 	var amp     = (e[\amp] ? 0);
 	var gMin    = (e[\gapMin] ? 2);
 	var gMax    = (e[\gapMax] ? 16);
 	var maxN    = (e[\notes]  ? 8);
 	var shrillOK = (e[\shrill] ? 1) > 0;
-	cur = nil;
+	chirpNote = nil;
 	if (muted.not and: { group.notNil } and: { amp > ampFloor }) {
 		if (flickPending) {
 			flickPending = false;
 			if (shrillOK and: { energy > restFloor }) {
-				queue = shrillRun.(lastMidi, rrand(3, 6)) ++ queue;
+				chirpQueue = shrillRun.(lastMidi, rrand(3, 6)) ++ chirpQueue;
 			};
 		};
-		if (queue.isEmpty) {
+		if (chirpQueue.isEmpty) {
 			if ((energy > restFloor) and: { urgent or: { gapLeft <= 0 } }) {
-				queue = buildPhrase.(e[\pcs], maxN, shrillOK);
+				chirpQueue = buildPhrase.(e[\pcs], maxN, shrillOK);
 				urgent = false;
 			} {
 				gapLeft = gapLeft - 1;
 			};
 		} {
-			if ((energy < (restFloor * 0.8)) and: { queue.size > 1 }) {
-				queue = queue.keep(1);
+			if ((energy < (restFloor * 0.8)) and: { chirpQueue.size > 1 }) {
+				chirpQueue = chirpQueue.keep(1);
 			};
 		};
-		if (queue.notEmpty) {
-			cur = queue.removeAt(0);
-			beats = cur[\beats];
-			if (queue.isEmpty) { gapLeft = gapFor.(gMin, gMax) };
+		if (chirpQueue.notEmpty) {
+			chirpNote = chirpQueue.removeAt(0);
+			beats = chirpNote[\beats];
+			if (chirpQueue.isEmpty) { gapLeft = gapFor.(gMin, gMax) };
 		};
 	} {
-		queue = [];
+		chirpQueue = [];
 	};
 	beats
 };
@@ -267,13 +260,14 @@ sense = { |d|
 	clock = TempoClock(2);
 	group = Group.new;
 
-	Event.addEventType(eventTypeName, { |e|
-		var n = cur;
+	Event.addEventType(chirpType, { |e|
+		var n = chirpNote;
 		if (n.notNil and: { group.notNil } and: { muted.not }) {
 			var tempo = clock !? { |c| c.tempo } ? 4;
 			var midi  = n[\note];
 			var freq  = midi.midicps;
 			var gain  = (~amp ? 0);
+			var chirpSpread = 0.3;
 			~instrument = \birdyChirp;
 			~out    = 0;
 			~group  = group;
@@ -282,7 +276,7 @@ sense = { |d|
 			~g1     = n[\g1];
 			~secs   = (n[\beats] / tempo).clip(0.035, 0.6);
 			~amp    = gain * n[\ampScale] * freqComp.(freq);
-			~pan    = n[\pan];
+			~pan    = (birdPan + (n[\pan] * chirpSpread)).clip(-1, 1);
 			~trill  = n[\trill];
 			~trate  = n[\trate];
 			~bright = n[\bright];
@@ -293,27 +287,27 @@ sense = { |d|
 		};
 	});
 
-	Pdef(m.ptn, Pbind(
-		\type, eventTypeName,
-		\dur,  Pfunc { |e| step.(e) }
+	Pdef(chirpPtn, Pbind(
+		\type, chirpType,
+		\dur,  Pfunc { |e| chirpStep.(e) }
 	));
-	Pdef(m.ptn).set(\amp, 0, \pcs, idlePcs, \notes, 8,
-		\gapMin, 2, \gapMax, 16, \shrill, 1);
-	Pdef(m.ptn).play(clock);
+	Pdef(chirpPtn).set(\amp, 0);
+	Pdef(chirpPtn).play(clock);
 
 	Pdef(whipPtn,
 		Pbind(
 			\instrument, \birdyWhip,
 			\group, group,
-			\pan, Pwhite(-1.0, 1.0),
+			\pan, Pfunc { birdPan },
 			\dur, Pfunc { whipGap },
+			\turn, Pfunc { if (chirpQueue.isEmpty and: { chirpNote.isNil }) { 0 } { Rest(0) } },
 			\sustain, 2,
 			\reverbMix, 0.5,
 			\reverbTime, 3.0,
 			\reverbSize, 0.7
 		);
 	);
-	Pdef(whipPtn).set(\amp, 0, \freq, whipBase.midicps);
+	Pdef(whipPtn).set(\amp, 0);
 	Pdef(whipPtn).play(clock);
 };
 
@@ -324,10 +318,10 @@ sense = { |d|
 	group = nil;
 	clock = nil;
 	muted = true;
-	queue = []; cur = nil;
-	Pdef(m.ptn).remove;
+	chirpQueue = []; chirpNote = nil;
+	Pdef(chirpPtn).remove;
 	Pdef(whipPtn).remove;
-	Event.eventTypes.removeAt(eventTypeName);
+	Event.eventTypes.removeAt(chirpType);
 	c !? { c.stop };
 	if (g.notNil) {
 		fork {
@@ -340,27 +334,34 @@ sense = { |d|
 
 //------------------------------------------------------------
 ~next = { |d|
-	var chirpGain = -8;
+	var chirpPcs  = [0,4];
+	var chirpGain = -23;
+	var whipBase  = 61;
+	var whipNotes = [0,2,5,7];
 	var whipGain  = -2;
+	var panDrift  = 0.01;
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol  = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var wAmp = m.accelMassFiltered.lincurve(0, 0.6 * sens, -40, 0, -2);
-	var wN   = m.gyroYFiltered.lincurve(-1.0, 1.0, 0, whipIdleNotes.size, -1)
-		.asInteger.clip(0, whipIdleNotes.size - 1);
-	var bAmp = m.accelMassFiltered.lincurve(restFloor, restFloor + (0.6 * sens), -30, 0, -2);
+	var chirpDb = m.accelMassFiltered.lincurve(restFloor, restFloor + (0.6 * sens), -30, 0, -2);
+	var whipDb  = m.accelMassFiltered.lincurve(0, 0.6 * sens, -40, 0, -2);
+	var whipIdx = m.gyroYFiltered.lincurve(-1.0, 1.0, 0, whipNotes.size, -1)
+		.asInteger.clip(0, whipNotes.size - 1);
 
 	sense.(d);
+	birdPan = (birdPan + panDrift.rand2).fold(-0.8, 0.8);
 
-	if(wAmp < -38, { wAmp = -110 });
-	if(m.accelMassFiltered <= restFloor, { bAmp = -110 });
+	if(m.accelMassFiltered <= restFloor, { chirpDb = -110 });
+	if(whipDb < -38, { whipDb = -110 });
 
-	Pdef(m.ptn).set(\amp, (bAmp + chirpGain).dbamp * vol);
-	Pdef(m.ptn).set(\pcs, idlePcs);
-	Pdef(m.ptn).set(\notes, 8, \gapMin, 2, \gapMax, 16, \shrill, 0.2);
+	Pdef(chirpPtn).set(\amp, (chirpDb + chirpGain).dbamp * vol);
+	Pdef(chirpPtn).set(\pcs, chirpPcs);
+	Pdef(chirpPtn).set(\notes, 8, \gapMin, 2, \gapMax, 16, \shrill, 0.2);
 
-	whipGap = 8;
-	Pdef(whipPtn).set(\amp, (wAmp + whipGain).dbamp * vol);
-	Pdef(whipPtn).set(\freq, (whipBase + whipIdleNotes[wN]).midicps);
+	// whipGap = 1;
+	whipGap = m.accelMassFiltered.lincurve(0.0, 2.6 * sens, 2, 0.1, -1);
+
+	Pdef(whipPtn).set(\amp, (whipDb + whipGain).dbamp * vol);
+	Pdef(whipPtn).set(\freq, (whipBase + whipNotes[whipIdx]).midicps);
 	Pdef(whipPtn).set(\swoopDelay, 0.0);
 	Pdef(whipPtn).set(\gliss, 0.07);
 };
