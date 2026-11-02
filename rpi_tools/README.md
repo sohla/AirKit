@@ -65,6 +65,12 @@ For your own `ssh`, run `ssh-keygen -R pi.local` once per reflash.
 
 Only one card named `pi` should be on the network at a time.
 
+**Powering off:** use `./poweroff.sh`. It shuts the Pi down, waits for the
+network to drop and then a further 20 s, and says when it's safe. Remove power
+only once the Pi 5's LED is solid red or off. SSH stops answering *before*
+the last writes to the card, and pulling power then corrupts the filesystem
+(round 2b). goss checks the kernel log for filesystem errors on every verify.
+
 ## The lab network
 
 ```
@@ -115,7 +121,7 @@ guided checklist recorded into the same report.
 ## Layout
 
 ```
-bootstrap.sh find-pi.sh provision.sh verify.sh round.sh   entry points
+bootstrap.sh find-pi.sh provision.sh verify.sh round.sh poweroff.sh   entry points
 survey-kit.sh                     read-only snapshot of a kit (ssh pi@kit 'bash -s' < survey-kit.sh)
 lib.sh                            shared: paths, ssh options, MAC→kit
 ansible/site.yml                  the role list, in order

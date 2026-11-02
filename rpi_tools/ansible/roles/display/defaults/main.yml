@@ -1,0 +1,3 @@
+# Waveshare 10.1" DSI LCD (C) on CAM/DISP 1 (the overlay's default port).
+# For CAM/DISP 0, append ",dsi0".
+display_overlay: vc4-kms-dsi-waveshare-panel,10_1_inch

@@ -4,6 +4,27 @@ One entry per test round. Newest first.
 
 ---
 
+## Round 2b — 2026-11-02 — airkit5, display step 1 (abandoned)
+
+Pi powered off over SSH to reseat the DSI ribbon (CAM/DISP 1), then powered
+on. The next provision failed in `apt`: a corrupt package list. The kernel log
+showed **EXT4 checksum errors on the root partition** from 4 s after boot. The
+filesystem was damaged, most likely because power was removed before the
+shutdown finished writing to the card (SSH stops answering before that).
+
+**Outcome:** card to be reflashed, not repaired; a round on a card we can't
+trust proves nothing. If the errors come back on a fresh flash, replace the
+card.
+
+**Added:** `poweroff.sh` (waits, then says when it's safe), and a goss check
+for filesystem errors in this boot's kernel log.
+
+**Display:** panel dark. Expected before the overlay is loaded (the driver
+turns the backlight on). If it's still dark after the overlay, check the
+panel's power feed and the ribbon orientation.
+
+---
+
 ## Round 2 — 2026-11-02 — airkit5, clean card
 
 **Card:** second card, freshly flashed with the Imager preset (no SSH key in

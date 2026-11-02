@@ -15,6 +15,17 @@ command:
     exec: ". /etc/os-release && echo $VERSION_CODENAME"
     exit-status: 0
     stdout: [trixie]
+  dsi-panel-connected:
+    exec: "cat /sys/class/drm/card*-DSI-*/status"
+    exit-status: 0
+    stdout: ["/^connected$/"]
+  touch-device-present:
+    exec: "grep -i goodix /proc/bus/input/devices"
+    exit-status: 0
+  filesystem-no-errors-this-boot:
+    exec: "dmesg | grep -cE 'EXT4-fs error|I/O error|Buffer I/O' ; true"
+    exit-status: 0
+    stdout: ["/^0$/"]
   updater-has-no-rt-limits:
     exec: systemctl show airkit-updater -p LimitRTPRIO --value
     exit-status: 0
@@ -35,6 +46,9 @@ file:
     exists: false
   /usr/local/bin/goss:
     exists: true
+  /boot/firmware/config.txt:
+    exists: true
+    contents: ["/^dtoverlay=vc4-kms-dsi-waveshare-panel,10_1_inch/"]
   /etc/sudoers.d/010_pi-nopasswd:
     exists: true
     mode: "0440"

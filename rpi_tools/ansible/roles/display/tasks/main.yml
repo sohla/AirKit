@@ -1,0 +1,19 @@
+# Own [all] line so it can't land inside a [pi4]/[cm5] section of config.txt.
+- name: Waveshare panel overlay in config.txt
+  ansible.builtin.blockinfile:
+    path: /boot/firmware/config.txt
+    marker: "# {mark} AirKit display (rpi_tools)"
+    block: |
+      [all]
+      dtoverlay={{ display_overlay }}
+  register: display_overlay_line
+
+- name: Reboot to load the panel overlay
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+  when: display_overlay_line is changed
+
+- name: Network ready again after the reboot
+  ansible.builtin.include_role:
+    name: net_ready
+  when: display_overlay_line is changed
