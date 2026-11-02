@@ -264,6 +264,8 @@ Each of these exists on a working kit, or will need to.
   labwc.
 - **Q: Updater (AirKitWebApp).** Its first install, via its own `deploy.sh`.
   Where in the order?
+  **Status:** passing. Installed in round 1; the page loads after a reboot
+  (hand check). Its place in the order is still open.
 - **Q: Desktop auto-login and screen blanking off.** Needed so AirKit has a
   display after a cold boot and the panel doesn't go dark mid-show. Do you
   set these?

@@ -21,6 +21,9 @@ without internet. Re-verify: **45 pass, 0 fail**, 1 skipped.
 Nothing cloud-init manages undid any setting. The updater service came back
 by itself.
 
+**Hand check:** the updater page at http://pi.local:8080 loads correctly
+(Steph, after the reboot). Pass.
+
 **Note for later:** with no internet at a venue, the kit's clock comes from
 the Pi 5's RTC. That only keeps time across power-off if an RTC battery is
 fitted. Without one, log file names in `~/logs` carry wrong dates. Not a
