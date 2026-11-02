@@ -4,6 +4,31 @@ One entry per test round. Newest first.
 
 ---
 
+## Round 2 — 2026-11-02 — airkit5, clean card
+
+**Card:** second card, freshly flashed with the Imager preset (no SSH key in
+the preset yet, so `bootstrap.sh` asked for the password twice). Nothing done
+by hand apart from `bootstrap.sh`.
+
+**Roles:** `net_ready`, `base`, `airkit_app`, `updater`, `goss`
+
+| Step | Result |
+|---|---|
+| provision | ok, 8 changed, 0 failed |
+| provision again | **0 changed**, idempotent |
+| verify | **45 pass, 0 fail**, 1 skipped (standalone, no role yet) |
+
+**Proved:** a factory card gets this far unaided. `net_ready` found no
+internet, added the temporary uplink via the Mac and waited for the clock.
+
+**Incident:** a first attempt was interrupted from the Mac while `apt`
+full-upgrade was running on the Pi. The upgrade carried on on the Pi and
+finished cleanly (`dpkg --audit` clean, nothing pending), and the re-run
+found nothing to upgrade. So an interrupted run doesn't wreck a card, but
+check `dpkg --audit` before carrying on after one.
+
+---
+
 ## Round 1b — 2026-11-02 — airkit5, reboot test
 
 Same card, rebooted, then `verify.sh` only.
