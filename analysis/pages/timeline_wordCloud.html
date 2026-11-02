@@ -55,7 +55,9 @@
         #stats .stat-value { font-size: 18px; }
         #stats .types { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hair); }
 
-        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 2px 0; color: var(--ink); }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 2px 0; color: var(--ink); cursor: pointer; user-select: none; }
+        .legend-item.off { opacity: .35; }
+        .legend-item.off span:first-of-type { text-decoration: line-through; }
         .legend-color { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
         .legend-percentage { margin-left: auto; font-family: var(--mono); color: var(--ink-2); font-size: 12px; }
 
@@ -106,7 +108,7 @@
     <div id="container">
         <header class="page-header">
             <h1>Commit Words</h1>
-            <p>The 200 most common words in commit messages, one disc per word, sized by how many commits use it. Pick a window and a commit type; click a word to list its commits.</p>
+            <p>The 200 most common words in commit messages, one disc per word, sized by how many commits use it. Pick a window and a commit type; click a word to list its commits, or a word type to hide or show it.</p>
         </header>
 
         <div id="timeline-controls">
@@ -166,6 +168,7 @@
         let timeRange = null;
         let filteredData = null;
         let currentFilter = 'all';
+        const hiddenPos = new Set();
 
         const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
@@ -267,7 +270,7 @@
             legendItems.forEach(item => {
                 const percentage = percentages[item.type] || '0.0';
                 legendHTML += `
-                    <div class="legend-item">
+                    <div class="legend-item${hiddenPos.has(item.type) ? ' off' : ''}" data-pos="${item.type}">
                         <div class="legend-color pos-${item.type}" style="background-color: ${item.color};"></div>
                         <span>${item.type}</span>
                         <span class="legend-percentage">${percentage}%</span>
@@ -276,6 +279,12 @@
             });
 
             document.querySelector('#legend .legend-section').innerHTML = legendHTML;
+            document.querySelectorAll('#legend .legend-item').forEach(el => el.addEventListener('click', () => {
+                const pos = el.dataset.pos;
+                hiddenPos.has(pos) ? hiddenPos.delete(pos) : hiddenPos.add(pos);
+                el.classList.toggle('off', hiddenPos.has(pos));
+                createPackedCircles();
+            }));
         }
 
         // Update timeline display
@@ -284,9 +293,6 @@
             filteredData = filterDataByDate(timeRange.extent());
 
             if (filteredData) {
-                // Update stats
-                document.getElementById('words-count').textContent = filteredData.words.length;
-
                 // Analyze part of speech for filtered words
                 const maxFreq = Math.max(...filteredData.words.map(w => w.size), 1);
                 const minFreq = Math.min(...filteredData.words.map(w => w.size), 1);
@@ -362,7 +368,9 @@
         });
 
         function createPackedCircles() {
-            if (!filteredData || filteredData.words.length === 0) {
+            const shownWords = filteredData ? filteredData.words.filter(w => !hiddenPos.has(w.pos)) : [];
+            document.getElementById('words-count').textContent = shownWords.length;
+            if (shownWords.length === 0) {
                 // Clear the visualization if no data
                 d3.select('#word-cloud').selectAll('*').remove();
                 return;
@@ -380,7 +388,7 @@
             svg.selectAll('*').remove();
 
             // Sort words by size (largest first) to ensure largest circles are placed first
-            const sortedWords = [...filteredData.words].sort((a, b) => b.size - a.size);
+            const sortedWords = shownWords.sort((a, b) => b.size - a.size);
 
             // Create pack layout
             const pack = d3.pack()
