@@ -4,6 +4,7 @@
   vars:
     tools_rev: "{{ lookup('pipe', 'git -C ' ~ playbook_dir ~ ' rev-parse --short HEAD') }}"
   roles:
+    - kit_identity
     - net_ready
     - base
     - airkit_app

@@ -35,11 +35,17 @@ address at boot, and provisioning reads it from there.
 | airkit2 | *d8:3a:dd:ca:e3:3e?* | *d8:3a:dd:ca:e3:3f?* | | | |
 | airkit3 | | | | | |
 | airkit4 | | | | | |
+| airkit5 | d8:3a:dd:ca:e2:7e | d8:3a:dd:ca:e2:7f | | Sound Blaster Play! 3 (`S3`, card 2) | test board, 2026-11-02 |
 | development | | | | | |
 
-The MACs come from `macs:` in the machine files, which doesn't say which is
-eth0 and which is wlan0. Provisioning reports each card's real MACs in
-`reports/`, so these can be left blank and filled from the first round.
+**The machine files are the record, not this table.** On its first run for a
+kit whose `macs:` is empty, provisioning writes the board's eth0 and wlan0 MACs
+into `machines/<kit>.scd` (commit it afterwards). After that, it refuses to run
+if the board's MACs don't match the kit named on the command line. The MACs
+belong to the Pi board, so the board is the kit; cards can move between boards.
+
+On a Pi 5, wlan0 is eth0 + 1 (airkit5: `…e2:7e` / `…e2:7f`), which fits the
+airkit1 and airkit2 pairs above.
 
 **Audio interface:** `start_airkit.sh` runs `amixer -c 2 set Speaker 90%`, so
 each kit expects a sound card at index 2 with a `Speaker` control. Which device

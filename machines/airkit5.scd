@@ -6,7 +6,7 @@
 	user: "SensiLab",
 
 	apAddr: "192.168.250.1",
-	macs: [],
+	macs: ["d8:3a:dd:ca:e2:7e","d8:3a:dd:ca:e2:7f"],
 	platform: \linux,
 
 	numDevices: 9,
