@@ -317,7 +317,7 @@ var loadPersonality = { |port, index|
     d.procRout.stop;
     d.procRout.free;
 
-    if(d.env != nil,{ d.env.use{
+    if(d.env != nil and: { d.enabled },{ d.env.use{
         Routine{
             s.sync;
             ~deinit.();
@@ -333,22 +333,24 @@ var loadPersonality = { |port, index|
     "loading personality: %".format(d.name).postln;
 
     NetAddr.new("127.0.0.1", 57120).sendMsg("/airkit/personalityName", d.port, d.name);
-    if(~visuals.notNil, {
-        ~visuals.clearVdefs(d.port);
-        ~visuals.clearEvents(d.port);
-    });
-    d.env = interpretPersonality.(d);
-    // ["TODO",d.enabled].postln;
-    d.env.use{
-        Routine{
-            s.sync;
-            ~init.(d);
-            s.sync;
-        }.play;
-    };
+    if(d.enabled, {
+        if(~visuals.notNil, {
+            ~visuals.clearVdefs(d.port);
+            ~visuals.clearEvents(d.port);
+        });
+        d.env = interpretPersonality.(d);
+        // ["TODO",d.enabled].postln;
+        d.env.use{
+            Routine{
+                s.sync;
+                ~init.(d);
+                s.sync;
+            }.play;
+        };
 
-    d.procRout = createProcRout.(d);
-    d.procRout.reset.play(AppClock);
+        d.procRout = createProcRout.(d);
+        d.procRout.reset.play(AppClock);
+    });
 
     ~devices.put(d.port,d);
 

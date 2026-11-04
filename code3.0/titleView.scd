@@ -17,11 +17,13 @@ var addTitleView = { |d|
 		if(msg[1].asInteger == d.port, {
 			var fs = 70 - (msg[2].asString.size * 3.5);
 			{
+				var muted = button.value;
 				button.font = Font(size:fs, bold:true);
 				button.states = [
 				[msg[2].asString, Color.black, d.color.alpha_(0.8)],
 				[msg[2].asString, Color.black.alpha_(0.5), Color.white.alpha_(0.1)],
 			];
+				button.value = muted;
 			}.defer;
 		});
 	},'/airkit/personalityName', NetAddr("127.0.0.1", NetAddr.langPort));
