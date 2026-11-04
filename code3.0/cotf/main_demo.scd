@@ -5,7 +5,7 @@
 // /airkit/outputMode is a logged no-op. Everything else is the show code.
 // Run: DEMO_OUT_DEVICE="Mac Studio Speakers" \
 //      /Applications/SuperCollider.app/Contents/MacOS/sclang \
-//        /Users/m1/AirKit/code3.0/cotf/main_demo.scd
+//        ~/AirKit/code3.0/cotf/main_demo.scd   (from ~/AirKit; any checkout works)
 // Env: DEMO_OUT_DEVICE (required), DEMO_NUM_OUT (default 8),
 //      DEMO_OUT_L/C/R (0-based buses, default 0/1/2) — see config_demo.scd.
 (
@@ -141,9 +141,12 @@ s.waitForBoot({
     // the identical limited signal; the second simply rewrites the first.
     // Bench-only side-effect of L == C on 2 ch: seat 2 at -0.5 lands both its
     // L and C gains on bus 0 (in phase, ~+3 dB) — expected, not a bug.
+    // Lookahead 3 ms: Limiter delays its signal by 2 x dur, so this adds ~6 ms
+    // (0.01 added ~20 ms, against the demo's latency budget). Re-tune only if
+    // the click-train measurement (venue gate R5) says so.
     SynthDef(\cotfDemoLimiter, { |outL = 0, outC = 1, outR = 2|
         [outL, outC, outR].do { |b|
-            ReplaceOut.ar(b, Limiter.ar(In.ar(b, 1), 0.89, 0.01));
+            ReplaceOut.ar(b, Limiter.ar(In.ar(b, 1), 0.89, 0.003));
         };
     }).add;
     s.sync;

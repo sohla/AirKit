@@ -122,7 +122,7 @@ if (numOut > devChans) {
     repoRoot +/+ "out" +/+ "Beethoven4_4_MSO_beats_2_mul4_meta.json",
 ].do { |p|
     if (File.exists(p).not) {
-        fail.("missing data file (from the composer; archive: /Users/m0/cotf-assets/airkit-data/; the .wav is read for its sample rate only — QLab plays the audio): %".format(p));
+        fail.("missing data file (from the composer; archive: ~/cotf-assets/airkit-data/ on M0; the .wav is read for its sample rate only — QLab plays the audio): %".format(p));
     };
 };
 

@@ -14,6 +14,8 @@ and a limiter sits on those outputs. The output device and which outputs are L/C
 env (`DEMO_OUT_DEVICE`, `DEMO_NUM_OUT`, `DEMO_OUT_L/C/R`). `/airkit/outputMode` does nothing
 there (it logs that it was ignored). The show files (`main_cotf.scd`, `config.scd`), the shared
 controllers and your personalities are untouched; API.md has the new row.
+Later the same day: the demo limiter's lookahead went from 10 ms to 3 ms (it delays the sound by twice
+that, so ~6 ms instead of ~20 ms); demo profile only.
 
 ## 2026-08-31 — STRINGCHORD up +2 dB in the Room 3 trim table (cotf)
 
