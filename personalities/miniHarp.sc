@@ -192,25 +192,29 @@ SynthDef(\stereoSampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, freq=
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var g = group;
+	var lib = samplesLib;
+	var tail = 6.0;
+	group = nil;
+	samplesLib = nil;
+
 	Pdef(m.ptn).remove;
 	Event.eventTypes.removeAt(eventTypeName);
 
 	fork {
-		if (group.notNil) {
-			group.set(\gate, 0);
-			1.0.wait;
-			group.freeAll;
+		if (g.notNil) {
+			g.set(\gate, 0);
+			tail.wait;
+			s.bind { g.freeAll };
 			s.sync;
-			group.free;
-			group = nil;
+			g.free;
 		};
-		if (samplesLib.notNil) {
-			samplesLib.do({|sample|
+		if (lib.notNil) {
+			lib.do({|sample|
 				postf("buffer dealloc [%] \n", sample.buffer);
 				sample.buffer.free;
 				s.sync;
 			});
-			samplesLib = nil;
 		};
 	};
 };

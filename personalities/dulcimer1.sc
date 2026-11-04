@@ -153,34 +153,42 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var g = group;
+	var v = verb;
+	var lib = samplesLib;
+	var bus = fxBus;
+	var voiceTail = 3.0;
+	var verbTail = 1.5;
+	group = nil;
+	verb = nil;
+	samplesLib = nil;
+	fxBus = nil;
+
 	Pdef(m.ptn).remove;
 	Event.eventTypes.removeAt(eventTypeName);
-	if (verb.notNil) { verb.set(\gate, 0) };
 
 	// Synths first, then buffers, then the bus. Freeing a buffer a PlayBuf
 	// is still reading crashes the server; the wait lets the reverb tail
 	// out rather than being cut off by the freeAll.
 	fork {
-		0.6.wait;
-		if (group.notNil) {
-			s.bind { group.freeAll };
+		voiceTail.wait;
+		if (v.notNil) { v.set(\gate, 0) };
+		verbTail.wait;
+		if (g.notNil) {
+			s.bind { g.freeAll };
 			s.sync;
-			group.free;
-			group = nil;
-			verb = nil;
+			g.free;
 		};
-		if (samplesLib.notNil) {
-			samplesLib.do({ |sample|
+		if (lib.notNil) {
+			lib.do({ |sample|
 				postf("buffer dealloc [%] \n", sample.buffer);
 				sample.buffer.free;
 				s.sync;
 			});
-			samplesLib = nil;
 		};
-		if (fxBus.notNil) {
-			postf("bus dealloc [%] \n", fxBus);
-			fxBus.free;
-			fxBus = nil;
+		if (bus.notNil) {
+			postf("bus dealloc [%] \n", bus);
+			bus.free;
 		};
 	};
 };

@@ -79,6 +79,10 @@ SynthDef(\evolver14, { |out = 0, gate = 1, amp = 0.3, t_hit = 0, vel = 1,
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
 			voice.set(\vel, msg[3], \t_hit, 1);
+
+			(type: \customVisualEvent, amp: 0, dur: 0.01, viewID: dev.port, shape: \circle,
+				startSize: msg[3].linlin(0, 1, 20, 160), endSize: msg[3].linlin(0, 1, 40, 240),
+				startColor: Color.white.alpha_(0.8), endColor: Color.white.alpha_(0), duration: 1.5).play;
 		};
 	}, '/akHit', s.addr);
 };

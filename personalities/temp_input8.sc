@@ -130,10 +130,11 @@ SynthDef(\simpleHit, {|out=0, amp=0.0, freq=120, attack=0.001, decay=0.03, susta
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
 			var note = notes.wrapAt(step);
+			var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 
 			step = step + 1;
 
-			synth.set(\freq, 220, \vel, msg[3], \t_hit, 1);
+			synth.set(\freq, 220, \vel, msg[3], \hitAmp, hitAmp * vol, \t_hit, 1);
 
 			hitAt = thisThread.seconds;
 			hitVel = msg[3];

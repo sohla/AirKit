@@ -163,22 +163,22 @@ SynthDef(\dropletVerb, {
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+  var dying = group;
+  var dyingBus = fxBus;
   Pdef(m.ptn).remove;
   if (verbSynth.notNil) { verbSynth.set(\gate, 0) };
+  group = nil;
+  fxBus = nil;
+  verbSynth = nil;
 
   fork {
     0.7.wait;
-    if (group.notNil) {
-      s.bind { group.freeAll };
+    if (dying.notNil) {
+      s.bind { dying.freeAll };
       s.sync;
-      group.free;
-      group = nil;
-      verbSynth = nil;
+      dying.free;
     };
-    if (fxBus.notNil) {
-      fxBus.free;
-      fxBus = nil;
-    };
+    dyingBus !? { dyingBus.free };
   };
 };
 

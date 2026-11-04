@@ -121,7 +121,7 @@ SynthDef(\insectLeaf2, {
 }).add;
 
 //------------------------------------------------------------
-~init = ~init <> {
+~init = ~init <> { |d|
 	var sp = species[0];
 
 	group = Group.new;
@@ -140,6 +140,15 @@ SynthDef(\insectLeaf2, {
 	], group);
 
 	leaf = Synth(\insectLeaf2, [\gate, 1, \amp, 0], group);
+
+	~vdef.(\insectGlow, { |ev, c|
+		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+		var a = m.accelMassFiltered.lincurve(0, 2.5 * sens, 0.02, 1.2, -2);
+		var n = ev[\numPoints] ? 48;
+		var r = c[\size] * (0.3 + a);
+		Array.fill(n, { |i| c[\pos] + Polar(r * (1 + (0.08 * sin((i * 6) + (c[\elapsed] * 9)))), i / n * 2pi).asPoint })
+	});
+	(type: \customVisualEvent, amp: 0, dur: 0.01, viewID: d.port, shape: \insectGlow, numPoints: 48, duration: inf, startSize: 80, endSize: 80, startColor: Color(1, 1, 1, 0.6), endColor: Color(1, 1, 1, 0.6)).play;
 
 	postf("[insects2] opening on species 0 of % : freq % temp % pan % \n",
 		species.size, sp[\freq], sp[\temp], sp[\pan]);

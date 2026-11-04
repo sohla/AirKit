@@ -22,12 +22,29 @@ SynthDef(\rainSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 //------------------------------------------------------------
 // intial state
 //------------------------------------------------------------
-~init = ~init <> {
+~init = ~init <> { |d|
 
 	var folder  = PathName("~/Downloads/yourDNASamples/rain");
 	postf("loading samples : % \n", folder);
 
 	group = Group.new;
+
+	~vdef.(\rainLayers, { |ev, c|
+		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+		var levels = [
+			m.accelMassFiltered.clip2(0.8 * sens).linlin(0, 0.8 * sens,0,1),
+			m.accelMassFiltered.clip2(1.6 * sens).linlin(0.8 * sens, 1.6 * sens,0,1),
+			m.accelMassFiltered.clip2(2.8 * sens).linlin(1.6 * sens, 2.8 * sens,0,1),
+			m.accelMassFiltered.clip2(6.0 * sens).linlin(2.8 * sens, 6.0 * sens,0,1)];
+		var n = ev[\numPoints] ? 48;
+		levels.do({ |lv, i|
+			var r = c[\size] * (i + 1);
+			c[\render].(Array.fill(n, { |j| c[\pos] + Polar(r * (1 + (lv * 0.3.rand2)), j / n * 2pi).asPoint }), 1, lv.max(0.05));
+		});
+		nil
+	});
+
+	(type: \customVisualEvent, amp: 0, dur: 0.01, viewID: d.port, shape: \rainLayers, numPoints: 48, startSize: 60, endSize: 60, startWidth: 1.5, endWidth: 1.5, startColor: Color.white.alpha_(0.7), endColor: Color.white.alpha_(0.7), duration: inf).play;
 
 	buffers = folder.entries.collect({ |path,i|
 		Buffer.read(s, path.fullPath, action:{|buf|

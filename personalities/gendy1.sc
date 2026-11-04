@@ -45,7 +45,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 //------------------------------------------------------------
 ~init = ~init <> {|d|
 
-	m.com.bgColor = Color.green(0.2);
+	// m.com.bgColor = Color.green(0.2);
 
 
 	~vdef.(\scope, { |ev, c|

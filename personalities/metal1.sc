@@ -291,7 +291,8 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
 	Pdef(m.ptn).remove;
-  synth.set(\gate, 0);
+	if(synth.notNil, { synth.set(\gate, 0) });
+	synth = nil;
 };
 
 //------------------------------------------------------------

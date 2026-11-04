@@ -43,7 +43,7 @@ SynthDef(\dropletVerb, {
 //------------------------------------------------------------
 ~init = ~init <> {
 	group = Group.new;
-	m.com.bgColor = Color.black(0.3);
+	// m.com.bgColor = Color.black(0.3);
 
 
 	~vdef.(\bead, { |ev, c|

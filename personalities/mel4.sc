@@ -126,7 +126,7 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 			)
 		).play;
 	};
-	m.com.bgColor = Color.red(0.2);
+	// m.com.bgColor = Color.red(0.2);
 	
 
 

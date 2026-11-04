@@ -66,13 +66,17 @@ SynthDef(\multiBeatVoice, {|out=0, freq=440, amp=0.2, pan=0,
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var g = group;
+	var tail = 1.8;
+	group = nil;
+
 	Pdef(m.ptn).remove;
 	fork {
-		if (group.notNil) {
-			s.bind { group.freeAll };
+		tail.wait;
+		if (g.notNil) {
+			s.bind { g.freeAll };
 			s.sync;
-			group.free;
-			group = nil;
+			g.free;
 		};
 	};
 };

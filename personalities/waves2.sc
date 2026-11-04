@@ -90,11 +90,11 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 
 	bgWaveBuffer1 = Buffer.read(s, bgWave1.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		if(dead.not, { bgWaveSynth1 = Synth(\looper, [\bufnum, buf, \amp, 0.2], group) });
+		if(dead.not, { bgWaveSynth1 = Synth(\looper, [\bufnum, buf, \amp, 0], group) });
 	});
 	bgWaveBuffer2 = Buffer.read(s, bgWave2.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		if(dead.not, { bgWaveSynth2 = Synth(\looper, [\bufnum, buf, \amp, 0.1], group) });
+		if(dead.not, { bgWaveSynth2 = Synth(\looper, [\bufnum, buf, \amp, 0], group) });
 	});
 
 };
@@ -134,6 +134,8 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var amp = m.accelMassFiltered.lincurve(0, 4 * sens,0.3,2, 2);
+	var bed1Amp = 0.2;
+	var bed2Amp = 0.1;
 
 	var time = TempoClock.beats;
 	var xPos = [-0.8,-0.6,-0.3,0.0,0.2,0.5,0.7,1.0].choose; // Random x position
@@ -165,6 +167,7 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 	var ev = (
 		type: \customVisualEvent,
 		amp: 0,
+		dur: 0.01,
 		viewID: d.port,
 		shape: \circle,
 		fill: false,
@@ -189,6 +192,9 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 			harmonics: 15
 		),
 	);
+
+	bgWaveSynth1 !? (_.set(\amp, bed1Amp * vol));
+	bgWaveSynth2 !? (_.set(\amp, bed2Amp * vol));
 
 	if(TempoClock.beats > (lastTime + rrand(0.3,0.6)),{
 		lastTime = TempoClock.beats;

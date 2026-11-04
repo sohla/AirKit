@@ -99,7 +99,19 @@ SynthDef(\whipbird, {
 			\sendGate, false,
 			\reverbMix, 0.5,
 			\reverbTime, 3.0,
-			\reverbSize, 0.7
+			\reverbSize, 0.7,
+
+			\type, \customVisualEvent,
+			\shape, \circle,
+			\sx, Pkey(\pan),
+			\ex, Pkey(\pan),
+			\sy, Pfunc({ |e| (e[\freq] ? 440).explin(200, 1200, 0.5, -0.5) }),
+			\ey, Pkey(\sy) - 0.2,
+			\startSize, Pfunc({ |e| (e[\amp] ? 0).linlin(0, 1, 0, 60) }),
+			\endSize, Pfunc({ |e| (e[\amp] ? 0).linlin(0, 1, 0, 140) }),
+			\startColor, Color.white,
+			\endColor, Color(1, 1, 1, 0),
+			\duration, 0.6
 		);
 	);
 
@@ -119,6 +131,7 @@ SynthDef(\whipbird, {
 
 	fork {
 		if (dying.notNil) {
+			4.wait;
 			s.bind { dying.freeAll };
 			s.sync;
 			dying.free;
@@ -138,6 +151,7 @@ SynthDef(\whipbird, {
 
 	if(amp < -38, { amp = -110 });
 
+	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\amp, (amp + gain).dbamp * vol);
 	Pdef(m.ptn).set(\freq, (baseShift + idleNotes.choose).midicps);

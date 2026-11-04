@@ -93,6 +93,10 @@ SynthDef(\grainCloud15, { |out = 0, buf = 0, amp = 0.3, vel = 1,
 				\pos, now.pos,
 				\grainDur, 0.1,//now.grainDur
 			], group);
+
+			(type: \customVisualEvent, amp: 0, dur: 0.01, viewID: dev.port, shape: \circle,
+				startSize: vel.linlin(0, 1, 20, 160), endSize: vel.linlin(0, 1, 40, 240),
+				startColor: Color.white.alpha_(0.8), endColor: Color.white.alpha_(0), duration: vel.linexp(0, 1, 0.1, 1.0)).play;
 		};
 	}, '/akHit', s.addr);
 };

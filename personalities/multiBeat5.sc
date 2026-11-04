@@ -147,8 +147,8 @@ SynthDef(\multiBeat5, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, pan=0, 
 			// \endColor, Pfunc({ |e|
 			// 	Color.hsv(((e[\octave] ? 5) - 4).linlin(0, 2, 0.055, 0.15), 1.0, 0.35, 0.0)
 			// }),
-			\startColor, Color.black,
-			\endColor, Color.black,
+			\startColor, Color.white,
+			\endColor, Color.white,
 
 			\duration, (Pkey(\dur) * 0.2) + 0.2,
 			\modulation, Pfunc({ |e| (lane: 15, ghost: 0.3, amp: 0) }),

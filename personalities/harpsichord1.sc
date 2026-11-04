@@ -110,8 +110,8 @@ SynthDef(\harpsiVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 
 			
 			\shape, \square,
-			\startColor, Color.black,
-			\endColor, Color.black,
+			// \startColor, Color.black,
+			// \endColor, Color.black,
 			\fill, false,
 			\sx, Pwhite(-0.05, 0.05),
 			\sy, Pwhite(-0.05, 0.05),
@@ -141,23 +141,28 @@ SynthDef(\harpsiVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var g = group;
+	var lib = samplesLib;
+	var tail = 2.8;
+	group = nil;
+	samplesLib = nil;
+
 	Pdef(m.ptn).remove;
 	Event.eventTypes.removeAt(eventTypeName);
 
 	fork {
-		if (group.notNil) {
-			s.bind { group.freeAll };
+		tail.wait;
+		if (g.notNil) {
+			s.bind { g.freeAll };
 			s.sync;
-			group.free;
-			group = nil;
+			g.free;
 		};
-		if (samplesLib.notNil) {
-			samplesLib.do({ |sample|
+		if (lib.notNil) {
+			lib.do({ |sample|
 				postf("buffer dealloc [%] \n", sample.buffer);
 				sample.buffer.free;
 				s.sync;
 			});
-			samplesLib = nil;
 		};
 	};
 };

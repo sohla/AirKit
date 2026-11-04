@@ -154,9 +154,9 @@ step = {
 	beats
 };
 
-sense = {
+sense = { |sens|
 	prevEnergy = energy;
-	energy = m.accelMassFiltered;
+	energy = m.accelMassFiltered * (0.5 / sens);
 	twist  = m.rrateMassFiltered;
 	if ((energy > (restFloor + 0.1)) and: { prevEnergy <= (restFloor + 0.1) }) { urgent = true };
 	tiltOct = switch(tiltOct,
@@ -172,7 +172,8 @@ sense = {
 };
 
 //------------------------------------------------------------
-~init = ~init <> {
+~init = ~init <> { |d|
+	var port = d.port;
 	clock = TempoClock(2);
 	group = Group.new;
 
@@ -183,6 +184,8 @@ sense = {
 			var midi  = n[\note];
 			var freq  = midi.midicps;
 			var db    = energy.clip(restFloor, 1.5).lincurve(restFloor, 1.5, ampLoDb, ampHiDb, -1.5);
+			var vy    = midi.linlin(midiLo, midiHi + 12, 0.6, -0.6);
+			var vsize = db.linlin(ampLoDb, ampHiDb, 8, 40);
 			~instrument = \birdsongChirp;
 			~out    = 0;
 			~group  = group;
@@ -199,6 +202,7 @@ sense = {
 			~sustain = ~secs;
 			~type = \note;
 			currentEnvironment.play;
+			(type: \customVisualEvent, amp: 0, dur: 0.01, viewID: port, shape: \circle, sx: n[\pan], ex: n[\pan], sy: vy, ey: vy, startSize: vsize, endSize: vsize * 2, startColor: Color.white, endColor: Color(1, 1, 1, 0), duration: 0.5).play;
 		};
 	});
 
@@ -222,6 +226,7 @@ sense = {
 	c !? { c.stop };
 	if (g.notNil) {
 		fork {
+			1.5.wait;
 			s.bind { g.freeAll };
 			s.sync;
 			g.free;
@@ -231,8 +236,9 @@ sense = {
 
 //------------------------------------------------------------
 ~next = { |d|
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	sense.();
+	sense.(sens);
 };
 
 //------------------------------------------------------------

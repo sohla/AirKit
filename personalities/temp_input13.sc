@@ -208,6 +208,7 @@ SynthDef(\strike13, { |out = 0, freq = 440, amp = 0.3, vel = 1.0,
 			var now = SystemClock.seconds;
 			var ioi = if(hitCount > 0, { (now - lastHit).clip(ioiMin, ioiMax) }, { 0.5 });
 			var note = noteFor.(vel);
+			var vol = dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 			var x;
 
 			if (hitCount > 0, {
@@ -223,7 +224,7 @@ SynthDef(\strike13, { |out = 0, freq = 440, amp = 0.3, vel = 1.0,
 			Synth(\strike13, [
 				\freq, note.midicps,
 				\vel, vel,
-				\amp, 0.5,
+				\amp, 0.5 * vol,
 				\decay, 0.35,
 				\tone, 6000,
 				\bright, brightNow,

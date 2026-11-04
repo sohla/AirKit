@@ -56,7 +56,7 @@ SynthDef(\dpulse, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
 	var folder = PathName(kitFolder);
 
 	group = Group.new;
-m.com.bgColor = Color.yellow(0.5);
+// m.com.bgColor = Color.yellow(0.5);
 
 	postf("loading samples : % \n", kitFolder);
 
@@ -64,7 +64,7 @@ m.com.bgColor = Color.yellow(0.5);
 		Buffer.read(s, path.fullPath, action: {|buf|
 			loaded = loaded + 1;
 			postf("buffer alloc [%] \n", buf);
-			if(loaded == folder.entries.size, {
+			if((loaded == folder.entries.size) and: { buffers.notNil }, {
 				buffers.sort({ |a, b| a.numFrames < b.numFrames });
 				kickIdx = buffers.detectIndex({ |b|
 					var name = PathName(b.path).fileName.toLower;
@@ -116,8 +116,8 @@ m.com.bgColor = Color.yellow(0.5);
 			// \endColor, Pfunc({ |e|
 			// 	Color.hsv(e[\pick] / (buffers.size.max(1)), 1, 0.4, 0.0)
 			// }),
-			\startColor, Color.black,
-			\endColor, Color.black,
+			\startColor, Color.white,
+			\endColor, Color.white,
 			\startWidth, (Pkey(\amp) * 18) + 1,
 			\endWidth, 0.3,
 			\duration, Pkey(\dur) * 2.5,
@@ -137,19 +137,25 @@ m.com.bgColor = Color.yellow(0.5);
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var g = group;
+	var bufs = buffers;
+	var tail = 1.0;
+	group = nil;
+	buffers = nil;
+
 	Pdef(m.ptn).remove;
 	fork {
-		if (group.notNil) {
-			s.bind { group.freeAll };
+		tail.wait;
+		if (g.notNil) {
+			s.bind { g.freeAll };
 			s.sync;
-			group.free;
-			group = nil;
+			g.free;
 		};
-		buffers.do({ |buf|
+		bufs.do({ |buf|
 			postf("buffer dealloc [%] \n", buf);
 			buf.free;
+			s.sync;
 		});
-		buffers = nil;
 	};
 };
 

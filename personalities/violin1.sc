@@ -97,12 +97,17 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 	});
 };
 ~deinit = ~deinit <> {
+	var dyingBuffer = buffer;
 	dead = true;
+	buffer = nil;
 	Pdef(m.ptn).remove;
-	buffer !? {
-		postf("buffer dealloc [%] \n", buffer);
-		buffer.free;
-		buffer = nil;
+	fork {
+		3.8.wait;
+		dyingBuffer !? {
+			postf("buffer dealloc [%] \n", dyingBuffer);
+			dyingBuffer.free;
+			s.sync;
+		};
 	};
 };
 

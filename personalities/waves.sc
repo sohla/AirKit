@@ -30,7 +30,8 @@ SynthDef(\waves22, { |out=0, gate=1, amp = 0.0, lag=1,ff=200|
 };
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
-    synth.set(\gate, 0);
+    synth !? { synth.set(\gate, 0) };
+    synth = nil;
 };
 
 //------------------------------------------------------------
@@ -75,6 +76,7 @@ SynthDef(\waves22, { |out=0, gate=1, amp = 0.0, lag=1,ff=200|
 	var ev = (
 		type: \customVisualEvent,
 		amp: 0,
+		dur: 0.01,
 		viewID: d.port,
 		shape: \line,
 		fill: true,

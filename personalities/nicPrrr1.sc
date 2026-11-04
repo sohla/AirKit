@@ -23,7 +23,7 @@ SynthDef(\nicPrrrLoop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1|
 		rate.lag(0.25) * BufRateScale.kr(bufnum),
 		1, 0, loop: 1);
 	sig = LeakDC.ar(sig);
-	Out.ar(2, sig * env * amp.lag(0.12));
+	Out.ar(0, sig * env * amp.lag(0.12));
 }).add;
 
 //------------------------------------------------------------

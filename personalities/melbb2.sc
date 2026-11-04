@@ -2,6 +2,7 @@ var m = ~model;
 var bi = [5,14].choose;
 var dur = 0.085;
 var limit = 0;
+var beatType = (\customBeatEvent_ ++ m.ptn).asSymbol;
 
 
 	var ev = (
@@ -14,6 +15,7 @@ var limit = 0;
 		startSize: 10,
 		endSize: 20,
 		duration: 1.0,
+		dur: 0.01,
 		startColor: Color.yellow.lighten(0.2).alpha_(0.8),
 		endColor: Color.green.darken(0.8).alpha_(0.1),
 		startWidth: 0.0,
@@ -67,7 +69,7 @@ SynthDef(\drumkit3, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 		});
 	});
 
-  	Event.addEventType(\customBeatEvent, {
+  	Event.addEventType(beatType, {
 		~subdiv = ~subdiv?1;
 		~cnt = ~cnt.mod((8/~subdiv));
     	if(~cnt == 0,{
@@ -80,7 +82,7 @@ SynthDef(\drumkit3, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	Pdef(m.ptn,
 		Pbind(
 			\instrument, \drumkit3,			
-      		\type, \customBeatEvent,
+      		\type, beatType,
 			\bufnum, Pfunc{
         		bi = bi + 1;
 				if(bi >= (~buffers.size-1),{bi=0});
@@ -110,15 +112,19 @@ SynthDef(\drumkit3, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 };
 
 ~deinit = ~deinit <> {
-  
-  Event.removeEventType(\customBeatEvent);
+	var dying = ~buffers;
+	~buffers = nil;
 	Pdef(m.ptn).remove;
+	Event.eventTypes.removeAt(beatType);
 
-	~buffers.do({|buf|
-		postf("buffer dealloc [%] \n", buf);
-		buf.free;
-		s.sync;
-	});
+	fork {
+		2.0.wait;
+		dying.do({|buf|
+			postf("buffer dealloc [%] \n", buf);
+			buf.free;
+			s.sync;
+		});
+	};
 };
 
 //------------------------------------------------------------
@@ -140,7 +146,7 @@ SynthDef(\drumkit3, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	Pdef(m.ptn).set(\amp,0.4 * vol);
 	Pdef(m.ptn).set(\rate,2.pow(rate));
 
-	if(m.accelMassFiltered > 0.05,{
+	if(m.accelMassFiltered > (0.1 * sens),{
 		if( Pdef(m.ptn).isPlaying.not,{
 			Pdef(m.ptn).resume(quant:dur);
 		});
@@ -159,6 +165,7 @@ SynthDef(\drumkit3, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 		startSize: 0,
 		endSize: 180,
 		duration: 0.3,
+		dur: 0.01,
 		startColor: Color.blue.lighten(0.8).alpha_(1),
 		endColor: Color.red.darken(0.9).alpha_(0.1),
 		startWidth: 1.0,

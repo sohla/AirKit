@@ -108,14 +108,17 @@ SynthDef(\movingBeast, { |out = 0, freq = 45, amp = 0.2, gate = 1,
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var g = group;
+	var tail = 3.2;
+	group = nil;
+
 	Pdef(m.ptn).remove;
 
 	fork {
-		if (group.notNil) {
-			group.set(\gate, 0);
-			1.8.wait;
-			group.free;
-			group = nil;
+		if (g.notNil) {
+			g.set(\gate, 0);
+			tail.wait;
+			g.free;
 		};
 	};
 };

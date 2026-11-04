@@ -41,7 +41,7 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 	postf("loading sample : % \n", path.fileName);
 	buffer = Buffer.read(s, path.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		if(dead.not, { synth = Synth(\nicMouthGrain,[\out, 2, \bufnum,buf, \rate, 1, \gate, 1 ]) });
+		if(dead.not, { synth = Synth(\nicMouthGrain,[\out, 0, \bufnum,buf, \rate, 1, \gate, 1 ]) });
 	});
 
 	~vdef.(\mouth, { |ev, c|

@@ -254,7 +254,7 @@ SynthDef(\hollowWoodR, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 	if (dying.notNil) {
 		fork {
 			dying.set(\gate, 0);
-			(relTime + 0.5).wait;
+			5.5.wait;
 			dying.free;
 		};
 	};

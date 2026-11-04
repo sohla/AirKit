@@ -15,7 +15,7 @@ var urgent    = false;
 var lastFlick = 0;
 var muted     = false;
 var birdPan   = 0;
-var 1nding = false;
+var flickPending = false;
 
 var whipGap   = 8;
 
@@ -256,7 +256,8 @@ sense = { |d|
 };
 
 //------------------------------------------------------------
-~init = ~init <> {
+~init = ~init <> { |d|
+	var port = d.port;
 	clock = TempoClock(2);
 	group = Group.new;
 
@@ -268,6 +269,8 @@ sense = { |d|
 			var freq  = midi.midicps;
 			var gain  = (~amp ? 0);
 			var chirpSpread = 0.3;
+			var vy    = midi.linlin(74, 112, 0.6, -0.6);
+			var vsize = gain.linlin(0, 0.1, 4, 40);
 			~instrument = \birdyChirp;
 			~out    = 0;
 			~group  = group;
@@ -284,6 +287,7 @@ sense = { |d|
 			~sustain = ~secs;
 			~type = \note;
 			currentEnvironment.play;
+			(type: \customVisualEvent, amp: 0, dur: 0.01, viewID: port, shape: \circle, sx: ~pan, ex: ~pan, sy: vy, ey: vy, startSize: vsize, endSize: vsize * 2, startColor: Color.white, endColor: Color(1, 1, 1, 0), duration: 0.5).play;
 		};
 	});
 
@@ -304,7 +308,19 @@ sense = { |d|
 			\sustain, 2,
 			\reverbMix, 0.5,
 			\reverbTime, 3.0,
-			\reverbSize, 0.7
+			\reverbSize, 0.7,
+
+			\type, \customVisualEvent,
+			\shape, \circle,
+			\sx, Pkey(\pan),
+			\ex, Pkey(\pan),
+			\sy, Pfunc({ |e| (e[\freq] ? 440).explin(200, 1200, 0.5, -0.5) }),
+			\ey, Pkey(\sy) - 0.2,
+			\startSize, Pfunc({ |e| (e[\amp] ? 0).linlin(0, 1, 0, 60) }),
+			\endSize, Pfunc({ |e| (e[\amp] ? 0).linlin(0, 1, 0, 140) }),
+			\startColor, Color.white,
+			\endColor, Color(1, 1, 1, 0),
+			\duration, 0.6
 		);
 	);
 	Pdef(whipPtn).set(\amp, 0);
@@ -325,6 +341,7 @@ sense = { |d|
 	c !? { c.stop };
 	if (g.notNil) {
 		fork {
+			4.wait;
 			s.bind { g.freeAll };
 			s.sync;
 			g.free;
@@ -360,6 +377,7 @@ sense = { |d|
 	// whipGap = 1;
 	whipGap = m.accelMassFiltered.lincurve(0.0, 2.6 * sens, 2, 0.1, -1);
 
+	Pdef(whipPtn).set(\viewID, d.port);
 	Pdef(whipPtn).set(\amp, (whipDb + whipGain).dbamp * vol);
 	Pdef(whipPtn).set(\freq, (whipBase + whipNotes[whipIdx]).midicps);
 	Pdef(whipPtn).set(\swoopDelay, 0.0);

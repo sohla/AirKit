@@ -59,11 +59,13 @@ SynthDef(\thunderSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 	// synth.sendMsg(\gate, 0);
 	var dying = group;
 	var dyingBuffers = buffers;
+	var tail = ((dyingBuffers ? []).collect({ |b| if(b.numFrames.notNil, { b.duration }, 0) }).maxItem ? 0) * 0.9 + 0.5;
 	group = nil;
 	buffers = nil;
 	synth = nil;
 
 	fork {
+		tail.wait;
 		if(dying.notNil, {
 			s.bind { dying.freeAll };
 			s.sync;
@@ -99,6 +101,7 @@ SynthDef(\thunderSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 				\cutoff, cutoff
 			], group);
 			synth.server.sendBundle(0.3,[\n_set, synth.nodeID, \gate, 0]);
+			(type: \customVisualEvent, amp: 0, dur: 0.01, viewID: d.port, shape: \circle, startSize: amp.linlin(0.05, 0.9, 40, 300), endSize: amp.linlin(0.05, 0.9, 80, 600), startWidth: 4, endWidth: 0.5, startColor: Color.white.alpha_(0.8), endColor: Color.white.alpha_(0), duration: 1.5).play;
 			index = index + 1;
       if(index >= buffers.size,{ index = 3});
 		});

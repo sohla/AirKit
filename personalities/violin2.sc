@@ -1,6 +1,7 @@
 var m = ~model;
 var synth;
 var buffer;
+var dead = false;
 var scan = 0.5;
 var lastNow = 0;
 var level = 0;
@@ -164,13 +165,31 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, 
 
 	buffer = Buffer.read(s, path.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		synth = Synth(\pullstretchMonoQ,[\buffer,buf,\pch,0.midiratio, \amp,0.4, \div, 10]);
+		if(dead.not, {
+			synth = Synth(\pullstretchMonoQ,[\buffer,buf,\pch,0.midiratio, \amp,0.4, \div, 10]);
+		}, {
+			buf.free;
+		});
 	});
 };
 
 ~deinit = ~deinit <> {
-	synth.free;
-	buffer.free;
+	var dying = synth;
+	var dyingBuffer = buffer;
+	var fade = 1.2;
+	dead = true;
+	synth = nil;
+	buffer = nil;
+
+	fork {
+		if(dying.notNil, {
+			dying.set(\amp, 0);
+			fade.wait;
+			dying.free;
+			s.sync;
+		});
+		if(dyingBuffer.notNil, { dyingBuffer.free });
+	};
 };
 
 

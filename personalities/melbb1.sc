@@ -169,14 +169,19 @@ SynthDef(\melbb2, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=440,
 };
 
 ~deinit = ~deinit <> {
+	var dying = buffers;
+	buffers = nil;
 	Pdef(m.ptn).remove;
 	Pdef(shaker).remove;
 
-	buffers.do({|buf|
-		postf("buffer dealloc [%] \n", buf);
-		buf.free;
-		s.sync;
-	});
+	fork {
+		1.5.wait;
+		dying.do({|buf|
+			postf("buffer dealloc [%] \n", buf);
+			buf.free;
+			s.sync;
+		});
+	};
 };
 
 //------------------------------------------------------------

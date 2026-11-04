@@ -268,12 +268,15 @@ SynthDef(\mellowPad11, { |out = 0, spread = 1, numChans = 2, freq = 130, amp = 0
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
 	var dying = group;
+	var dyingLib = samplesLib;
 
 	OSCdef(hitKey) !? (_.free);
 	trig !? (_.free);
 	trig = nil;
 	if (pad.notNil) { pad.set(\gate, 0) };
+	pad = nil;
 	group = nil;
+	samplesLib = nil;
 
 	fork {
 		2.6.wait;
@@ -281,15 +284,13 @@ SynthDef(\mellowPad11, { |out = 0, spread = 1, numChans = 2, freq = 130, amp = 0
 			s.bind { dying.freeAll };
 			s.sync;
 			dying.free;
-			pad = nil;
 		};
-		if (samplesLib.notNil) {
-			samplesLib.do({ |sample|
+		if (dyingLib.notNil) {
+			dyingLib.do({ |sample|
 				postf("buffer dealloc [%] \n", sample[\buffer]);
 				sample[\buffer].free;
 				s.sync;
 			});
-			samplesLib = nil;
 		};
 	};
 };

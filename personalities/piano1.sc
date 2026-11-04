@@ -199,31 +199,37 @@ SynthDef(\pianoVerb, {
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
-	Pdef(m.ptn).remove;
-	if (verbSynth.notNil) { verbSynth.set(\gate, 0) };
+	var g = group;
+	var verb = verbSynth;
+	var lib = samplesLib;
+	var bus = fxBus;
+	var voiceTail = 3.0;
+	var verbTail = 0.6;
+	group = nil;
+	verbSynth = nil;
+	samplesLib = nil;
+	fxBus = nil;
 
+	Pdef(m.ptn).remove;
 	Event.eventTypes.removeAt(eventTypeName);
 
 	fork {
-		if (group.notNil) {
-			s.bind { group.freeAll };
+		voiceTail.wait;
+		if (verb.notNil) { verb.set(\gate, 0) };
+		verbTail.wait;
+		if (g.notNil) {
+			s.bind { g.freeAll };
 			s.sync;
-			group.free;
-			group = nil;
-			verbSynth = nil;
+			g.free;
 		};
-		if (samplesLib.notNil) {
-			samplesLib.do({ |sample|
+		if (lib.notNil) {
+			lib.do({ |sample|
 				postf("buffer dealloc [%] \n", sample.buffer);
 				sample.buffer.free;
 				s.sync;
 			});
-			samplesLib = nil;
 		};
-		if (fxBus.notNil) {
-			fxBus.free;
-			fxBus = nil;
-		};
+		if (bus.notNil) { bus.free };
 	};
 };
 

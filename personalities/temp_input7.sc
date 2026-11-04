@@ -86,7 +86,7 @@ SynthDef(\warmPadVoice, {
 
 	sig = Splay.ar(sig, spread);
 
-	Out.ar(out, sig + (sub * env * vel));
+	Out.ar(out, sig + (sub * env * vel * amp));
 }).add;
 
 //------------------------------------------------------------

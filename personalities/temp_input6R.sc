@@ -63,15 +63,17 @@ SynthDef(\miniMoogVoice, {
 
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
+			var sens = dev.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+			var vol = dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 			var vel = msg[3];
 			// var notes = [0,7,12,16] + 40;
 			var notes = [2,4,5,7,9,11,12,14] + 40 + 12;
-			var ff = m.accelMassFiltered.lincurve(0.0, 1.0, 200, 2000, -2).clip(200, 12000);
-			var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger;
+			var ff = m.accelMassFiltered.lincurve(0.0, 2.0 * sens, 200, 2000, -2).clip(200, 12000);
+			var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger.clip(0, notes.size - 1);
 
 			Synth(\miniMoogVoice, [
 				\freq, notes[rt].midicps,
-				\amp, vel.linlin(0.0, 1.0, 0.05, 0.2),
+				\amp, vel.linlin(0.0, 1.0, 0.05, 0.2) * vol,
 				\filterFreq, ff,
 				\attack, rel,//vel.lincurve(0.0, 1.0, 1.01, 0.002,-2),
 				\decay, 0.12,
@@ -80,6 +82,10 @@ SynthDef(\miniMoogVoice, {
 				\fq, 0.3,
 				\dur, 0.2
 			], group);
+
+			(type: \customVisualEvent, amp: 0, dur: 0.01, viewID: dev.port, shape: \circle,
+				startSize: vel.linlin(0, 1, 20, 160), endSize: vel.linlin(0, 1, 40, 240),
+				startColor: Color.white.alpha_(0.8), endColor: Color.white.alpha_(0), duration: 2.2).play;
 		};
 	}, '/akHit', s.addr);
 };
@@ -96,7 +102,7 @@ SynthDef(\miniMoogVoice, {
 	if (dying.notNil) {
 		fork {
 			dying.set(\gate, 0);
-			(relTime + 0.5).wait;
+			(relTime + 4.5).wait;
 			dying.free;
 		};
 	};

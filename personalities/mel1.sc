@@ -78,7 +78,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 	buffer = nil;
 	Pdef(m.ptn).remove;
 	fork{
-		1.0.yield;
+		2.5.yield;
 		dyingBuffer !? {
 			postf("buffer dealloc [%] \n", dyingBuffer);
 			dyingBuffer.free;

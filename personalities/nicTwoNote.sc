@@ -183,18 +183,19 @@ SynthDef(\nicTwoNoteSampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, f
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var dyingLib = samplesLib;
+	samplesLib = nil;
 	Pdef(m.ptn).remove;
 
 	// delay so in-flight synths finish before their buffers go
 	fork {
-		1.0.yield;
-		if(samplesLib.notNil, {
-			samplesLib.do({|sample|
+		3.7.yield;
+		if(dyingLib.notNil, {
+			dyingLib.do({|sample|
 				postf("buffer dealloc [%] \n", sample.buffer);
 				sample.buffer.free;
 				s.sync;
 			});
-			samplesLib = nil;
 		});
 	};
 };

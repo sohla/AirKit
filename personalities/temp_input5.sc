@@ -70,16 +70,22 @@ SynthDef(\bellVoice, { |out = 0, amp = 0.3, freq = 523, vel = 1.0,
 	OSCdef(hitKey, { |msg|
 
 		if (msg[1] == trig.nodeID) {
+			var sens = dev.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+			var vol = dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 			var notes = [0,7,12,16] + 52;
-			var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger;
+			var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger.clip(0, notes.size - 1);
 			var rrate = [dev.sensors.rrateEvent.x, dev.sensors.rrateEvent.y, dev.sensors.rrateEvent.z].sumabs.lincurve(0.0, 1.0, 0.0, 1.0, -5);
-			var decay = m.accelMassFiltered.lincurve(0.0, 1.0, 0.0, 6.0, -5);
+			var decay = m.accelMassFiltered.lincurve(0.0, 2.0 * sens, 0.0, 6.0, -5);
 			var updown = (dev.sensors.gyroEvent.y / pi.half).lincurve(0.0,1.0,0.0,6.0,0);
 			var note = notes[rt];
 			var vel = msg[3];
 
 			Synth(\bellVoice, [\freq, note.midicps, \vel, vel,
-				\amp, 0.1, \decay, decay, \rel, relTime], group);
+				\amp, 0.1 * vol, \decay, decay, \rel, relTime], group);
+
+			(type: \customVisualEvent, amp: 0, dur: 0.01, viewID: dev.port, shape: \circle,
+				startSize: vel.linlin(0, 1, 20, 160), endSize: vel.linlin(0, 1, 40, 240),
+				startColor: Color.white.alpha_(0.8), endColor: Color.white.alpha_(0), duration: decay.max(0.3)).play;
 
 			// SystemClock.sched(dblDelay, {
 			// 	if (group.notNil, {
