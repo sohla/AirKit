@@ -16,3 +16,6 @@ liveSession/mball1 Project/Samples/*
 # Runtime state the kit writes for itself (device volume/sensitivity).
 # Outside release_dirs, so a web update never touches it either.
 /state/
+
+# Generated performer scores. Regenerate with scores/build.py.
+/scores/output/
