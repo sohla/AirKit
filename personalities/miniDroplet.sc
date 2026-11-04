@@ -75,6 +75,7 @@ SynthDef(\dropletVerb, {
 			\instrument, \miniDroplet,
 			\group, group,
 			\out, fxBus,
+			\sendGate, false,
 
 			\div,  Pswitch(divs.collect({ |n| Pn(n, n) }),             Pkey(\divIdx)),
 			\step, Pswitch(divs.collect({ |n| Pseries(0, 1, n) }),     Pkey(\divIdx)),
