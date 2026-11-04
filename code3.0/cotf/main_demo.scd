@@ -12,6 +12,9 @@
 var codeRoot = thisProcess.nowExecutingPath.dirname.dirname; // .../code3.0
 
 thisProcess.interpreter.executeFile(codeRoot +/+ "cotf" +/+ "config_demo.scd");
+// [DEMO] config_demo.scd refused (one ERROR line, exit 1 pending): stop here,
+// before the controllers load and the server boots.
+if (~demoConfigError.notNil) { ^nil };
 
 // Same load order as main.sc: personality -> osc -> conductor.
 thisProcess.interpreter.executeFile(codeRoot +/+ "personalityController.scd");
@@ -136,6 +139,8 @@ s.waitForBoot({
     // re-creates monitors, so this ordering holds for the whole boot. If two
     // of L/C/R share a bus (e.g. a 2-ch bench, L=C=0) both ReplaceOuts compute
     // the identical limited signal; the second simply rewrites the first.
+    // Bench-only side-effect of L == C on 2 ch: seat 2 at -0.5 lands both its
+    // L and C gains on bus 0 (in phase, ~+3 dB) — expected, not a bug.
     SynthDef(\cotfDemoLimiter, { |outL = 0, outC = 1, outR = 2|
         [outL, outC, outR].do { |b|
             ReplaceOut.ar(b, Limiter.ar(In.ar(b, 1), 0.89, 0.01));
@@ -339,8 +344,11 @@ s.waitForBoot({
     // Places one seat across L/C/R (-1 = L, 0 = C, 1 = R). Bad seat -> log and
     // ignore (never clipped onto another seat).
     OSCdef(\cotfSeatPan, { |msg|
-        var seat = (msg[1] ? 0).asInteger;
-        if ((seat >= 1) and: { seat <= 5 } and: { msg.size > 2 }) {
+        var raw = msg[1] ? 0;
+        var seat = raw.asInteger;
+        // Reject fractional seats (1.5 would otherwise truncate onto seat 1).
+        if ((raw.isNumber) and: { raw == seat } and: { (seat >= 1) and: { seat <= 5 } }
+                and: { msg.size > 2 }) {
             var pan = msg[2].asFloat.clip(-1, 1);
             var fade = (msg[3] ? 0.1).asFloat.max(0);
             ~demoSeatPan[seat - 1] = pan;
