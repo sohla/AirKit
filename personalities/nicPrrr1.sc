@@ -51,6 +51,8 @@ SynthDef(\nicPrrrLoop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1|
 		var drive = m.accelMassFiltered;
 		var amp = drive.lincurve(0, 1.6, 0, 1, 2);
 		var rate = drive.linlin(0, 1.6, 1, 1.22);
+		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+		var sound = drive.lincurve(0, 0.6 * d.params.sensitivity.linexp(0, 1, 4, 0.25), 0, 1, 2) * vol;
 
 		var mid = c[\pos];
 		var ring = c[\size];
@@ -78,13 +80,13 @@ SynthDef(\nicPrrrLoop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1|
 		// );
 
 		flies = amp.linlin(0, 1, 1, swarm).round.asInteger.max(1);
-		flies.do { |i|
+		if(sound > -80.dbamp, { flies.do { |i|
 			var beat = sin((now * wingHz * rate * (1 + (i * 0.11))) + (i * 1.7));
 			var a = head - (spread * beat.abs * ((i + 1) / flies));
 			var r = ring * (1 + (wobble * beat * ((i % 3) - 1)));
 			var dot = dotMin.blend(dotMax, amp) * (1 - (i / (flies + 1)));
 			c[\draw].(\circle, (pos: mid + Polar(r, a).asPoint, size: dot), 1, amp);
-		};
+		}; });
 
 		nil
 	});

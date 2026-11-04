@@ -84,12 +84,12 @@ SynthDef(\simpleHit, {|out=0, amp=0.0, freq=120, attack=0.001, decay=0.03, susta
 		droneLvl = droneLvl + ((target - droneLvl) * (1 - exp(dt.neg / if(target > droneLvl, rise, fall))));
 		h = lift * droneLvl * duck;
 
-		c[\render].(Array.fill(n, { |i|
+		if(droneLvl > 0.001, { c[\render].(Array.fill(n, { |i|
 			var t = i / (n - 1);
 			var ph = (t * cycles) - (now * scroll);
 			var w = if(saw, { (ph.wrap(0, 1) * 2) - 1 }, { sin(ph * 2pi) });
 			(mid.x + (half * ((t * 2) - 1))) @ (mid.y + (w * h))
-		}), 0.4 + (droneLvl * duck), 0.12 + (0.88 * droneLvl * duck), false);
+		}), 0.4 + (droneLvl * duck), 0.12 + (0.88 * droneLvl * duck), false); });
 		nil
 	});
 

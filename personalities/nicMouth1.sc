@@ -54,6 +54,8 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 		var rest = mod[\restAlpha] ? 0.05;
 		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 		var amp = m.accelMassFiltered.linlin(0,4.3 * sens,0.00001,1);
+		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+		var sounding = (m.accelMassFiltered.linlin(0, 2.3 * sens, 0.00001, 1) >= 0.01) and: { vol > 0.001 };
 		var rate = m.gyroYFiltered.lincurve(-1.0,1.0,0.1,2.0,0);
 		var start = m.gyroZFiltered.lincurve(-1.0,1.0,0.0,1.0,0);
 		var a = c[\posStart];
@@ -68,7 +70,7 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 		open = if(amp > squeezeAt, { squeezeAt + ((amp - squeezeAt) * squeezeSlope) }, { amp });
 		open = open / (squeezeAt + ((1 - squeezeAt) * squeezeSlope));
 
-		mouthVoices.do { |i|
+		if(sounding, { mouthVoices.do { |i|
 			var gain = 0.2 + (i * 0.4);
 			var gap = open * gain * c[\size];
 			var lip = { |t, side|
@@ -81,7 +83,7 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 				++ Array.fill(n, { |j| lip.(1 - (j / (n - 1)), 1) }),
 				0.5 + gain, rest + ((1 - rest) * gain * open.sqrt), true
 			);
-		};
+		}; });
 		nil
 	});
 

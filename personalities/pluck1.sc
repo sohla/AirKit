@@ -6,6 +6,7 @@ var synth;
 // ~next reads - no values are relayed through vars.
 var sincePluck = 0;
 var lastNow = 0;
+var bandLevel = 0;
 
 m.rrateMassFilteredAttack = 0.8;
 m.accelMassFilteredAttack = 0.8;
@@ -49,13 +50,14 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 	//   frq  -> how fast it vibrates         (scaled for 60fps)
 	//   size -> how far a pluck throws it    (\startSize)
 	//
-	// A points func : a band is one polyline, so the core draws it and it
-	// keeps \modulation, \closed and \fill.
+	// A draw func : one polyline through c[\render], so it keeps \modulation,
+	// \closed and \fill, with its alpha following the synth's amp.lag.
 	~vdef.(\rubberBand, { |ev, c|
 		var n = ev[\numPoints] ? 64;
 		var mod = ev[\modulation] ? ();
 		var decay = mod[\decay] ? 4;
 		var vibScale = mod[\vibScale] ? 0.05;
+		var ampLag = mod[\ampLag] ? 0.2;
 		var modeMin = mod[\modeMin] ? 1;
 		var modeMax = mod[\modeMax] ? 10;
 		var pch = 40 + (m.accelMass * 150);
@@ -71,13 +73,16 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 		var vibHz = frq * vibScale;
 		var dt = (now - lastNow).clip(0, 0.25);
 		var env;
+		var points;
+		var sounding = (m.accelMass >= 0.1) and: { d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1) > 0.001 };
 
 		lastNow = now;
 		sincePluck = sincePluck + dt;
 		if(sincePluck >= pluckRate.max(0.01).reciprocal, { sincePluck = 0 });
 		env = exp(sincePluck.neg * decay) * gate * throwPx;
+		bandLevel = sounding.asInteger + ((bandLevel - sounding.asInteger) * exp(log(0.001) * dt / ampLag));
 
-		Array.fill(n, { |i|
+		points = Array.fill(n, { |i|
 			var t = i / (n - 1);
 			var y = 0;
 			modes.do { |k|
@@ -85,7 +90,9 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 				y = y + (sin(kk * pi * t) * cos(2pi * kk * vibHz * now) / kk);
 			};
 			a.blend(b, t) + (normal * y * env)
-		})
+		});
+		if(bandLevel > 0.001, { c[\render].(points, 1, bandLevel, false) });
+		nil
 	});
 
 	// Fired once and held. The anchors are normalised, so the band fits
@@ -113,6 +120,7 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 			vibScale: 0.02,
 			modeMin: 1,
 			modeMax: 10,
+			ampLag: 0.2,
 			amp: 0
 		)
 	).play;

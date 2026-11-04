@@ -142,8 +142,10 @@ SynthDef(\strike13, { |out = 0, freq = 440, amp = 0.3, vel = 1.0,
 		var halfW = c[\bounds].width * 0.5 * 0.85;
 		var halfH = c[\size];
 		var n = (phrase ? []).size;
+		var sens = dev.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+		var echoing = (m.accelMassFiltered.lincurve(0, 3 * sens, -30, -8, -1) >= -26) and: { dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1) > 0.001 };
 
-		if(n < 2, {
+		if(echoing.not, { [] }, { if(n < 2, {
 			// nothing remembered yet - a flat line, so the empty tape is
 			// legible rather than just absent
 			[ mid + (halfW.neg @ 0), mid + (halfW @ 0) ]
@@ -153,7 +155,7 @@ SynthDef(\strike13, { |out = 0, freq = 440, amp = 0.3, vel = 1.0,
 				var y = (phrase[i][\vel] ? 0).clip(0, 1).linlin(0, 1, halfH, halfH.neg);
 				mid + (x @ y)
 			})
-		})
+		}) })
 	});
 
 	~vdef.(\loopHead, { |ev, c|
@@ -162,7 +164,9 @@ SynthDef(\strike13, { |out = 0, freq = 440, amp = 0.3, vel = 1.0,
 		var n = (phrase ? []).size.max(1);
 		var x = (((loopIdx % n) / (phraseLen - 1)) * 2 - 1) * halfW;
 		var h = c[\size] * stretchNow.explin(0.25, 4.0, 1.4, 0.5);
-		[ mid + (x @ h.neg), mid + (x @ h) ]
+		var sens = dev.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+		var echoing = (m.accelMassFiltered.lincurve(0, 3 * sens, -30, -8, -1) >= -26) and: { dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1) > 0.001 };
+		if(echoing.not, { [] }, { [ mid + (x @ h.neg), mid + (x @ h) ] })
 	});
 
 	trig = Synth(\inputTrigger13, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -82,

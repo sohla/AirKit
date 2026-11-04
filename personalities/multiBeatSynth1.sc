@@ -54,10 +54,15 @@ SynthDef(\multiBeatDrone, {|out=0, freq=110, amp=0.05, pan=0,
 		var open = amp.linlin(ampMin, ampMax, 0.0, 1.0);
 		var lobes = droneNote.linlin(noteLo, noteHi, lobeMin, lobeMax).round.asInteger;
 		var radius = ev[\startSize].blend(ev[\endSize], open);
-		Array.fill(n, { |i|
-			var angle = i / n * 2pi;
-			var r = radius * (1 + (depth * sin(angle * lobes)));
-			c[\pos] + Polar(r, angle).asPoint
+		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+		var sounding = (m.accelMassFiltered.lincurve(0, 2.0 * sens, -32, -10, -1) >= -31) and: { vol > 0.001 };
+		if(sounding.not, { [] }, {
+			Array.fill(n, { |i|
+				var angle = i / n * 2pi;
+				var r = radius * (1 + (depth * sin(angle * lobes)));
+				c[\pos] + Polar(r, angle).asPoint
+			})
 		})
 	});
 

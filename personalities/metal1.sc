@@ -158,6 +158,7 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 		var rel = mod[\release] ? 0.7;
 		var fade = mod[\fade] ? -8;
 		var drive = m.accelMass * 0.5;
+		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 		var amp, size, col;
 
 		if(drive < 0.02, { drive = 0.0 });
@@ -173,7 +174,7 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 
 		size = ev[\startSize].blend(ev[\endSize], amp);
 		col = ev[\startColor].blend(ev[\endColor], amp);
-		col.alpha = col.alpha * amp.lincurve(0, 1, 0, 1, fade);
+		col.alpha = col.alpha * amp.lincurve(0, 1, 0, 1, fade) * (vol > 0.001).asInteger;
 
 		Pen.width = ev[\startWidth].blend(ev[\endWidth], amp);
 		Pen.addArc(c[\pos], size, 0, 2pi);

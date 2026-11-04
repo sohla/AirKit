@@ -37,9 +37,10 @@ SynthDef(\rainSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 			m.accelMassFiltered.clip2(2.8 * sens).linlin(1.6 * sens, 2.8 * sens,0,1),
 			m.accelMassFiltered.clip2(6.0 * sens).linlin(2.8 * sens, 6.0 * sens,0,1)];
 		var n = ev[\numPoints] ? 48;
+		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 		levels.do({ |lv, i|
 			var r = c[\size] * (i + 1);
-			c[\render].(Array.fill(n, { |j| c[\pos] + Polar(r * (1 + (lv * 0.3.rand2)), j / n * 2pi).asPoint }), 1, lv.max(0.05));
+			if((lv * vol) > -80.dbamp, { c[\render].(Array.fill(n, { |j| c[\pos] + Polar(r * (1 + (lv * 0.3.rand2)), j / n * 2pi).asPoint }), 1, lv.max(0.05)) });
 		});
 		nil
 	});

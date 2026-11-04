@@ -104,7 +104,7 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, 
 		head = a.blend(b, scan.linlin(0, 1, lo, hi));
 		centre = head + (0 @ (pan * tall * drift));
 
-		c[\render].([head - (0 @ (tall * headReach)), head + (0 @ (tall * headReach))], 0.5, headAlpha, false);
+		if(level > 0.005, { c[\render].([head - (0 @ (tall * headReach)), head + (0 @ (tall * headReach))], 0.5, headAlpha, false); });
 
 		if(level > 0.005, {
 			voices.do { |v|

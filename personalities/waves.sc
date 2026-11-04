@@ -102,7 +102,7 @@ SynthDef(\waves22, { |out=0, gate=1, amp = 0.0, lag=1,ff=200|
     ),
 	);
 
-  if(TempoClock.beats > (lastTime + 0.05),{
+  if((TempoClock.beats > (lastTime + 0.05)) and: { (amp * vol) > -80.dbamp },{
     lastTime = TempoClock.beats;
     ev.play;
   });

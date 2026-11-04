@@ -498,6 +498,7 @@ Event.addEventType(\customVisualEvent, {
 
 	var src = ~viewID ? ~src;
 	var targets = ~canvas;
+	var silent = (~instrument != \default) and: { (~amp.value ? 0).asArray.maxItem < -80.dbamp };
 
 	var event = (
 		\src: src,
@@ -535,6 +536,7 @@ Event.addEventType(\customVisualEvent, {
 
 	// explicit \canvas overrides the router; otherwise resolve by source device
 	if(targets.isNil, { targets = core.routes[src] ? [] });
+	if(silent, { targets = [] });
 
 	targets.asArray.do { |cn|
 		var c = core.canvases[cn];
