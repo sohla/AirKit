@@ -198,7 +198,7 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 
 	if(TempoClock.beats > (lastTime + rrand(0.3,0.6)),{
 		lastTime = TempoClock.beats;
-		if(m.accelMass>0.05,{
+		if((m.accelMass>0.05) and: { buffers.notNil },{
 	    	ev.play;
 			synth = Synth(\waveSampler, [\bufnum, buffers[bi], \amp, amp * 0.2 * vol, \rate, ], group);
 			bi = bi + 1;

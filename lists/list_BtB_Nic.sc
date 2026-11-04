@@ -11,7 +11,7 @@
 		"nicMouth1",
 		"nicMouthPerc",
 		"miniDroplet",
-		"waves2",
+		"waves",
 
 		"silence",
 	]
