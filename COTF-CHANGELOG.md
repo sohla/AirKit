@@ -4,6 +4,17 @@ One entry per push batch from the Concerts of the Future side, newest first: wha
 why, and what (if anything) behaves differently on your machine. The intent is that nothing
 here ever changes how AirKit behaves for you — if it does, that's a bug, tell us.
 
+## 2026-11-04 — demo profile for the SensiLab demo, on branch `feat/sensilab-demo` (cotf)
+
+**Nothing changes for you, and nothing changes on AirConcert** — this lives on its own branch.
+Two new files, `cotf/config_demo.scd` and `cotf/main_demo.scd`: a copy of the show profile for
+an off-season demo on ordinary speakers. Each seat is summed to mono and placed across three
+speakers (left / centre / right) with a new message, `/airkit/seatPan <seat> <-1..1> [fade]`,
+and a limiter sits on those outputs. The output device and which outputs are L/C/R come from
+env (`DEMO_OUT_DEVICE`, `DEMO_NUM_OUT`, `DEMO_OUT_L/C/R`). `/airkit/outputMode` does nothing
+there (it logs that it was ignored). The show files (`main_cotf.scd`, `config.scd`), the shared
+controllers and your personalities are untouched; API.md has the new row.
+
 ## 2026-08-31 — STRINGCHORD up +2 dB in the Room 3 trim table (cotf)
 
 **Nothing changes for you.** One `~cotfPatchTrims` value in `cotf/main_cotf.scd` only
