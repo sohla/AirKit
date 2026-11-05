@@ -84,8 +84,10 @@ SynthDef(\dulcimerVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 	var sig = PlayBuf.ar(2, bufnum,
 		rate: rate * BufRateScale.kr(bufnum) * [1, 1.007],
 		startPos: start * BufFrames.kr(bufnum), loop: 0);
-	var tone = LFTri.ar(freq * [1,1.02] * 0.5 * LFCub.ar(9 * amp,0, 0.1 * amp,2), 0, subamp);
-	var mix = (sig + tone) * amp * env;
+	var tone = LFTri.ar(freq * [1,1.006] * 0.5 * LFCub.ar(1 * amp * 0.5,0, 0.1 * amp, 2), 0, subamp);
+	// var ex = HPF.ar(BrownNoise.ar(0.03), 5250);
+	// var klan = Klank.ar(`[[32, 16, 8] * freq, [0.04, 0.2, 0.3, 0.4], 0.3], ex);
+	var mix = (sig + tone) * amp * env * 0.5;
 	Out.ar(out, mix);
 }).add;
 

@@ -10,6 +10,7 @@
 		"miniMoog",
 		"waves2",
 		"melVoice1",
+		"melVoice2",
 
 		"silence",
 	]

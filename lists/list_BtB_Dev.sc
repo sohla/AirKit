@@ -24,6 +24,7 @@
 
 		"nicTwoNote",
 		"nicVoice1",
+		"nicVoice2",
 		"nicbb1",
 		"nicPrrr1",
 		"nicMouth1",
@@ -33,6 +34,7 @@
 		"melbb2",
 		"mel1",
 		"melVoice1",
+		"melVoice2",
 		"mel4",
 
 		"gendy1",

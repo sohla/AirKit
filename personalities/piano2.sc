@@ -91,7 +91,7 @@ SynthDef(\pianoVerb, {
 	sig = FreeVerb2.ar(sig[0], sig[1], mix, room.clip(0, 0.95), damp);
 	sig = LeakDC.ar(sig);
 	Out.ar(out, sig * env * amp);
-	Out.ar(2, sig * env * amp);
+	Out.ar(0, sig * env * amp);
 }).add;
 
 //------------------------------------------------------------
@@ -153,7 +153,7 @@ SynthDef(\pianoVerb, {
 
 	group = Group.new;
 	fxBus = Bus.audio(s, 4);
-	verbSynth = Synth.tail(group, \pianoVerb, [\in, fxBus, \out, 0, \mix, 0.4, \room, 2.83, \damp, 0.3, \amp, 1]);
+	verbSynth = Synth.tail(group, \pianoVerb, [\in, fxBus, \out, 0, \mix, 0.2, \room, 2.83, \damp, 0.3, \amp, 1]);
 
 	
 	// The zero line, held for the life of the personality, so the shift

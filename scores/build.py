@@ -70,8 +70,6 @@ def box(label, cls="write"):
 def page(r, i, n, p, people, pieces, stamp, wears):
     e = html.escape
     d, ink = part(r, p), INK.get(p.lower(), "#333")
-    strip = "".join(
-        f'<span class="s-{part(x, p)["state"]}{" here" if j == i else ""}">{j + 1}</span>' for j, x in enumerate(pieces))
     others = [(o, part(r, o)) for o in people if o != p]
     others = [(o, x["play"] or x["sound"] or x["worn"]) for o, x in others if x["state"] != "rest"]
     others = "".join(f'<li><b>{o}</b> {e(w)}</li>' for o, w in others if w)
@@ -94,8 +92,8 @@ def page(r, i, n, p, people, pieces, stamp, wears):
                 f'<div class="field grow"><div class="lab">Timeline</div>{timeline()}</div>')
     task = f'<div class="task"><div class="lab">What happens</div>{e(r["task"])}</div>' if r.get("task") and d["state"] != "rest" else ""
     return f'''<section class="page" style="--ink:{ink}">
-  <header><span>Beyond the Bones · <b>{e(p)}</b></span><div class="strip">{strip}</div></header>
-  <div class="title"><span class="num">{i + 1}</span><h1>{e(r["piece"])}</h1></div>
+  <header><span>Beyond the Bones · <b>{e(p)}</b></span></header>
+  <div class="title"><h1>{e(r["piece"])}</h1></div>
   {withyou}
   {body}
   {task}
@@ -108,13 +106,7 @@ CSS = """
 body{margin:0;font-family:"Atkinson Hyperlegible",Verdana,sans-serif;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .page{width:210mm;height:297mm;padding:12mm 15mm 10mm;display:flex;flex-direction:column;gap:5mm;page-break-after:always;overflow:hidden}
 header{display:flex;justify-content:space-between;align-items:center;font-size:12pt;color:#444;gap:6mm}
-.strip{display:flex;gap:1.5mm}
-.strip span{width:7mm;height:7mm;border:0.5mm solid #999;border-radius:1mm;font-size:8pt;display:flex;align-items:center;justify-content:center;color:#666}
-.strip .s-mine{border:0.7mm solid var(--ink);color:#111;font-weight:700}
-.strip .s-rest{border-style:dashed}
-.strip .here{background:#111;border-color:#111;color:#fff}
 .title{display:flex;align-items:center;gap:6mm;border-bottom:1.2mm solid #111;padding-bottom:3mm}
-.num{flex:none;width:22mm;height:22mm;border-radius:50%;background:var(--ink);color:#fff;font-size:30pt;font-weight:700;display:flex;align-items:center;justify-content:center}
 h1{margin:0;font-size:40pt;line-height:1.05}
 .with ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:2mm 8mm;font-size:14pt}
 .lab{font-size:11pt;letter-spacing:.08em;text-transform:uppercase;color:#555;margin-bottom:1.5mm}

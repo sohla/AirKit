@@ -13,6 +13,7 @@
 		"miniDroplet",
 		"waves",
 		"nicVoice1",
+		"nicVoice2",
 
 		"silence",
 	]

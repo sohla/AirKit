@@ -116,6 +116,7 @@ SynthDef(\nicVoice1Sampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, fr
 
 	group = Group.new;
 
+	
 	samplesLib = folder.entries.collect({ |path|
 		var stem = path.fileNameWithoutExtension;
 		var buffer = Buffer.read(s, path.fullPath, action:{ |buf|

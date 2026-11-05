@@ -54,7 +54,10 @@ var firstNoteOf = { |stem|
 var folder = PathName("~/Downloads/nicSamples/twoNote");
 
 var cellBase = 63;					
-var cell = [2,0,-2,-12,-24] - 3 + 12;
+// var cell = [2,0,-2,-12,-24] - 3 + 12;
+var cell = [4,2,-2,-12,-24] - 3 + 12;
+// var cell = [5,0,-3,-12,-24] - 3 + 12;
+// var cell = [5,0,-4,-12,-24] - 3 + 12;
 var octaves = [-2,-1,0,1];			
 
 
@@ -73,9 +76,9 @@ SynthDef(\nicTwoNoteSampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, f
 	var lr = rate * BufRateScale.kr(bufnum);
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate,doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum, rate: [lr, lr * 1.0017], startPos: start * BufFrames.kr(bufnum), loop: 0);
-	var penv = EnvGen.kr(Env.new([0, 2], [0.27], '\hold'), gate);
+	// var penv = EnvGen.kr(Env.new([0, 2], [0.27], '\hold'), gate);
 	var li = LocalIn.ar(2);
-	var tone = LFTri.ar((freq.cpsmidi+penv).midicps + 1.5, 0, 0.1) + li;
+	var tone = LFTri.ar((freq.cpsmidi - 24).midicps + 1.5, 0, 0.4) + li;
 	var fil = RLPF.ar(sig, freq, 0.1) + tone; 
 	var verb = FreeVerb.ar(fil + sig, mix: 0.4, room: 0.9, damp: 0.2);
 	LocalOut.ar(PitchShift.ar(verb,0.3,7.midiratio,0,0.3,1));
