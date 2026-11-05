@@ -71,6 +71,11 @@ add to rc.xml, check it has
   grep -A2 -i touch ~/.config/labwc/rc.xml
   ```
   Also: in its case, is the panel landscape (1280x800) or portrait?
+- **Found (round 3):** on airkit5 (CAM/DISP 1) the output is `DSI-2` and the
+  touch device is `11-0014 Goodix Capacitive TouchScreen`. The `4-0014` in the
+  rc.xml line won't match; the role reads the name from the board. The panel
+  runs on its pogo pins alongside the M.2 HAT+; if they're not seated, the
+  panel's LED stays off and `dsi-panel-answers` fails.
 - **Check:** auto: panel output present at 1280x800 with the right transform,
   Goodix touch device present, rc.xml mapping present. Then a screenshot
   copied to `reports/`.
@@ -240,6 +245,9 @@ https://www.jeffgeerling.com/blog/2023/nvme-ssd-boot-raspberry-pi-5
   unchanged.
 - **Note:** on a Pi 5, `nvme` is another name for `pciex1`, so one of the two
   lines is enough. Harmless to keep both.
+- **Found (round 3):** with the M.2 HAT+ fitted, the SSD appeared as `nvme0n1`
+  (238.5 GB) with neither line in `config.txt`. The HAT+ enables PCIe itself.
+  The lines may not be needed at all; to be confirmed when booting from it.
 - **Check:** auto: PCIe enabled, the SSD shows up in `lsblk`, boot order
   has NVMe first, and if booting from it, `/` is on `nvme0n1`.
   human: cold boot with the SD card out comes up in AirKit.

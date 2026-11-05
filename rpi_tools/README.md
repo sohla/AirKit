@@ -68,8 +68,13 @@ Only one card named `pi` should be on the network at a time.
 **Powering off:** use `./poweroff.sh`. It shuts the Pi down, waits for the
 network to drop and then a further 20 s, and says when it's safe. Remove power
 only once the Pi 5's LED is solid red or off. SSH stops answering *before*
-the last writes to the card, and pulling power then corrupts the filesystem
-(round 2b). goss checks the kernel log for filesystem errors on every verify.
+the last writes to the card, and pulling power then can corrupt the
+filesystem. goss checks the kernel log for filesystem errors on every verify.
+
+**Use branded SD cards.** No-name cards (manufacturer ID `0x000000`, check
+with `cat /sys/block/mmcblk0/device/manfid`) silently wrote data to the wrong
+places on a fresh flash (round 3). The card matters even with the SSD: it's
+the source of the SSD copy and the backup boot drive.
 
 ## The lab network
 

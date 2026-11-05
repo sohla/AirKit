@@ -19,6 +19,10 @@ command:
     exec: "cat /sys/class/drm/card*-DSI-*/status"
     exit-status: 0
     stdout: ["/^connected$/"]
+  dsi-panel-answers:
+    exec: "dmesg | grep -cE 'ws_touchscreen .*I2C write failed|Goodix-TS .*I2C communication failure' ; true"
+    exit-status: 0
+    stdout: ["/^0$/"]
   touch-device-present:
     exec: "grep -i goodix /proc/bus/input/devices"
     exit-status: 0

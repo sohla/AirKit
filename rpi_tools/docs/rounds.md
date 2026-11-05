@@ -4,7 +4,73 @@ One entry per test round. Newest first.
 
 ---
 
+## Round 3 — 2026-11-05 — airkit5, good card, display overlay
+
+**Bad cards first.** Two no-name cards (`SD16G`, manufacturer ID `0x000000`,
+02/2025) both showed EXT4 errors within 21 s of a **fresh** flash, on the same
+inode (`/var/lib/apt/lists/partial`). Checked from the Mac:
+
+- The image is clean: the cached download passes `xz -t`, and `e2fsck -fn` on
+  its root partition finds nothing.
+- On the card, that directory's first block held an exact copy of a block
+  from the **boot partition** about 5.6 GB earlier: data written to the wrong
+  address.
+- A file-by-file compare of the boot partition, plus `dpkg --verify`, found
+  more silent damage: `kernel8.img`, `initramfs8`, `issue.txt`,
+  `/boot/config-6.18.50+rpt-rpi-v8`, and 2–3 directories. It booted only
+  because none of those are read during a Pi 5 boot.
+
+A third card (`MSSD0`, ID `0xc9`, 29.2 GB), flashed from the same image in the
+same reader, was clean on every check. **Cause: the no-name cards**, not the
+image and not the reader. They're retired, and the SD card has to be
+trustworthy even with the SSD plan: the SD → SSD copy would carry its damage
+over, and the SD card is the backup boot drive.
+
+Legitimate first-boot differences from the image, for later comparisons:
+`cmdline.txt`, `user-data`, `meta-data`, Firefox's `distribution.ini` (welcome
+URL id), `g_ether.conf`, and the `/etc` config files. The Mac also writes
+`.Spotlight-V100` and `.fseventsd` to the boot partition while the card is in
+the reader.
+
+| Step | Result |
+|---|---|
+| provision | ok, 11 changed, 0 failed |
+| provision again | **0 changed**, idempotent |
+| verify | 51 pass, **1 fail**: no touch device (panel not seated, see below) |
+| verify, after refit | **54 pass, 0 fail**, 1 skipped |
+
+**Display:** the overlay loads and `DSI-2` (CAM/DISP 1) reports `connected`
+at 1280x800, but the panel's controller (`11-0045`) and touch chip (`11-0014`)
+didn't answer on I²C (error -121), and the panel's LED was off. The Pi's
+supply was fine (5.14 V, no throttling, 5 A detected), so no 5V was reaching
+the pogo pins. With the M.2 HAT+ removed, the panel came up and touch
+registered. **With the HAT refitted, still on pogo pins, it also worked**: the
+panel shows the desktop, touch registers, and the SSD is present. Cause: the
+first assembly wasn't seated, so the pogo pins weren't touching. Not a
+HAT/panel conflict. The official M.2 HAT+ is powered over the PCIe ribbon and
+only passes the GPIO pins through, so it doesn't load the header's 5V pins.
+Boot order can't matter either: those pins are live from power-on.
+
+Re-verify with HAT and panel fitted: **54 pass, 0 fail**, 1 skipped
+(standalone, no role yet).
+
+**Found:**
+- `connected` proves only that the overlay is loaded, not that a panel is
+  there. Added goss `dsi-panel-answers`: no I²C failures from the panel or
+  touch chip this boot.
+- The touch device on this board is `11-0014 Goodix Capacitive TouchScreen`,
+  not `4-0014` as in the `rc.xml` notes. The touch role must read the name
+  from the board.
+- With the HAT on, the SSD shows as `nvme0n1` (238.5 GB) with no
+  `dtparam=pciex1`; the HAT+ enables PCIe itself.
+
+---
+
 ## Round 2b — 2026-11-02 — airkit5, display step 1 (abandoned)
+
+> **Correction (round 3):** the cause was very likely the no-name card, not
+> the power-off. The same corruption showed up on a fresh flash of the same
+> card type with no power-off at all.
 
 Pi powered off over SSH to reseat the DSI ribbon (CAM/DISP 1), then powered
 on. The next provision failed in `apt`: a corrupt package list. The kernel log
