@@ -11,7 +11,7 @@
     - airkit_app
     - supercollider_standalone
     - audio
-    # autostart                  what runs start_airkit.sh at login/boot
+    - autostart
     - updater
     # tuning                     on hold — docs/requirements.md §9
     - goss

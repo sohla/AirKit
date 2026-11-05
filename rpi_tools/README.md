@@ -123,6 +123,12 @@ guided checklist recorded into the same report.
   masks it for all users (option A in `docs/requirements.md`), so JACK owns
   the card. Side effect: no desktop sound outside JACK.
 - **The SuperCollider standalone** (built on Bullseye) runs on Trixie as is.
+- **AirKit needs the `Require` quark.** Without it `main.sc` fails to compile
+  and the only sign is "Class not defined" in `~/logs`; the desktop shows
+  and nothing else happens.
+- **The Pi clones AirKit from GitHub**, so anything AirKit needs (such as
+  its `machines/<kit>.scd`) must be pushed before provisioning, or the kit
+  boots as "UNKNOWN MACHINE" on built-in defaults.
 - **`Quarks.install` needs the absolute path** to the standalone's
   `sclang.yaml` in `-l`; with a relative one it can't record the quark.
 - **lightdm autologin applies `pam_limits`**, so the desktop session gets

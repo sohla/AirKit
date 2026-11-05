@@ -5,3 +5,4 @@ sc_standalone_dir: /home/pi/supercolliderStandaloneRPI64
 # Canvas3D: code3.0/threeDeeView.scd.
 sc_quarks:
   - Canvas3D
+  - Require

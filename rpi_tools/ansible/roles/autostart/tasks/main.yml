@@ -1,0 +1,22 @@
+# Starts AirKit at desktop login. labwc's autostart runs
+# lxsession-xdg-autostart, which reads ~/.config/autostart/.
+- name: ~/.config/autostart
+  ansible.builtin.file:
+    path: /home/pi/.config/autostart
+    state: directory
+    owner: pi
+    group: pi
+    mode: "0755"
+
+- name: AirKit autostart entry
+  ansible.builtin.copy:
+    dest: /home/pi/.config/autostart/airkit.desktop
+    owner: pi
+    group: pi
+    mode: "0644"
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=AirKit
+      Exec=/home/pi/start_airkit.sh
+      Terminal=false

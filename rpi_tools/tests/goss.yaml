@@ -31,10 +31,11 @@ command:
     exit-status: 0
     stdout: ["AIRKIT-SCLANG-OK 3.13.0"]
     timeout: 90000
-  quark-canvas3d-compiles:
-    exec: ./probes/sc-classes.sh Canvas3D Canvas3DItem
+  quarks-compile:
+    # One class per quark in sc_quarks. Require: main.sc can't load without it.
+    exec: ./probes/sc-classes.sh Canvas3D Canvas3DItem Require
     exit-status: 0
-    stdout: ["AIRKIT-CLASSES Canvas3D=true Canvas3DItem=true"]
+    stdout: ["AIRKIT-CLASSES Canvas3D=true Canvas3DItem=true Require=true"]
     timeout: 90000
   standalone-libs-complete:
     exec: "cd /home/pi/supercolliderStandaloneRPI64 && ldd ./sclang ./scsynth ./supernova | grep -c 'not found' ; true"
@@ -129,6 +130,10 @@ file:
     owner: pi
     mode: "0755"
     contents: ["code3.0/main.sc"]
+  /home/pi/.config/autostart/airkit.desktop:
+    exists: true
+    owner: pi
+    contents: ["/^Type=Application$/", "/^Exec=/home/pi/start_airkit.sh$/", "/^Terminal=false$/"]
   /home/pi/logs:
     exists: true
     filetype: directory

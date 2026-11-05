@@ -180,21 +180,27 @@ Currently by hand in SuperCollider. To be scripted.
   `start_airkit.sh` and the updater expect it.
 - **Check:** auto
 
-### 17. Install the Canvas3D quark from a script
-`Quarks.install("Canvas3D")` run in sclang, not via `Quarks.gui`. Needed by
-`code3.0/threeDeeView.scd`. The quark is
+### 17. Install the quarks from a script
+`Quarks.install(...)` run in sclang, not via `Quarks.gui`. Two are needed:
+- **`Require`**: `main.sc` and the rest of `code3.0/` load each other with
+  it. Without it nothing compiles: no window, no server, and the only sign
+  is "Class not defined" in `~/logs` (round 4d).
+- **`Canvas3D`**: needed by `code3.0/threeDeeView.scd`. The quark is
 [`Canvas3D`](https://github.com/supercollider-quarks/downloaded-quarks/tree/master/Canvas3D);
 the notes' `3DCanvas` was a slip (no quark has that name).
-- **Status:** passing (round 4c). The `supercollider_standalone` role installs
-  each quark in `sc_quarks` headless and records it in the standalone's
+- **Status:** passing (rounds 4c, 4d). The `supercollider_standalone` role
+  installs each quark in `sc_quarks` headless and records it in the standalone's
   `sclang.yaml`, skipping any already listed there.
 - **Found:** `Quarks.install` must be given the **absolute** path to
   `sclang.yaml` (`-l /home/pi/supercolliderStandaloneRPI64/sclang.yaml`).
   With the relative path it clones the quark but fails with "Could not write
   to file", so it's never recorded. AirKit can still start with the
   relative path; only writing the file needs the absolute one.
-- **Check:** auto: a fresh sclang compiles with `Canvas3D` and `Canvas3DItem`
-  defined (`probes/sc-classes.sh`)
+- **Check:** auto: a fresh sclang has `Canvas3D`, `Canvas3DItem` and
+  `Require` defined (`probes/sc-classes.sh`)
+- **Note:** the Mac has ~30 quarks, mostly for development. Only these two
+  are needed so far; add any other that turns up as "Class not defined" in
+  the boot log to `sc_quarks`.
 
 ## E. Network
 
@@ -305,9 +311,13 @@ Each of these exists on a working kit, or will need to.
 - **`iw` package.** It isn't installed on a fresh card, and the network tools
   and AP checks use it. It'll be added with the AP role.
 
-- **Q: Autostart (Steph to find).** What runs `start_airkit.sh` at boot? On labwc it's
-  usually `~/.config/labwc/autostart`. The LXDE file in 7 isn't read by
-  labwc.
+- **Autostart.** `~/.config/autostart/airkit.desktop` (Steph's entry:
+  `Exec=/home/pi/start_airkit.sh`, `Terminal=false`), written by the
+  `autostart` role. labwc's autostart runs `lxsession-xdg-autostart`, which
+  reads that folder.
+  **Status:** passing (round 4d). After a reboot AirKit starts at login;
+  scsynth starts jackd from `~/.jackdrc` (FIFO 40, `S3`), outputs wired to
+  `system:playback`.
 - **Q: Updater (AirKitWebApp).** Its first install, via its own `deploy.sh`.
   Where in the order?
   **Status:** passing. Installed in round 1; the page loads after a reboot

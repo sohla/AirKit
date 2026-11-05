@@ -4,6 +4,42 @@ One entry per test round. Newest first.
 
 ---
 
+## Round 4d — 2026-11-05 — airkit5, autostart and Require
+
+New `autostart` role: `~/.config/autostart/airkit.desktop`, the entry Steph
+uses on the kits (`Exec=/home/pi/start_airkit.sh`, `Terminal=false`). On
+Trixie, labwc's autostart runs `lxsession-xdg-autostart`, which reads that
+folder.
+
+**First reboot: desktop only, no AirKit window.** sclang was running but
+idle, with no server. Its log stopped after "Welcome": output through `tee`
+is buffered. Run by hand, `main.sc` failed with "Class not defined" on every
+`Require(...)`. **`Require` is a quark** and the kit didn't have it. Added to
+`sc_quarks`.
+
+**Second run: AirKit up but "UNKNOWN MACHINE"**, on built-in defaults.
+`machines/airkit5.scd` (with this board's MACs) was only in local, unpushed
+commits, and the Pi clones from GitHub. Pushed `Airsticks-RPI` (the rpi_tools
+commits rebased onto the remote's; no files in common), pulled on the Pi.
+
+| Step | Result |
+|---|---|
+| provision (Require) | 1 changed |
+| reboot | AirKit at login: `[machine] AirKit5 (SensiLab) via MAC : 9 devices` |
+| provision, again | 1 changed (marker), then **0** |
+| verify | **88 pass, 2 fail**: `audio-tone-plays` reports busy, as expected |
+
+After boot: sclang runs `main.sc`; scsynth starts jackd from `~/.jackdrc`
+(`-R -P40 -dhw:S3`); `SuperCollider:out_1/2` wired to `system:playback`.
+`jack-starts-realtime` passed against AirKit's own jackd.
+
+**Next (decided):** with AirKit running, verify checks AirKit itself (jackd
+realtime on S3, scsynth wired to playback, xruns in AirKit's log) instead of
+playing its own tone. The tone probe runs only when AirKit isn't up. That is
+the start of item 20's boot probe.
+
+---
+
 ## Round 4c — 2026-11-05 — airkit5, Canvas3D quark
 
 Same card. The `supercollider_standalone` role now installs the quarks in
