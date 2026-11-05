@@ -1,0 +1,2 @@
+# The updater's own repo on this Mac; its deploy.sh does the install.
+updater_src: "{{ lookup('env', 'AIRKIT_WEBAPP') | default('/Users/soh_la/Develop/Web/Projects/AirKitWebApp', true) }}"

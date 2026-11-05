@@ -1,0 +1,8 @@
+sc_standalone_repo: https://github.com/redFrik/supercolliderStandaloneRPI64
+sc_standalone_dir: /home/pi/supercolliderStandaloneRPI64
+
+# Installed with Quarks.install, recorded in the standalone's sclang.yaml.
+# Canvas3D: code3.0/threeDeeView.scd.
+sc_quarks:
+  - Canvas3D
+  - Require

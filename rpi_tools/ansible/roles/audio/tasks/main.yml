@@ -1,0 +1,47 @@
+# Option A: PipeWire off, so jackd owns the sound card. Masked globally
+# (what `systemctl --global mask` does), so it can't start for any login.
+- name: PipeWire masked for all users
+  ansible.builtin.file:
+    src: /dev/null
+    dest: "/etc/systemd/user/{{ item }}"
+    state: link
+    force: true
+  loop: "{{ pipewire_user_units }}"
+  register: audio_pipewire_masked
+
+- name: pi in the audio group
+  ansible.builtin.user:
+    name: pi
+    groups: audio
+    append: true
+  register: audio_group
+
+- name: Realtime limits for pi
+  ansible.builtin.copy:
+    dest: /etc/security/limits.d/audio.conf
+    mode: "0644"
+    content: |
+      # rpi_tools audio role
+      pi   -  rtprio     95
+      pi   -  memlock    unlimited
+      pi   -  nice       -19
+  register: audio_limits
+
+- name: ~/.jackdrc (scsynth starts jackd from it)
+  become: false
+  ansible.builtin.copy:
+    dest: /home/pi/.jackdrc
+    mode: "0644"
+    content: "{{ jack_command }}\n"
+
+# A running login keeps its old groups and limits, and PipeWire keeps the
+# card until the session ends. A reboot gives the desktop all three.
+- name: Reboot so the desktop session gets the audio setup
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+  when: audio_pipewire_masked is changed or audio_group is changed or audio_limits is changed
+
+- name: Network ready again after the reboot
+  ansible.builtin.include_role:
+    name: net_ready
+  when: audio_pipewire_masked is changed or audio_group is changed or audio_limits is changed

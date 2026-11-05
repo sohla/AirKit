@@ -1,0 +1,42 @@
+# The MACs belong to the Pi board, so they say which kit this hardware is.
+# machines/*.scd is the record; a kit with no MACs gets this board's.
+- name: This board's MACs
+  ansible.builtin.set_fact:
+    board_macs: "{{ [ansible_facts.eth0.macaddress | default(''),
+                     ansible_facts.wlan0.macaddress | default('')]
+                    | select | map('lower') | list }}"
+    kit_macs_lc: "{{ kit_macs | map('lower') | list }}"
+
+- name: Kits whose machine file lists one of these MACs
+  ansible.builtin.set_fact:
+    claimed_by: "{{ (claimed_by | default([])) + [item] }}"
+  loop: "{{ groups['airkits'] }}"
+  when: hostvars[item].kit_macs | map('lower') | list | intersect(board_macs) | length > 0
+
+- name: Board belongs to the kit named on the command line
+  ansible.builtin.assert:
+    that:
+      - (claimed_by | default([])) | difference([inventory_hostname]) | length == 0
+      - kit_macs_lc | length == 0 or (kit_macs_lc | intersect(board_macs) | length > 0)
+    fail_msg: >-
+      This board ({{ board_macs | join(', ') }}) is
+      {{ (claimed_by | default([])) | join(' / ') or 'not ' ~ inventory_hostname }},
+      but you asked for {{ inventory_hostname }}
+      ({{ machine_file }} lists {{ kit_macs | join(', ') or 'no MACs' }}).
+      Check the kit name, or correct the machine file.
+    quiet: true
+
+- name: Record this board's MACs in {{ machine_file }}
+  when: kit_macs | length == 0
+  delegate_to: localhost
+  become: false
+  ansible.builtin.replace:
+    path: "{{ playbook_dir }}/../../{{ machine_file }}"
+    regexp: '^(\s*)macs:\s*\[\s*\],'
+    replace: '\1macs: [{{ board_macs | map("to_json") | join(",") }}],'
+  register: macs_recorded
+
+- name: Remember to commit the machine file
+  ansible.builtin.debug:
+    msg: "{{ machine_file }} now lists {{ board_macs | join(', ') }}. Commit it."
+  when: macs_recorded is changed

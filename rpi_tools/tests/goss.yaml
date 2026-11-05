@@ -1,0 +1,217 @@
+# Run via ../verify.sh. {{.Vars.kit}} is the inventory name, e.g. airkit3.
+# Kit state only: must pass after a reboot, with or without internet.
+# Internet and clock are provisioning conditions, enforced by net_ready.
+
+command:
+  hostname:
+    exec: hostname
+    exit-status: 0
+    stdout: [pi]
+  arch-is-64bit:
+    exec: uname -m
+    exit-status: 0
+    stdout: [aarch64]
+  os-is-trixie:
+    exec: ". /etc/os-release && echo $VERSION_CODENAME"
+    exit-status: 0
+    stdout: [trixie]
+  dsi-panel-connected:
+    exec: "cat /sys/class/drm/card*-DSI-*/status"
+    exit-status: 0
+    stdout: ["/^connected$/"]
+  dsi-panel-answers:
+    exec: "dmesg | grep -cE 'ws_touchscreen .*I2C write failed|Goodix-TS .*I2C communication failure' ; true"
+    exit-status: 0
+    stdout: ["/^0$/"]
+  touch-device-present:
+    exec: "grep -i goodix /proc/bus/input/devices"
+    exit-status: 0
+  sclang-runs:
+    exec: ./probes/sclang-runs.sh
+    exit-status: 0
+    stdout: ["AIRKIT-SCLANG-OK 3.13.0"]
+    timeout: 90000
+  quarks-compile:
+    # One class per quark in sc_quarks. Require: main.sc can't load without it.
+    exec: ./probes/sc-classes.sh Canvas3D Canvas3DItem Require
+    exit-status: 0
+    stdout: ["AIRKIT-CLASSES Canvas3D=true Canvas3DItem=true Require=true"]
+    timeout: 90000
+  standalone-libs-complete:
+    exec: "cd /home/pi/supercolliderStandaloneRPI64 && ldd ./sclang ./scsynth ./supernova | grep -c 'not found' ; true"
+    exit-status: 0
+    stdout: ["/^0$/"]
+  pipewire-not-running:
+    exec: "pgrep -c -x 'pipewire|wireplumber|pipewire-pulse' ; true"
+    exit-status: 0
+    stdout: ["/^0$/"]
+  sound-card-s3-present:
+    exec: "grep -c '\\[S3 *\\]' /proc/asound/cards"
+    exit-status: 0
+    stdout: ["/^1$/"]
+  desktop-session-rt-limits:
+    # The session AirKit runs in. Kernel shows nice -19 as 39 (20 - nice).
+    exec: "grep -E '^Max (realtime priority|locked memory|nice priority) ' /proc/$(pgrep -u pi -x labwc | head -1)/limits | sed -E 's/^Max ([a-z]+) [a-z]+ +([^ ]+) .*/\\1=\\2/' | sort | paste -sd' '"
+    exit-status: 0
+    stdout: ["/^locked=unlimited nice=39 realtime=95$/"]
+  desktop-session-in-audio-group:
+    exec: "grep -q \"^Groups:.* $(getent group audio | cut -d: -f3)\\b\" /proc/$(pgrep -u pi -x labwc | head -1)/status"
+    exit-status: 0
+  jack-starts-realtime:
+    exec: ./probes/jack-starts.sh
+    exit-status: 0
+    stdout: ["JACK-OK rt=40"]
+    timeout: 30000
+  # AirKit down: plays a 3 s tone through the speaker, 30 s in all.
+  # AirKit up: checks AirKit's own audio instead (peak not measured).
+  audio-tone-plays:
+    exec: ./probes/audio-tone.sh
+    exit-status: 0
+    stdout:
+      - "/^AIRKIT-AUDIO (peak=0\\.(0[5-9]|[1-9])[0-9]*|airkit) connected=yes xruns=0 sr=44100/"
+    timeout: 120000
+  touch-mapped-to-panel:
+    exec: >-
+      out=$(ls -d /sys/class/drm/card*-DSI-* | head -1 | sed 's|.*/card[0-9]*-||');
+      dev=$(sed -n 's/^N: Name="\(.*Goodix Capacitive TouchScreen\)"$/\1/p' /proc/bus/input/devices | head -1);
+      grep -cF "<touch deviceName=\"$dev\" mapToOutput=\"$out\" mouseEmulation=\"yes\"/>" /home/pi/.config/labwc/rc.xml
+    exit-status: 0
+    stdout: ["/^1$/"]
+  panel-landscape-1280x800:
+    exec: >-
+      out=$(ls -d /sys/class/drm/card*-DSI-* | head -1 | sed 's|.*/card[0-9]*-||');
+      sudo -u pi XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0 wlr-randr |
+      awk -v o="$out" '/^[^ ]/{on=($1==o)} on' |
+      grep -E 'Enabled: yes|1280x800 px.*current|Transform: normal' | wc -l
+    exit-status: 0
+    stdout: ["/^3$/"]
+  # network_ap. Settings from utils/network/README.md.
+  ap-profile-settings:
+    exec: "nmcli -g 802-11-wireless.mode,802-11-wireless.ssid,802-11-wireless.channel,802-11-wireless.powersave,802-11-wireless-security.proto,802-11-wireless-security.pairwise,802-11-wireless-security.group,802-11-wireless-security.pmf,ipv4.method,ipv4.addresses,connection.autoconnect connection show '{{.Vars.ap_ssid}}' | paste -sd' '"
+    exit-status: 0
+    stdout: ["/^ap {{.Vars.ap_ssid}} 11 disable rsn ccmp ccmp 1 shared {{.Vars.ap_addr}}/24 yes$/"]
+  ap-on-air:
+    exec: "/usr/sbin/iw dev wlan0 info | awk '$1==\"ssid\"||$1==\"type\"||$1==\"channel\"{print $2}' | paste -sd' '"
+    exit-status: 0
+    stdout: ["/^{{.Vars.ap_ssid}} AP 11$/"]
+  ap-power-save-off:
+    exec: /usr/sbin/iw dev wlan0 get power_save
+    exit-status: 0
+    stdout: ["Power save: off"]
+  ap-address:
+    exec: ip -br -4 addr show wlan0
+    exit-status: 0
+    stdout: ["/ {{.Vars.ap_addr}}/24/"]
+  ap-dhcp-dns:
+    # NM's own dnsmasq for ipv4.method=shared, not the dnsmasq service.
+    exec: "pgrep -a -x dnsmasq | grep -cF -- '--listen-address={{.Vars.ap_addr}} '"
+    exit-status: 0
+    stdout: ["/^1$/"]
+  filesystem-no-errors-this-boot:
+    exec: "dmesg | grep -cE 'EXT4-fs error|I/O error|Buffer I/O' ; true"
+    exit-status: 0
+    stdout: ["/^0$/"]
+  updater-has-no-rt-limits:
+    exec: systemctl show airkit-updater -p LimitRTPRIO --value
+    exit-status: 0
+    stdout: ["/^0$/"]
+  no-pending-upgrades:
+    exec: "apt-get -s dist-upgrade | grep -c '^Inst ' ; true"
+    exit-status: 0
+    stdout: ["/^0$/"]
+
+file:
+  /proc/device-tree/model:
+    exists: true
+    contents: ["Raspberry Pi 5"]
+  /etc/airkit-provision:
+    exists: true
+    contents: ["kit: {{.Vars.kit}}"]
+  /var/run/reboot-required:
+    exists: false
+  /usr/local/bin/goss:
+    exists: true
+  /boot/firmware/config.txt:
+    exists: true
+    contents: ["/^dtoverlay=vc4-kms-dsi-waveshare-panel,10_1_inch/"]
+  /etc/sudoers.d/010_pi-nopasswd:
+    exists: true
+    mode: "0440"
+    contents: ["pi ALL=(ALL) NOPASSWD: ALL"]
+
+  # airkit_app
+  /home/pi/Develop/SuperCollider/Projects/AirKit/.git:
+    exists: true
+    filetype: directory
+  /home/pi/Develop/SuperCollider/Projects/AirKit/code3.0/main.sc:
+    exists: true
+  /home/pi/start_airkit.sh:
+    exists: true
+    owner: pi
+    mode: "0755"
+    contents: ["code3.0/main.sc"]
+  /home/pi/.config/autostart/airkit.desktop:
+    exists: true
+    owner: pi
+    contents: ["/^Type=Application$/", "/^Exec=/home/pi/start_airkit.sh$/", "/^Terminal=false$/"]
+  /home/pi/logs:
+    exists: true
+    filetype: directory
+    owner: pi
+  /home/pi/supercolliderStandaloneRPI64/sclang:
+    exists: true
+    owner: pi
+  /home/pi/.config/SuperCollider/sc_ide_conf.yaml:
+    exists: true
+    owner: pi
+  /home/pi/.jackdrc:
+    exists: true
+    owner: pi
+    contents: ["/usr/bin/jackd -R -P40 -dalsa -dhw:S3 -r44100 -p256 -n3"]
+  /etc/security/limits.d/audio.conf:
+    exists: true
+    contents: ["/^pi +- +rtprio +95$/", "/^pi +- +memlock +unlimited$/", "/^pi +- +nice +-19$/"]
+  /etc/systemd/user/pipewire.service:
+    exists: true
+    linked-to: /dev/null
+  /etc/systemd/user/wireplumber.service:
+    exists: true
+    linked-to: /dev/null
+
+  # updater — and the June 2026 rule: no RT limits in its unit
+  /etc/systemd/system/airkit-updater.service:
+    exists: true
+    contents: ["User=pi"]
+
+user:
+  pi:
+    exists: true
+    groups:
+      contain-elements: [sudo]
+
+service:
+  ssh:
+    enabled: true
+    running: true
+  avahi-daemon:
+    enabled: true
+    running: true
+  NetworkManager:
+    enabled: true
+    running: true
+  airkit-updater:
+    enabled: true
+    running: true
+
+port:
+  tcp:8080:
+    listening: true
+
+interface:
+  eth0:
+    exists: true
+
+http:
+  http://localhost:8080/:
+    status: 200
+    timeout: 5000

@@ -1,0 +1,18 @@
+- name: Configure an AirKit
+  hosts: airkits
+  become: true
+  vars:
+    tools_rev: "{{ lookup('pipe', 'git -C ' ~ playbook_dir ~ ' rev-parse --short HEAD') }}"
+  roles:
+    - kit_identity
+    - net_ready
+    - base
+    - display
+    - airkit_app
+    - supercollider_standalone
+    - audio
+    - autostart
+    - updater
+    # tuning                     on hold — docs/requirements.md §9
+    - goss
+    - network_ap                 # last: it takes wlan0

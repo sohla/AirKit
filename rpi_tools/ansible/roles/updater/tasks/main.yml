@@ -1,0 +1,32 @@
+# First install only. Later updater changes go out with `make deploy` from
+# AirKitWebApp as usual, so provisioning never overwrites a newer updater.
+- name: Is the updater already installed?
+  ansible.builtin.stat:
+    path: /etc/systemd/system/airkit-updater.service
+  register: updater_unit
+
+- name: Install the updater with its own deploy.sh
+  when: not updater_unit.stat.exists
+  delegate_to: localhost
+  become: false
+  block:
+    # deploy.sh uses plain ssh, and a reflashed card has a new host key.
+    - name: Forget the previous card's host key for {{ ansible_host }}
+      ansible.builtin.command: ssh-keygen -R {{ ansible_host }}
+      changed_when: false
+      failed_when: false
+
+    - name: Trust this card's host key
+      ansible.builtin.shell: ssh-keyscan -T 5 {{ ansible_host }} 2>/dev/null >> ~/.ssh/known_hosts
+      changed_when: false
+
+    - name: deploy.sh --install-deps --setup-service
+      ansible.builtin.command:
+        argv: ["{{ updater_src }}/scripts/deploy.sh", -t, "pi@{{ ansible_host }}",
+               --install-deps, --setup-service]
+      register: updater_deploy
+
+- name: deploy.sh output
+  ansible.builtin.debug:
+    var: updater_deploy.stdout_lines
+  when: updater_deploy is changed

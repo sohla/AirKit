@@ -1,0 +1,4 @@
+# Lab fallback: the Mac's Internet Sharing gateway. Used only when the Pi's
+# own default route can't reach the internet (e.g. it took the lab AP's DHCP).
+uplink_gw: 192.168.2.1
+uplink_addr: 192.168.2.250

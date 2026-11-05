@@ -1,0 +1,68 @@
+# Own [all] line so it can't land inside a [pi4]/[cm5] section of config.txt.
+- name: Waveshare panel overlay in config.txt
+  ansible.builtin.blockinfile:
+    path: /boot/firmware/config.txt
+    marker: "# {mark} AirKit display (rpi_tools)"
+    block: |
+      [all]
+      dtoverlay={{ display_overlay }}
+  register: display_overlay_line
+
+- name: Reboot to load the panel overlay
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+  when: display_overlay_line is changed
+
+- name: Network ready again after the reboot
+  ansible.builtin.include_role:
+    name: net_ready
+  when: display_overlay_line is changed
+
+# Touch mapping. Pi OS's autotouch writes the same line at login, but only
+# when exactly one display is connected, so HDMI at first boot leaves touch
+# spanning both screens. Names come from the board (bus 11 on CAM/DISP 1).
+- name: Touch device and panel output names
+  ansible.builtin.shell: |
+    touch=$(sed -n 's/^N: Name="\(.*Goodix Capacitive TouchScreen\)"$/\1/p' /proc/bus/input/devices | head -1)
+    out=$(ls -d /sys/class/drm/card*-DSI-* 2>/dev/null | head -1 | sed 's|.*/card[0-9]*-||')
+    echo "$touch"; echo "$out"
+  register: display_names
+  changed_when: false
+  check_mode: false
+  failed_when: >-
+    display_names.stdout_lines | length != 2 or
+    display_names.stdout_lines[0] == '' or display_names.stdout_lines[1] == ''
+
+- name: Fail if the panel isn't answering
+  ansible.builtin.fail:
+    msg: >-
+      No Goodix touch device or DSI output. The panel isn't answering: check
+      its power (LED on? pogo pins seated?) and the ribbon, then rerun.
+  when: display_names is failed
+
+- name: labwc rc.xml exists (same skeleton autotouch writes)
+  ansible.builtin.copy:
+    dest: /home/pi/.config/labwc/rc.xml
+    force: false
+    owner: pi
+    group: pi
+    mode: "0664"
+    content: |
+      <?xml version="1.0"?>
+      <openbox_config xmlns="http://openbox.org/3.4/rc">
+      </openbox_config>
+  register: display_rcxml_new
+
+- name: Touch mapped to the panel
+  ansible.builtin.lineinfile:
+    path: /home/pi/.config/labwc/rc.xml
+    regexp: '<touch deviceName="[^"]*Goodix'
+    line: "\t<touch deviceName=\"{{ display_names.stdout_lines[0] }}\" mapToOutput=\"{{ display_names.stdout_lines[1] }}\" mouseEmulation=\"yes\"/>"
+    insertbefore: "</openbox_config>"
+  register: display_touch_line
+
+# labwc reloads rc.xml on SIGHUP; otherwise it applies at next login.
+- name: Reload labwc
+  ansible.builtin.command: pkill -HUP -x labwc
+  when: display_rcxml_new is changed or display_touch_line is changed
+  failed_when: false
