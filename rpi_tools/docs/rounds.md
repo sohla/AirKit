@@ -4,6 +4,36 @@ One entry per test round. Newest first.
 
 ---
 
+## Round 4e — 2026-11-05 — airkit5, verify with AirKit running
+
+`probes/audio-tone.sh` now has two modes. If AirKit (`sclang` running
+`code3.0/main.sc`) is up, it owns the sound card, so the probe checks AirKit's
+audio without touching it: scsynth and jackd running,
+`SuperCollider:out_1` wired to `system:playback`, the sample rate
+(`jack_samplerate`), and the xruns in AirKit's newest log, where jackd writes.
+Otherwise it plays the tone as before. One goss pattern accepts either line:
+
+```
+AIRKIT-AUDIO airkit connected=yes xruns=0 sr=44100           AirKit up
+AIRKIT-AUDIO peak=0.1 connected=yes xruns=0 sr=44100.0       AirKit down
+```
+
+| Step | Result |
+|---|---|
+| verify, AirKit up (after boot) | **90 pass, 0 fail**, 4 s |
+| verify, AirKit stopped | **90 pass, 0 fail**, 37 s (tone played) |
+
+**Limits:**
+- AirKit mode doesn't measure the output level. Sound out of AirKit is the
+  hand check in item 20.
+- No JACK client reports xruns live, so they're counted in the log since
+  AirKit started. sclang's output goes through `tee` and is buffered, so the
+  last few lines may not be there yet.
+
+`jack-starts-realtime` already checked a running jackd when there is one.
+
+---
+
 ## Round 4d — 2026-11-05 — airkit5, autostart and Require
 
 New `autostart` role: `~/.config/autostart/airkit.desktop`, the entry Steph

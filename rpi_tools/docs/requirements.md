@@ -165,6 +165,9 @@ Currently by hand in SuperCollider. To be scripted.
   right level (Steph).
 - **Limit:** 0 xruns is with the server idle. Under AirKit's load with sticks
   sending OSC is item 20's probe.
+- **With AirKit running** (round 4e) the probe doesn't play a tone: it checks
+  AirKit's own audio (scsynth wired to playback, 44.1 kHz, xruns in AirKit's
+  log) and leaves it running.
 - **Check:** auto, by a probe: boots scsynth on JACK, plays a test tone,
   confirms the server is running, the output isn't silent and there are 0
   xruns over 30 s.
