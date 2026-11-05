@@ -4,6 +4,40 @@ One entry per test round. Newest first.
 
 ---
 
+## Round 4c — 2026-11-05 — airkit5, Canvas3D quark
+
+Same card. The `supercollider_standalone` role now installs the quarks in
+`sc_quarks` (just
+[`Canvas3D`](https://github.com/supercollider-quarks/downloaded-quarks/tree/master/Canvas3D),
+for `code3.0/threeDeeView.scd`; item 17). It runs `Quarks.install` in a
+headless sclang and fails unless sclang reports the quark installed. A quark
+already listed in the standalone's `sclang.yaml` is skipped. Install needs
+internet, which provisioning already ensures.
+
+Before the round, the hand install from testing was undone (`sclang.yaml`
+restored, the clone removed), so this is the role from scratch.
+
+| Step | Result |
+|---|---|
+| provision | 2 changed (quark install, provision marker) |
+| provision again | **0 changed** |
+| verify | **87 pass, 0 fail**, 0 skipped |
+
+New check: `quark-canvas3d-compiles`. `probes/sc-classes.sh` starts a fresh
+sclang and reports whether each named class exists; a later quark needs one
+line in goss.
+
+**Fixed during the round:**
+- `Quarks.install("3DCanvas")` (as in the notes): "not found". The quark is
+  `Canvas3D`.
+- With `-l sclang.yaml` (relative), sclang cloned the quark but couldn't write
+  `sclang.yaml`. The role passes the absolute path.
+
+The quark's last commit is from December 2018, so it isn't pinned to a
+version; it isn't moving.
+
+---
+
 ## Round 4b — 2026-11-05 — airkit5, audio probe
 
 `probes/audio-tone.sh` (item 14), now part of every verify. It starts jackd

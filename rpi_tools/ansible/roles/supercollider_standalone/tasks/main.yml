@@ -36,3 +36,29 @@
     remote_src: true
     force: false
     mode: "0644"
+
+# A quark counts as installed once its path is in sclang.yaml. sclang needs
+# the config's absolute path to write it back (relative fails to save).
+- name: Quarks already in sclang.yaml
+  become: false
+  ansible.builtin.command: grep -c "downloaded-quarks/{{ item }}$" {{ sc_standalone_dir }}/sclang.yaml
+  loop: "{{ sc_quarks }}"
+  register: sc_quark_listed
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Quarks installed
+  become: false
+  ansible.builtin.shell: |
+    printf 'Quarks.install("%s"); "AIRKIT-QUARK %%\n".postf(Quarks.isInstalled("%s")); 0.exit;\n' {{ item.item }} {{ item.item }} > /tmp/airkit-quark.scd
+    QT_QPA_PLATFORM=offscreen timeout 300 ./sclang -a -l {{ sc_standalone_dir }}/sclang.yaml /tmp/airkit-quark.scd 2>&1
+    rm -f /tmp/airkit-quark.scd
+  args:
+    chdir: "{{ sc_standalone_dir }}"
+  loop: "{{ sc_quark_listed.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.stdout != "1"
+  register: sc_quark_install
+  failed_when: "'AIRKIT-QUARK true' not in sc_quark_install.stdout"

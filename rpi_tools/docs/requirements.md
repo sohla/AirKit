@@ -180,12 +180,21 @@ Currently by hand in SuperCollider. To be scripted.
   `start_airkit.sh` and the updater expect it.
 - **Check:** auto
 
-### 17. Install the 3DCanvas quark from a script
-`Quarks.install("3DCanvas")` run in sclang, not via `Quarks.gui`. Needed by
-`code3.0/threeDeeView.scd`.
-- **Q:** With `-a -l sclang.yaml`, the quark gets recorded in the
-  standalone's `sclang.yaml`. Is that where it ends up on your kits now?
-- **Check:** auto: sclang compiles with `Canvas3D` defined
+### 17. Install the Canvas3D quark from a script
+`Quarks.install("Canvas3D")` run in sclang, not via `Quarks.gui`. Needed by
+`code3.0/threeDeeView.scd`. The quark is
+[`Canvas3D`](https://github.com/supercollider-quarks/downloaded-quarks/tree/master/Canvas3D);
+the notes' `3DCanvas` was a slip (no quark has that name).
+- **Status:** passing (round 4c). The `supercollider_standalone` role installs
+  each quark in `sc_quarks` headless and records it in the standalone's
+  `sclang.yaml`, skipping any already listed there.
+- **Found:** `Quarks.install` must be given the **absolute** path to
+  `sclang.yaml` (`-l /home/pi/supercolliderStandaloneRPI64/sclang.yaml`).
+  With the relative path it clones the quark but fails with "Could not write
+  to file", so it's never recorded. AirKit can still start with the
+  relative path; only writing the file needs the absolute one.
+- **Check:** auto: a fresh sclang compiles with `Canvas3D` and `Canvas3DItem`
+  defined (`probes/sc-classes.sh`)
 
 ## E. Network
 

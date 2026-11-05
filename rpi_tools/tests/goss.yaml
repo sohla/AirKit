@@ -31,6 +31,11 @@ command:
     exit-status: 0
     stdout: ["AIRKIT-SCLANG-OK 3.13.0"]
     timeout: 90000
+  quark-canvas3d-compiles:
+    exec: ./probes/sc-classes.sh Canvas3D Canvas3DItem
+    exit-status: 0
+    stdout: ["AIRKIT-CLASSES Canvas3D=true Canvas3DItem=true"]
+    timeout: 90000
   standalone-libs-complete:
     exec: "cd /home/pi/supercolliderStandaloneRPI64 && ldd ./sclang ./scsynth ./supernova | grep -c 'not found' ; true"
     exit-status: 0

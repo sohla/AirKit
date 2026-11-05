@@ -123,6 +123,8 @@ guided checklist recorded into the same report.
   masks it for all users (option A in `docs/requirements.md`), so JACK owns
   the card. Side effect: no desktop sound outside JACK.
 - **The SuperCollider standalone** (built on Bullseye) runs on Trixie as is.
+- **`Quarks.install` needs the absolute path** to the standalone's
+  `sclang.yaml` in `-l`; with a relative one it can't record the quark.
 - **lightdm autologin applies `pam_limits`**, so the desktop session gets
   `/etc/security/limits.d/` after a reboot. A running session doesn't.
 - **`iw` isn't installed** by default.
