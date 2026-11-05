@@ -1,9 +1,13 @@
 var m = ~model;
 var buffer;
 var dead = false;
+
 // var notes = [0,1,4,5,7,8,7,5,4,5,4,1,4,1,0,0];
 // var notes = [0,4,5,7,9,10,16,17,19];
-var notes = [0,2,5,-2] + 2;
+
+// var notes = [0,2,5,-2] + 2;
+var notes = [0,2,7,-2] + 2;
+
 m.accelMassFilteredAttack = 0.99;
 m.accelMassFilteredDecay = 0.8;
 m.rrateMassFilteredAttack = 0.99;
@@ -12,14 +16,14 @@ m.gyroFilteredAttack = 0.8;
 m.gyroFilteredDecay = 0.4;
 
 //------------------------------------------------------------
-SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=440,
-	attack=0.01, decay=0.1, sustain=0.3, release=1.2, gate=1,cutoff=20000, rq=0.9|
-	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
+SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
+	attack=0.01, decay=0.1, sustain=0.3, release=1.2, gate=1,cutoff=20000, rq=0.9, freq=440|
+	var lr = rate * BufRateScale.kr(bufnum);
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, timeScale: 1,doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum, rate: [lr, lr * 1.003], startPos: start * BufFrames.kr(bufnum), loop: 0);
 	var hs = RHPF.ar(sig, [6000,7000], 0.99,13).tanh;
-	// sig = RLPF.ar(sig, cutoff, rq);// + osc;
-	sig = Pan2.ar(Mix.ar(hs[0] + sig[0]), pan, amp * env);
+	var sub = SinOsc.ar(freq * 4, LFNoise2.ar(10,10), EnvGen.kr(Env.perc(0.1, release), gate) * 0.04);
+	sig = Pan2.ar(Mix.ar(hs[0] + sig[0] + sub), pan, amp * env);
 	sig = FreeVerb.ar(sig,0.5,0.4);
 	sig = LeakDC.ar(sig);
 	Out.ar(out, sig);
@@ -50,6 +54,8 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 					\sustain,0.1,
 					\release,1.3,
 					\rate, Pslide(notes.midiratio, inf, Pkey(\range), 0, 0),
+					\baseNote, 72,
+					\freq, Pfunc({ |e| (e[\baseNote] + e[\rate].ratiomidi).midicps }),
 
 
 				\type, \customVisualEvent,

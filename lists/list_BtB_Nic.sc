@@ -12,6 +12,7 @@
 		"nicMouthPerc",
 		"miniDroplet",
 		"waves",
+		"nicVoice1",
 
 		"silence",
 	]

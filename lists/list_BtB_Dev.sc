@@ -23,6 +23,7 @@
 		"miniMarimba",
 
 		"nicTwoNote",
+		"nicVoice1",
 		"nicbb1",
 		"nicPrrr1",
 		"nicMouth1",
@@ -31,6 +32,7 @@
 		"melbb1",
 		"melbb2",
 		"mel1",
+		"melVoice1",
 		"mel4",
 
 		"gendy1",
