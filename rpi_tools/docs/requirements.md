@@ -42,6 +42,9 @@ dtoverlay=vc4-kms-dsi-waveshare-panel,10_1_inch
 Reference: https://www.waveshare.com/wiki/10.1inch_DSI_LCD_(C)
 
 ### 7. Reboot. Screen working, correct rotation, touch in sync
+- **Status:** passing (round 3b). Landscape, `DSI-2` 1280x800, touch mapped
+  by the `display` role, four-corner hand check passed. labwc only; the LXDE
+  and xrandr notes below don't apply on Trixie.
 Your notes:
 ```
 sudo nano /etc/xdg/lxsession/LXDE-pi/autostart

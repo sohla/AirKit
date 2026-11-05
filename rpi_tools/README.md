@@ -122,6 +122,10 @@ guided checklist recorded into the same report.
 - **PipeWire runs by default** and can hold the sound card. The audio setup
   turns it off (option A in `docs/requirements.md`).
 - **`iw` isn't installed** by default.
+- **autotouch** (Pi OS) maps a touchscreen in `~/.config/labwc/rc.xml` at
+  login, but only with exactly one display connected, and only once. The
+  `display` role writes the mapping itself so HDMI at first boot can't break it.
+  The touch device's name carries its I²C bus (`11-0014` on CAM/DISP 1).
 
 ## Layout
 

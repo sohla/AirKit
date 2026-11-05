@@ -4,6 +4,33 @@ One entry per test round. Newest first.
 
 ---
 
+## Round 3b — 2026-11-05 — airkit5, touch mapping
+
+Same card. Raspberry Pi OS's `autotouch` (run at each login from
+`/etc/xdg/autostart/autotouch.desktop`) had already written the right line to
+`~/.config/labwc/rc.xml`. But it only does that when exactly one display is
+connected, and never again once a touch line exists. So HDMI plugged in at
+first boot would leave touch spanning both screens for good. The `display`
+role now writes the same line itself, taking the device and output names from
+the board, and stops with a clear message if the panel isn't answering.
+
+| Step | Result |
+|---|---|
+| provision | ok, 1 changed (provision marker, new tools commit); touch line already right |
+| provision again | **0 changed** |
+| verify | **58 pass, 0 fail**, 1 skipped (standalone) |
+
+New checks: `touch-mapped-to-panel` and `panel-landscape-1280x800` (DSI
+output enabled, 1280x800, transform normal, read with `wlr-randr`).
+
+**Hand check:** touching the four corners lands on the four corners (Steph).
+Pass. Picture upright, landscape, desktop showing.
+
+kanshi is left empty for now; with only the panel there's nothing for it to
+do. It comes with HDMI (item 19).
+
+---
+
 ## Round 3 — 2026-11-05 — airkit5, good card, display overlay
 
 **Bad cards first.** Two no-name cards (`SD16G`, manufacturer ID `0x000000`,

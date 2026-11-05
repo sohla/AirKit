@@ -26,6 +26,21 @@ command:
   touch-device-present:
     exec: "grep -i goodix /proc/bus/input/devices"
     exit-status: 0
+  touch-mapped-to-panel:
+    exec: >-
+      out=$(ls -d /sys/class/drm/card*-DSI-* | head -1 | sed 's|.*/card[0-9]*-||');
+      dev=$(sed -n 's/^N: Name="\(.*Goodix Capacitive TouchScreen\)"$/\1/p' /proc/bus/input/devices | head -1);
+      grep -cF "<touch deviceName=\"$dev\" mapToOutput=\"$out\" mouseEmulation=\"yes\"/>" /home/pi/.config/labwc/rc.xml
+    exit-status: 0
+    stdout: ["/^1$/"]
+  panel-landscape-1280x800:
+    exec: >-
+      out=$(ls -d /sys/class/drm/card*-DSI-* | head -1 | sed 's|.*/card[0-9]*-||');
+      sudo -u pi XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0 wlr-randr |
+      awk -v o="$out" '/^[^ ]/{on=($1==o)} on' |
+      grep -E 'Enabled: yes|1280x800 px.*current|Transform: normal' | wc -l
+    exit-status: 0
+    stdout: ["/^3$/"]
   filesystem-no-errors-this-boot:
     exec: "dmesg | grep -cE 'EXT4-fs error|I/O error|Buffer I/O' ; true"
     exit-status: 0
