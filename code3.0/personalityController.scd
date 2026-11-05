@@ -10,7 +10,7 @@ var com = (
     \dur: 1,
     \accelMass: 0,
     \rrateMass: 0,
-    \bgColor: Color.black,
+    \bgColor: machine[\bgColor],
 );
 
 //------------------------------------------------------------

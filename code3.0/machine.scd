@@ -95,6 +95,10 @@ var defaults = (
 	border: isOSX,
 	fullScreen: isOSX.not,
 
+	// The ground every canvas starts on, until a personality sets
+	// m.com.bgColor.
+	bgColor: Color.black,
+
 	// How screens.scd finds the second screen for the visuals window.
 	// \hdmi : the Pi's HDMI port (/sys/class/drm + xrandr)
 	// \osx  : AppKit's screen list, any display arranged beside the main one

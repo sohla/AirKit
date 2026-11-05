@@ -27,5 +27,6 @@
 	latency: 0.1,
 
 	border: false,
-	fullScreen: true
+	fullScreen: true,
+	bgColor: Color.black
 )

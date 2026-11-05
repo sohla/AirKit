@@ -40,6 +40,7 @@
 
 	border: true,
 	fullScreen: false,
+	bgColor: Color.white,
 	screenProbe: \osx,
 
 	drumInput: false

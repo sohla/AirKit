@@ -35,7 +35,7 @@ SynthDef(\drumkit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 ~init = ~init <> {
 
 	var folder  = PathName("~/Downloads/openLabSamples/kit");
-	m.com.bgColor = Color.grey(0.2);
+	// m.com.bgColor = Color.grey(0.2);
 
 	postf("loading samples : % \n", folder);
 
