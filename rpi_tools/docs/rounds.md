@@ -4,6 +4,38 @@ One entry per test round. Newest first.
 
 ---
 
+## Round 4b — 2026-11-05 — airkit5, audio probe
+
+`probes/audio-tone.sh` (item 14), now part of every verify. It starts jackd
+from `~/.jackdrc`, sets Speaker to 90% as `start_airkit.sh` does, boots
+scsynth, plays a 3 s 440 Hz tone and idles for the rest of 30 s. It reports
+the output peak (measured on scsynth's output bus), whether
+`SuperCollider:out_1` feeds `system:playback`, and the xruns in jackd's log.
+
+```
+AIRKIT-AUDIO peak=0.1 connected=yes xruns=0 sr=44100.0
+```
+
+| Step | Result |
+|---|---|
+| verify | **85 pass, 0 fail**, 36 s |
+
+**Hand check:** the tone is heard through the speaker, level good (Steph).
+Pass.
+
+**Fixed during the round:**
+- The probe's first version hung: a bare `wait` also waited for jackd. Its
+  jackd ran 3½ min that way, with 0 xruns.
+- goss runs checks in parallel, and two probes each start jackd. verify now
+  runs goss with `--max-concurrent 1`.
+
+**Limit:** 0 xruns is idle load. Load with sticks sending OSC comes with the
+AirKit boot probe (item 20). The probe reports busy, not a failure of
+the card, if AirKit's JACK is already running; once there's an autostart,
+verify will have to stop AirKit around it.
+
+---
+
 ## Round 4 — 2026-11-05 — airkit5, standalone and JACK
 
 Same card. Two new roles, one at a time.

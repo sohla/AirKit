@@ -157,6 +157,14 @@ sudo usermod -aG audio $USER
 
 ### 14. Boot the server to check audio works
 Currently by hand in SuperCollider. To be scripted.
+- **Status:** passing (round 4b). `probes/audio-tone.sh` runs in every
+  verify: jackd from `~/.jackdrc`, Speaker at 90% (as `start_airkit.sh`),
+  scsynth plays a 3 s 440 Hz tone, output peak measured, scsynth's outputs
+  wired to `system:playback`, xruns counted over 30 s. Result: peak 0.1,
+  connected, **0 xruns at -P40**, 44.1 kHz. Heard through the speaker at the
+  right level (Steph).
+- **Limit:** 0 xruns is with the server idle. Under AirKit's load with sticks
+  sending OSC is item 20's probe.
 - **Check:** auto, by a probe: boots scsynth on JACK, plays a test tone,
   confirms the server is running, the output isn't silent and there are 0
   xruns over 30 s.

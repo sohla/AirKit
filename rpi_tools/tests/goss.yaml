@@ -56,6 +56,16 @@ command:
     exit-status: 0
     stdout: ["JACK-OK rt=40"]
     timeout: 30000
+  # Plays a 3 s tone through the speaker. 30 s. Reports busy if AirKit is up.
+  audio-tone-plays:
+    exec: ./probes/audio-tone.sh
+    exit-status: 0
+    stdout:
+      - "/AIRKIT-AUDIO peak=0\\.(0[5-9]|[1-9])/"
+      - "connected=yes"
+      - "xruns=0 "
+      - "sr=44100"
+    timeout: 120000
   touch-mapped-to-panel:
     exec: >-
       out=$(ls -d /sys/class/drm/card*-DSI-* | head -1 | sed 's|.*/card[0-9]*-||');

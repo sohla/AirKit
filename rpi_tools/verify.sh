@@ -17,7 +17,8 @@ scp -q -r "${SSH_OPTS[@]}" "$RPI_TOOLS/tests" "$PI_USER@$host:airkit-tests.new" 
     echo "# $kit ($host)  $(date)"
     echo "# rpi_tools rev $(git -C "$RPI_TOOLS" rev-parse --short HEAD 2>/dev/null)$(git -C "$RPI_TOOLS" diff --quiet -- . 2>/dev/null || echo '-dirty')"
     echo
-    pi_ssh "$host" "cd airkit-tests && sudo goss -g goss.yaml --vars-inline '{\"kit\":\"$kit\"}' validate --format documentation --no-color"
+    # One check at a time: the jack and audio probes each start jackd.
+    pi_ssh "$host" "cd airkit-tests && sudo goss -g goss.yaml --vars-inline '{\"kit\":\"$kit\"}' validate --max-concurrent 1 --format documentation --no-color"
 } 2>&1 | tee "$report"
 rc=${PIPESTATUS[0]}
 
