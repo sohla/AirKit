@@ -1,0 +1,49 @@
+# The kit's own Wi-Fi network for the sticks: NetworkManager in AP mode on
+# the onboard radio. Last in site.yml because it takes wlan0.
+- name: iw, for checking the AP
+  ansible.builtin.apt:
+    name: iw
+    state: present
+
+- name: Wi-Fi radio state
+  ansible.builtin.command: nmcli radio wifi
+  register: wifi_radio
+  changed_when: false
+
+- name: Wi-Fi radio on
+  ansible.builtin.command: nmcli radio wifi on
+  when: wifi_radio.stdout != "enabled"
+
+- name: AP profile {{ ap_ssid }}
+  community.general.nmcli:
+    conn_name: "{{ ap_ssid }}"
+    type: wifi
+    ifname: "{{ ap_iface }}"
+    ssid: "{{ ap_ssid }}"
+    autoconnect: true
+    wifi:
+      mode: ap
+      band: bg
+      channel: "{{ ap_channel }}"
+      powersave: 2                 # off
+    wifi_sec:
+      key-mgmt: wpa-psk
+      psk: "{{ ap_psk }}"
+      proto: [rsn]
+      pairwise: [ccmp]
+      group: [ccmp]
+      pmf: 1                       # off: some stick firmware mishandles PMF
+    method4: shared
+    ip4: "{{ ap_addr }}/{{ ap_prefix }}"
+    method6: disabled
+    state: present
+  register: ap_profile
+
+- name: Active connection on {{ ap_iface }}
+  ansible.builtin.command: nmcli -g GENERAL.CONNECTION device show {{ ap_iface }}
+  register: ap_active
+  changed_when: false
+
+- name: AP up
+  ansible.builtin.command: nmcli connection up "{{ ap_ssid }}"
+  when: ap_profile is changed or ap_active.stdout != ap_ssid

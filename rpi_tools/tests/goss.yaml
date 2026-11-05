@@ -85,6 +85,28 @@ command:
       grep -E 'Enabled: yes|1280x800 px.*current|Transform: normal' | wc -l
     exit-status: 0
     stdout: ["/^3$/"]
+  # network_ap. Settings from utils/network/README.md.
+  ap-profile-settings:
+    exec: "nmcli -g 802-11-wireless.mode,802-11-wireless.ssid,802-11-wireless.channel,802-11-wireless.powersave,802-11-wireless-security.proto,802-11-wireless-security.pairwise,802-11-wireless-security.group,802-11-wireless-security.pmf,ipv4.method,ipv4.addresses,connection.autoconnect connection show '{{.Vars.ap_ssid}}' | paste -sd' '"
+    exit-status: 0
+    stdout: ["/^ap {{.Vars.ap_ssid}} 11 disable rsn ccmp ccmp 1 shared {{.Vars.ap_addr}}/24 yes$/"]
+  ap-on-air:
+    exec: "/usr/sbin/iw dev wlan0 info | awk '$1==\"ssid\"||$1==\"type\"||$1==\"channel\"{print $2}' | paste -sd' '"
+    exit-status: 0
+    stdout: ["/^{{.Vars.ap_ssid}} AP 11$/"]
+  ap-power-save-off:
+    exec: /usr/sbin/iw dev wlan0 get power_save
+    exit-status: 0
+    stdout: ["Power save: off"]
+  ap-address:
+    exec: ip -br -4 addr show wlan0
+    exit-status: 0
+    stdout: ["/ {{.Vars.ap_addr}}/24/"]
+  ap-dhcp-dns:
+    # NM's own dnsmasq for ipv4.method=shared, not the dnsmasq service.
+    exec: "pgrep -a -x dnsmasq | grep -cF -- '--listen-address={{.Vars.ap_addr}} '"
+    exit-status: 0
+    stdout: ["/^1$/"]
   filesystem-no-errors-this-boot:
     exec: "dmesg | grep -cE 'EXT4-fs error|I/O error|Buffer I/O' ; true"
     exit-status: 0

@@ -1,0 +1,6 @@
+# utils/network/README.md has the reasons for each of these.
+ap_iface: wlan0
+ap_channel: 11          # the sticks only scan channel 11
+ap_prefix: 24
+# The kits' convention: the passphrase is the SSID (ap_ssid, from inventory).
+ap_psk: "{{ ap_ssid }}"

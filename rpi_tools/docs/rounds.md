@@ -4,6 +4,70 @@ One entry per test round. Newest first.
 
 ---
 
+## Round 4f — 2026-11-05 — airkit5, access point
+
+New `network_ap` role (item 18), last in `site.yml`: NetworkManager profile
+`AirKit5Network` on wlan0 with the settings from `utils/network/README.md`
+(channel 11, PMF off, power save off, WPA2 CCMP, shared at 192.168.250.1/24).
+SSID, connection name and passphrase are the same string (Steph). The
+inventory gives each kit `ap_ssid` (`<label>Network`, or `ssid:` from the
+machine file) and `ap_addr` (`apAddr`); verify now passes both to goss.
+
+On the fresh card NetworkManager had the **Wi-Fi radio off** and `iw` wasn't
+installed; the role fixes both. The Pi stays reachable on eth0 throughout.
+
+| Step | Result |
+|---|---|
+| provision, again | 2 changed (profile, AP up), then **0** |
+| verify | **100 pass, 0 fail** (10 new AP checks) |
+| reboot, verify | AP back by itself; **100 pass, 0 fail** with AirKit running |
+
+AirKit now finds the kit by its strongest signal: `[machine] AirKit5
+(SensiLab) via AP address 192.168.250.1` (it was "via MAC" with no AP).
+
+**Fixed during the round:** `community.general.nmcli`'s `mode` is for bonds;
+AP mode goes in `wifi.mode`. A `pgrep -f` check counted its own shell.
+
+**Stick:** one Airstick (`64:e8:33:63:88:60`, Espressif) joined
+**4 s after the AP came up** at boot (16:13:30) and stayed on with steady
+traffic (712k packets in 27 min). It took a DHCP address (`.193`), though
+`utils/network/README.md` says the sticks use static IPs: to check. The
+Pi's radio reports no signal strength for its clients.
+
+**Lab network incident (not the AP).** The Mac lost the Pi over the cable.
+From the Pi's log:
+- at boot (16:13) eth0 took the N600's `10.1.1.9`, not the Mac's
+  `192.168.2.x` (the two-DHCP-server race, see README). The Mac kept
+  reaching it over IPv6 (`pi.local`);
+- at 16:20:35 eth0's **physical link** went down and up (kernel "Link is
+  Down"): cable, switch or N600. After that the Mac had no route to it.
+  Mac Internet Sharing had also stopped when its Wi-Fi changed network.
+
+Recovered by joining the N600's network: `./verify.sh airkit5 10.1.1.9`
+→ **100 pass, 0 fail**. Nothing on eth0 changed when the AP came up.
+
+**AirKit quit at 16:38:32**, cleanly (`/quit` to the server, exit 0), 10 s
+after eth0 bounced again. Probably closed by hand; to confirm. So whether
+AirKit adds the stick (device tab) isn't checked yet.
+
+**Not committed yet** (the `network_ap` role, inventory `ap_ssid`, verify
+vars, 10 AP checks, these notes).
+
+### Next session
+1. Reboot (or `~/start_airkit.sh`), check the stick appears on the device tab
+   and moves the visuals and sound. Then commit and push this round.
+2. Confirm whether AirKit was closed by hand at 16:38.
+3. Sticks: static IPs or DHCP? Fix `utils/network/README.md` or the role.
+4. airkit2's machine file needs `ssid: "AirKit2_Network"`, and its USB
+   dongle isn't handled by `network_ap` yet.
+5. `sticks.sh` (scan the AP for joined sticks from the Mac), if wanted.
+6. Lab: the N600 vs Mac DHCP race made the Pi unreachable over the cable.
+   Pass the IP (`10.1.1.9`) to the scripts, or keep Internet Sharing up.
+7. Later: item 20 (AirKit boot probe with sticks), 19 (HDMI), 21 (power
+   button), 23 (SSD).
+
+---
+
 ## Round 4e — 2026-11-05 — airkit5, verify with AirKit running
 
 `probes/audio-tone.sh` now has two modes. If AirKit (`sclang` running

@@ -217,13 +217,20 @@ AP power mode off.
 ```
 Plus, from `utils/network/README.md`: channel 11, PMF off, `ipv4.method
 shared` at the kit's AP IP.
-- **Q:** These are `modify` commands. How is the profile created in the first
-  place (`nmcli con add …`, or the desktop's hotspot dialog)? Paste it if you
-  have it.
-- **Q:** Is the connection name always the same as the SSID (`AirKit4Network`)?
-  The network tools assume `AirKit2_Network`.
-- **Check:** auto: profile settings, AP up on channel 11, PMF off, power save
-  off, address = kit's AP IP.
+- **Status:** passing (round 4f). A stick joined 4 s after the AP came up;
+  AirKit adding it is still to check. The `network_ap` role
+  (last in `site.yml`) creates the whole profile with NetworkManager:
+  AP mode, band bg, channel 11, WPA2 (`rsn`/`ccmp`/`ccmp`), PMF off, power
+  save off, `ipv4.method shared` at the machine file's `apAddr`/24, IPv6 off,
+  autoconnect. It also turns the Wi-Fi radio on (off on a fresh card) and
+  installs `iw`.
+- **SSID = connection name = passphrase** (Steph, 2026-11-05). The SSID is
+  `<label>Network` (`AirKit5Network`) unless the machine file has an
+  `ssid:` key. **airkit2 is `AirKit2_Network`** (`utils/network/README.md`),
+  so its machine file needs `ssid: "AirKit2_Network"` before it's
+  provisioned, and its USB dongle isn't handled by the role yet.
+- **Check:** auto: profile settings, AP on the air (SSID, type AP, channel
+  11), power save off, wlan0 at the kit's AP IP, NM's dnsmasq serving it.
   human: a real stick joins.
 
 ### 19. Second screen (HDMI)
@@ -311,8 +318,8 @@ Each of these exists on a working kit, or will need to.
   With no terminal to type a password into, those fail silently. So does
   `deploy.sh`'s `sudo mv`. Either all of sudo is passwordless (what older
   Pi OS images did), or only those commands are.
-- **`iw` package.** It isn't installed on a fresh card, and the network tools
-  and AP checks use it. It'll be added with the AP role.
+- **`iw` package.** It isn't installed on a fresh card; the `network_ap` role
+  installs it. It's in `/usr/sbin`, so not on pi's PATH.
 
 - **Autostart.** `~/.config/autostart/airkit.desktop` (Steph's entry:
   `Exec=/home/pi/start_airkit.sh`, `Terminal=false`), written by the

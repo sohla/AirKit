@@ -92,6 +92,10 @@ run, and again after any reboot:
   address `192.168.2.250` and a default route via the Mac's `192.168.2.1`.
   Nothing is saved on the card, so a reboot removes it and a finished kit
   carries nothing from the lab.
+- If the Mac can't reach the Pi over the cable (Internet Sharing off, or
+  the Pi took the N600's `10.1.1.x`), join the N600's network and pass the
+  Pi's IP: `./verify.sh airkit5 10.1.1.9`. Provisioning still needs
+  sharing for internet.
 - It waits for the **clock** to sync. A fresh card's clock is the image date,
   and TLS rejects every newer certificate ("certificate is not yet valid").
 
@@ -133,7 +137,12 @@ guided checklist recorded into the same report.
   `sclang.yaml` in `-l`; with a relative one it can't record the quark.
 - **lightdm autologin applies `pam_limits`**, so the desktop session gets
   `/etc/security/limits.d/` after a reboot. A running session doesn't.
-- **`iw` isn't installed** by default.
+- **`iw` isn't installed** by default, and lives in `/usr/sbin` (not on pi's
+  PATH).
+- **The Wi-Fi radio is off** in NetworkManager on a fresh card. The
+  `network_ap` role turns it on.
+- **Kit SSID** is `<label>Network` unless the machine file has `ssid:`; it is
+  also the connection name and the passphrase.
 - **autotouch** (Pi OS) maps a touchscreen in `~/.config/labwc/rc.xml` at
   login, but only with exactly one display connected, and only once. The
   `display` role writes the mapping itself so HDMI at first boot can't break it.

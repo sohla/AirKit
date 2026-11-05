@@ -15,4 +15,4 @@
     - updater
     # tuning                     on hold — docs/requirements.md §9
     - goss
-    # network_ap                 last: it takes wlan0
+    - network_ap                 # last: it takes wlan0

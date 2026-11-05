@@ -36,6 +36,8 @@ def kits():
             "kit_label": value(t, "label"),
             "kit_user": value(t, "user"),
             "ap_addr": value(t, "apAddr"),
+            # SSID defaults to <label>Network; a machine file can name its own.
+            "ap_ssid": value(t, "ssid") or f"{value(t, 'label')}Network",
             "kit_macs": value(t, "macs") or [],
             "machine_file": f"machines/{f.name}",
         }
