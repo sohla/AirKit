@@ -4,6 +4,40 @@ One entry per test round. Newest first.
 
 ---
 
+## Round 4 — 2026-11-05 — airkit5, standalone and JACK
+
+Same card. Two new roles, one at a time.
+
+**`supercollider_standalone`** (items 8–11): qjackctl (brings jackd2), the
+standalone cloned into `~` (commit `7e9cfcf`, SC 3.13.0), and
+`sc_ide_conf.yaml` from its template. The standalone was built on Bullseye;
+**on Trixie every library resolves and `sclang` compiles and interprets
+headless.**
+
+**`audio`** (items 12–13): PipeWire masked for all users (option A), the
+limits file, and `~/.jackdrc` with **-P40** (decided today, below the Wi-Fi
+interrupt at 50). Reboots once so the desktop session gets it all.
+
+| Step | Result |
+|---|---|
+| standalone: provision, again | 6 changed, then **0** |
+| audio: provision, again | 4 changed (one reboot), then **0** |
+| verify | **83 pass, 0 fail**, 0 skipped |
+
+**Checked on the Pi:** the desktop session (lightdm autologin applies
+`pam_limits`) has rtprio 95, memlock unlimited and nice -19 (the kernel shows
+39); jackd starts from `~/.jackdrc` on `S3` and its audio thread runs
+SCHED_FIFO 40; PipeWire and WirePlumber aren't running. pi was already in
+`audio` on Pi OS.
+
+**Fixed during the round:** the limits check matched "Max realtime timeout"
+too and misread the columns. The Pi was right.
+
+**Next:** the audio probe (item 14): scsynth on JACK plays a tone, the
+output meter shows signal, xruns counted over 30 s. Then a listening check.
+
+---
+
 ## Round 3b — 2026-11-05 — airkit5, touch mapping
 
 Same card. Raspberry Pi OS's `autotouch` (run at each login from

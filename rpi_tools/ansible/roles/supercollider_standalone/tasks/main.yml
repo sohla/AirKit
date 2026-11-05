@@ -1,0 +1,38 @@
+# jackd2 (pulled in by qjackctl) asks whether to enable realtime limits for
+# @audio. Answer no here: the audio role writes pi's own limits file.
+- name: jackd2 realtime question preseeded
+  ansible.builtin.debconf:
+    name: jackd2
+    question: jackd/tweak-rt-limits
+    vtype: boolean
+    value: "false"
+
+- name: qjackctl installed (brings jackd2)
+  ansible.builtin.apt:
+    name: qjackctl
+    state: present
+
+# Cloned once, like the app: the standalone is a fixed build.
+- name: SuperCollider standalone cloned
+  become: false
+  ansible.builtin.git:
+    repo: "{{ sc_standalone_repo }}"
+    dest: "{{ sc_standalone_dir }}"
+    depth: 1
+    update: false
+
+- name: ~/.config/SuperCollider
+  become: false
+  ansible.builtin.file:
+    path: /home/pi/.config/SuperCollider
+    state: directory
+    mode: "0755"
+
+- name: SC IDE config from the standalone's template
+  become: false
+  ansible.builtin.copy:
+    src: "{{ sc_standalone_dir }}/sc_ide_conf_temp.yaml"
+    dest: /home/pi/.config/SuperCollider/sc_ide_conf.yaml
+    remote_src: true
+    force: false
+    mode: "0644"

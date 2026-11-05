@@ -88,11 +88,17 @@ add to rc.xml, check it has
 ## C. Audio
 
 ### 8. `sudo apt-get install qjackctl`
+- **Status:** passing (round 4). Installed by `supercollider_standalone`; it
+  brings jackd2. jackd2's "enable realtime?" install question is answered no,
+  because the `audio` role writes pi's own limits.
 - **Q:** Is qjackctl only for setting up JACK by hand, or does it run on the
   kit (e.g. to start jackd)? If jackd is started from `~/.jackdrc` (see 13),
   qjackctl may not be needed at all on the kits.
 
 ### 9. `git clone https://github.com/redFrik/supercolliderStandaloneRPI64 --depth 1`
+- **Status:** passing (round 4). Cloned once into `~` (commit `7e9cfcf`,
+  SuperCollider 3.13.0). **Runs on Trixie:** every library resolves, and
+  `sclang` compiles and interprets headless (`probes/sclang-runs.sh`).
 - **Q:** Into `~`? `start_airkit.sh` expects `~/supercolliderStandaloneRPI64`.
 - **Q:** That repo's README lists apt packages it depends on. Do you install
   any of them, or has it always just run?
@@ -105,9 +111,21 @@ add to rc.xml, check it has
 mkdir -p ~/.config/SuperCollider
 cp supercolliderStandaloneRPI64/sc_ide_conf_temp.yaml ~/.config/SuperCollider/sc_ide_conf.yaml
 ```
+- **Status:** passing (round 4). Copied once, never overwritten.
 - **Check:** auto
 
 ### 12–13. Configure JACK
+- **Status:** passing (round 4), in the `audio` role. `~/.jackdrc` is
+  `/usr/bin/jackd -R -P40 -dalsa -dhw:S3 -r44100 -p256 -n3`. **-P40 decided**
+  (2026-11-05). PipeWire is masked for all users (option A). The limits
+  file is as below. pi was already in `audio`.
+- **Checked:** the desktop session (where AirKit runs) has rtprio 95,
+  memlock unlimited and nice -19; jackd starts from `~/.jackdrc` and its audio
+  thread runs SCHED_FIFO 40 (`probes/jack-starts.sh`); PipeWire isn't running.
+- **Cost of option A:** no desktop sound outside JACK (volume applet, browser,
+  HDMI and Bluetooth audio).
+
+Your original line:
 ```
 /usr/bin/jackd -R -P75 -dalsa -dhw:S3 -r44100 -p256 -n3
 ```
@@ -128,7 +146,7 @@ sudo usermod -aG audio $USER
   **Proposed: `-P40`.** That's below the Wi-Fi interrupt's default of 50, so
   it needs none of the on-hold tuning. Measured by the audio probe (xruns
   with simulated stick OSC running). Raise toward 49 if needed, never to 50.
-  *Awaiting your OK.*
+  **Decided: -P40.**
 - **Q:** `hw:S3` picks the card by name, but `start_airkit.sh` sets the volume
   with `amixer -c 2` (by index). Are they the same card? If so,
   `amixer -c S3` keeps working when the card numbering moves.

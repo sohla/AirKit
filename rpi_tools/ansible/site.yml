@@ -9,7 +9,8 @@
     - base
     - display
     - airkit_app
-    # supercollider_standalone   ~/supercolliderStandaloneRPI64 + sclang.yaml
+    - supercollider_standalone
+    - audio
     # autostart                  what runs start_airkit.sh at login/boot
     - updater
     # tuning                     on hold — docs/requirements.md §9

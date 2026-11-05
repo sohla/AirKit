@@ -119,8 +119,12 @@ guided checklist recorded into the same report.
 - **sudo asks for a password** on a fresh card. `bootstrap.sh` makes it
   passwordless, as older Pi OS images were. AirKit's Shutdown and Network
   buttons and the updater's `deploy.sh` depend on it.
-- **PipeWire runs by default** and can hold the sound card. The audio setup
-  turns it off (option A in `docs/requirements.md`).
+- **PipeWire runs by default** and holds the sound card. The `audio` role
+  masks it for all users (option A in `docs/requirements.md`), so JACK owns
+  the card. Side effect: no desktop sound outside JACK.
+- **The SuperCollider standalone** (built on Bullseye) runs on Trixie as is.
+- **lightdm autologin applies `pam_limits`**, so the desktop session gets
+  `/etc/security/limits.d/` after a reboot. A running session doesn't.
 - **`iw` isn't installed** by default.
 - **autotouch** (Pi OS) maps a touchscreen in `~/.config/labwc/rc.xml` at
   login, but only with exactly one display connected, and only once. The

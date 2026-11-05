@@ -26,6 +26,36 @@ command:
   touch-device-present:
     exec: "grep -i goodix /proc/bus/input/devices"
     exit-status: 0
+  sclang-runs:
+    exec: ./probes/sclang-runs.sh
+    exit-status: 0
+    stdout: ["AIRKIT-SCLANG-OK 3.13.0"]
+    timeout: 90000
+  standalone-libs-complete:
+    exec: "cd /home/pi/supercolliderStandaloneRPI64 && ldd ./sclang ./scsynth ./supernova | grep -c 'not found' ; true"
+    exit-status: 0
+    stdout: ["/^0$/"]
+  pipewire-not-running:
+    exec: "pgrep -c -x 'pipewire|wireplumber|pipewire-pulse' ; true"
+    exit-status: 0
+    stdout: ["/^0$/"]
+  sound-card-s3-present:
+    exec: "grep -c '\\[S3 *\\]' /proc/asound/cards"
+    exit-status: 0
+    stdout: ["/^1$/"]
+  desktop-session-rt-limits:
+    # The session AirKit runs in. Kernel shows nice -19 as 39 (20 - nice).
+    exec: "grep -E '^Max (realtime priority|locked memory|nice priority) ' /proc/$(pgrep -u pi -x labwc | head -1)/limits | sed -E 's/^Max ([a-z]+) [a-z]+ +([^ ]+) .*/\\1=\\2/' | sort | paste -sd' '"
+    exit-status: 0
+    stdout: ["/^locked=unlimited nice=39 realtime=95$/"]
+  desktop-session-in-audio-group:
+    exec: "grep -q \"^Groups:.* $(getent group audio | cut -d: -f3)\\b\" /proc/$(pgrep -u pi -x labwc | head -1)/status"
+    exit-status: 0
+  jack-starts-realtime:
+    exec: ./probes/jack-starts.sh
+    exit-status: 0
+    stdout: ["JACK-OK rt=40"]
+    timeout: 30000
   touch-mapped-to-panel:
     exec: >-
       out=$(ls -d /sys/class/drm/card*-DSI-* | head -1 | sed 's|.*/card[0-9]*-||');
@@ -90,7 +120,23 @@ file:
     owner: pi
   /home/pi/supercolliderStandaloneRPI64/sclang:
     exists: true
-    skip: true    # until the supercollider_standalone role exists
+    owner: pi
+  /home/pi/.config/SuperCollider/sc_ide_conf.yaml:
+    exists: true
+    owner: pi
+  /home/pi/.jackdrc:
+    exists: true
+    owner: pi
+    contents: ["/usr/bin/jackd -R -P40 -dalsa -dhw:S3 -r44100 -p256 -n3"]
+  /etc/security/limits.d/audio.conf:
+    exists: true
+    contents: ["/^pi +- +rtprio +95$/", "/^pi +- +memlock +unlimited$/", "/^pi +- +nice +-19$/"]
+  /etc/systemd/user/pipewire.service:
+    exists: true
+    linked-to: /dev/null
+  /etc/systemd/user/wireplumber.service:
+    exists: true
+    linked-to: /dev/null
 
   # updater — and the June 2026 rule: no RT limits in its unit
   /etc/systemd/system/airkit-updater.service:
