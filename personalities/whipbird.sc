@@ -146,7 +146,7 @@ SynthDef(\whipbird, {
 	var gain = 4;
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var amp = m.accelMassFiltered.lincurve(0, 2.6 * sens, -40, 0, -2);
+	var amp = m.accelMassFiltered.lincurve(0, 2.6 * sens, -40, -5, -2);
 	var dur = m.accelMassFiltered.lincurve(0, 2.6 * sens, 1, 0.2, -2);
 
 	if(amp < -38, { amp = -110 });

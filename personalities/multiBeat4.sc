@@ -29,7 +29,7 @@ SynthDef(\multiBeatKit, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
     attack=0.005, decay=0.1, sustain=0.8, release=0.02, gate=1, cutoff=50, rq=0.01|
 	var lr = rate * BufRateScale.kr(bufnum);
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
-	var sig = PlayBuf.ar(1, bufnum, rate: [lr, lr * 1.2],
+	var sig = PlayBuf.ar(1, bufnum, rate: [lr, lr * 1.1],
 		startPos: start * BufFrames.kr(bufnum), loop: 0);
 	sig = RHPF.ar(sig, cutoff.clip(20, 8000), rq) * 2;
 	sig = Compander.ar(sig, sig,
@@ -92,7 +92,7 @@ SynthDef(\dpulse, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
 			\bufnum, Pfunc({ |e| buffers[e[\pick].clip(0, buffers.size - 1)] }),
 
 			\amp, Pkey(\energy) * Pfunc({ |e| if(e[\step] == 0, { 1.0 }, { 0.55 }) }),
-			\rate, 0.25,//Pfunc({ |e| rates.choose * (e[\roll] ? 1) }),
+			\rate, 0.53,//Pfunc({ |e| rates.choose * (e[\roll] ? 1) }),
 			\start, Pfunc({ |e|
 				if(e[\rate] < 0, { 0.98 }, { [0, 0.12].wchoose([0.88, 0.12]) })
 			}),
