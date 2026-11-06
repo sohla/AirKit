@@ -14,6 +14,12 @@
 		"waves",
 		"nicVoice1",
 		"nicVoice2",
+		"nicSynth2",
+
+		"melVoice1",
+		"melVoice2",
+		"melSynth2",
+		"melSynth3",
 
 		"silence",
 	]

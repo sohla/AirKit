@@ -8,11 +8,11 @@ var verbA;
 var verbB;
 
 var noteSets = [
-	[7,2,-2,0],
-	
-	[6,-4,2,0],
-	[2,4,9,0],
-	[2,4,7,0]
+	[0,2,-2,7],
+	[2,5,10],
+	[1,5,8],
+	[0,5,9],
+	[2,3,5,7]
 ];
 // var noteSets = [[0]];
 var noteOffset = 0;
@@ -85,8 +85,8 @@ SynthDef(\melVoice2Verb, {|in=0, out=0, gate=1, release=2|
 				\shape, \circle,
 			
 				\duration, 3.6,
-				\sx, 1.neg + Pfunc({|e| e.octave * 0.02}),
-				\sy, 1.5 - Pfunc({|e| e.rate * 0.75}),
+				\sx, 0,
+				\sy, 0,//1.5 - Pfunc({|e| e.rate * 0.75}),
 				\startSize, 10,
 				\ex, Pkey(\sx),
 				\ey, Pkey(\sy),

@@ -56,11 +56,12 @@ var folder = PathName("~/Downloads/nicSamples/twoNote");
 
 var cellBase = 60;					
 var noteSets = [
-	[0,7,3,7,7],
+	[0,7,5,2],
+	[2,5,7],
 
-	[0,7,4,7,7],
-	[1,11,7,9,9],
-	[11,9,7,9,9]
+	[1,5,8,0],
+	[0,5,-3],
+	[2,0,-2],
 ];
 
 
@@ -83,7 +84,7 @@ SynthDef(\nicVoice2Sampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, fr
 	attack=0.01, decay=0.1, sustain=0.3, release=3.2, gate=1|
 	var lr = rate * BufRateScale.kr(bufnum);
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate,doneAction: 2);
-	var sig = PlayBuf.ar(2, bufnum, rate: [lr, lr * 1.0017], startPos: start * BufFrames.kr(bufnum), loop: 0);
+	var sig = PlayBuf.ar(2, bufnum, rate: [lr, lr * 1.0017] - 0.04, startPos: start * BufFrames.kr(bufnum), loop: 0);
 	// var penv = EnvGen.kr(Env.new([0, 2], [0.27], '\hold'), gate);
 	var li = LocalIn.ar(2);
 	var tone = LFTri.ar((freq.cpsmidi - 24).midicps + 1.5, 0, 0.4) + li;

@@ -72,16 +72,19 @@ SynthDef(\miniMoog, {
 			\numPoints, 64,
 			\fill, true,
 			\duration, Pkey(\release),
-			\sx, 0.8,
-			\ex, 0.0 - (Pkey(\release) * 0.5),
-			\sy, (Pkey(\note) + (Pkey(\octave) * 12)).linlin(36, 69, 0.55, -0.55),
-			\ey, (Pkey(\note) + (Pkey(\octave) * 12)).linlin(36, 69, 0.55, -0.55),
+			\sy, 0.8,
+			\ey, 0.0 - (Pkey(\release) * 0.5),
+			\sx, (Pkey(\note) + (Pkey(\octave) * 12)).linlin(36, 69, 0.55, -0.55),
+			\ex, (Pkey(\note) + (Pkey(\octave) * 12)).linlin(36, 69, 0.55, -0.55),
 			\startSize, Pkey(\amp).lincurve(0.018, 0.89, 8, 30, -1),
 			\endSize, Pkey(\amp).lincurve(0.018, 0.89, 1, 20, -1),
 			\startWidth, 2,
 			\endWidth, 0.5,
-			\startColor, Pfunc{|e|Color.hsv( (e.root/9).fold(0.1,1), 0.9, 0.3, 1.0)},
-			\endColor, Color.hsv(0.4, 0.8, 0.3, 0.0),
+			// \startColor, Pfunc{|e|Color.hsv( (e.root/9).fold(0.1,1), 0.9, 0.3, 1.0)},
+			// \endColor, Color.hsv(0.4, 0.8, 0.3, 0.0),
+			\startColor, Pfunc({ |e| Color.hsv((e[\filterFreq] ? 800).explin(60, 15000, 0.28, 0.4), (e[\fq] ? 0.3).linlin(0.05, 1.0, 0.85, 0.35), 1.0, 1.0) }),
+			\endColor, Pfunc({ |e| e[\startColor].copy.alpha_(0) }),
+			\rotation, pi/2,
 			\modulation, Pfunc({ (
 				type: \normal,
 				freq: m.accelMassFiltered.lincurve(0, 2.0, 1, 12, -1),
@@ -96,7 +99,7 @@ SynthDef(\miniMoog, {
 			
 		);
 	);
-	Pdef(m.ptn).play(quant:0.1);
+	Pdef(m.ptn).play(quant:0.8);
 	// Pdef(m.ptn).pause;
 };
 

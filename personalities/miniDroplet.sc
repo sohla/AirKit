@@ -3,9 +3,9 @@ var group;
 var fxBus;
 var verbSynth;
 
-var beat = 1.0;
-var divs = [1, 4, 6,8];
-var notes = [2,4,0,-1,-3].stutter(4);
+var beat = 0.8;
+var divs = [1, 2, 6, 8];
+var notes = [2,4,0,-1,-3].stutter(4) + 24;
 
 m.accelMassFilteredAttack = 0.9;
 m.accelMassFilteredDecay = 0.2;
@@ -80,8 +80,8 @@ SynthDef(\dropletVerb, {
 			\div,  Pswitch(divs.collect({ |n| Pn(n, n) }),             Pkey(\divIdx)),
 			\step, Pswitch(divs.collect({ |n| Pseries(0, 1, n) }),     Pkey(\divIdx)),
 			\dur,  Pkey(\div).reciprocal * beat,
-			\root, Pseq([0,5,-2,2,0].stutter(64), inf),
-			\func, Pfunc({ |e| m.com.root = e[\root] }),
+			// \root, Pseq([0,5,-2,2,0].stutter(64), inf),
+			// \func, Pfunc({ |e| m.com.root = e[\root] }),
 
 			\accent, Pfunc({ |e|
 				var st = e[\step] ? 0, dv = e[\div] ? 1;
@@ -104,7 +104,7 @@ SynthDef(\dropletVerb, {
 			\type, \customVisualEvent,
 			\shape, \bead,
 			\numPoints, 72,
-			\fill, true,//Pfunc({ |e| e[\step] == 0 }),
+			\fill, false,//Pfunc({ |e| e[\step] == 0 }),
 			\rim, Pfunc({ |e| ((e[\step] ? 0) / (e[\div] ? 1) * 4 + 0.5).wrap(0, 4) }),
 			\sx, Pfunc({ |e| var f = e[\rim].frac; [f * 2 - 1, 1, 1 - (f * 2), -1][e[\rim].floor.asInteger] * 0.56 }),
 			\sy, Pfunc({ |e| var f = e[\rim].frac; [-1, f * 2 - 1, 1, 1 - (f * 2)][e[\rim].floor.asInteger] * 0.16 }),
@@ -113,12 +113,12 @@ SynthDef(\dropletVerb, {
 			\xEnv, Pfunc({ Env([0, 1], [1], 3) }),
 			\yEnv, Pfunc({ Env([0, 1], [1], 3) }),
 			\rotation, Pfunc({ |e| (e[\rim].floor + 1) * 0.5pi * 0.3}),
-			\startSize, Pfunc({ |e| (e.use { ~freq.value }).explin(120, 1800, 250, 26) }),
+			\startSize, Pfunc({ |e| (e.use { ~freq.value }).explin(120, 1800, 50, 26) }),
 			\endSize, Pfunc({ |e| e[\startSize] * 0.35 }),
 			\sizeEnv, Pfunc({ Env([0, 1], [1], -4) }),
-			\startWidth, Pfunc({ |e| (e[\filterRQ] ? 1) * 4 }),
+			\startWidth, Pfunc({ |e| (e[\filterRQ] ? 1) * 5}),
 			\endWidth, 0.5,
-			\startColor, Color.red,
+			\startColor, Color.new(0.3,0.3,1),
 
 			// \startColor, Pfunc({ |e|
 			// 	var f = e.use { ~freq.value };
@@ -135,7 +135,7 @@ SynthDef(\dropletVerb, {
 			\colorEnv, Pfunc({ Env([0, 1], [1], -4) }),
 			\duration, Pfunc({ |e| (e[\attack] ? 0.001) + (e[\decay] ? 0.3) * 4 }),
 			\modulation, Pfunc({ |e| (
-				wobble: e[\wobble] ? 10, depth: 0.2, maxLobes: 4, breathe: 6, taper: 1.4, amp: 0
+				wobble: e[\wobble] ? 2, depth: 0.2, maxLobes: 2, breathe: 3, taper: 1.4, amp: 0
 			) })
 		);
 	);
@@ -149,7 +149,7 @@ SynthDef(\dropletVerb, {
 
 	Pdef(m.ptn).play(quant: beat);
 
-	m.com.root = 0;
+	// m.com.root = 0;
 };
 
 //------------------------------------------------------------

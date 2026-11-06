@@ -93,6 +93,8 @@
 		"insects2",
 
 		"silence",
+		"nicSynth2",
+		"melSynth2",
 	]
 )
 
