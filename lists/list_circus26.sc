@@ -28,6 +28,16 @@
 
 		"multiBeatSynth1",
 
+		"piano2",
+		"multiBeat1",
+		"gendy1",
+		"miniMoog",
+		"waves2",
+		"melVoice1",
+		"melVoice2",
+		"melSynth2",
+		"melSynth3",
+
 		"silence",
 	]
 )
