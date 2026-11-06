@@ -12,7 +12,8 @@
 	numDevices: 9,
 
 	// list: unconfirmed — falls back to list_dev.sc until set.
-	list: "list_Mel_26.sc",
+	// list: "list_Mel_26.sc",
+	list: "list_circus26.sc",
 	// list: "list_alon26.sc",
 	// list: "list_ITR_Nic.sc",
 	// list: "list_yourDNA26.sc",
