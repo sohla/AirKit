@@ -17,7 +17,7 @@ var ioiMax = 2.0;
 var smooth = 0.99;
 
 // var notes = [0,7,10,12,19,24,29,36] - 12;
-var notes = [0,7,19] - 9 + 24;
+var notes = [0,2,4,5,7,9,11,12] - 9;
 
 var bodyRatios = [1, 1.34, 2.71];
 var bodyAmps = [0.5, 0.25, 0.12];
@@ -68,9 +68,8 @@ SynthDef(\hollowWoodL, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 	var plk = Pluck.ar(exc, fire, 0.05, freq.reciprocal.clip(0.0001, 0.05) * 0.5 * lfo,
 		decay, coef.clip(0.0, 0.95));
 
-
 	var knock = Decay2.ar(fire, 0.0005, 0.008) * PinkNoise.ar(1);
-	var bod = DynKlank.ar(`[
+	var bod = Klank.ar(`[
 		[freq * 1, freq * 1.34, freq * 2.71] * lfo,
 		[0.5, 0.25, 0.12],
 		[0.30, 0.18, 0.10] * body
@@ -126,8 +125,9 @@ SynthDef(\hollowWoodL, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 		nil
 	});
 
-	trig = Synth(\hollowWoodTriggerL, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -33,
-		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.001], group);
+	trig = Synth(\hollowWoodTriggerL, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -30,
+		\fullScale, 0.7, \curve, 0.3, \deadtime, 0.001], group);
+
 
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
@@ -170,7 +170,7 @@ SynthDef(\hollowWoodL, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			note = notes.clipAt(rt) + 45;
 			Synth(\hollowWoodL, [
 				\freq, note.midicps,
-				\vel, vel,
+				\vel, vel * 2,
 				\amp, 0.3 * ang * vol,
 				\decay, ang * 5,
 				\coef, cf * roll,
