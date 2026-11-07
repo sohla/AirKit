@@ -2,7 +2,6 @@ var inputBus = 0;
 var m = ~model;
 var group, synth, trig;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
-var relTime = 0.6;
 
 var notes = [40,47,52,56];
 var step = 0;
@@ -159,6 +158,7 @@ SynthDef(\simpleHit, {|out=0, amp=0.0, freq=120, attack=0.001, decay=0.03, susta
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
 	var dying = group;
+	var tail = 1.1;
 
 	OSCdef(hitKey) !? (_.free);
 	trig !? (_.free);
@@ -169,7 +169,7 @@ SynthDef(\simpleHit, {|out=0, amp=0.0, freq=120, attack=0.001, decay=0.03, susta
 	if (dying.notNil) {
 		fork {
 			dying.set(\gate, 0);
-			(relTime + 0.5).wait;
+			tail.wait;
 			dying.free;
 		};
 	};

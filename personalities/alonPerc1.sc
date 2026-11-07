@@ -2,7 +2,6 @@ var m = ~model;
 var dev = ~device;
 var group, trig, buffers;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
-var relTime = 0.4;
 var step = 0;
 
 var kitFolder = "~/Downloads/cotf_samples/drums";
@@ -170,6 +169,7 @@ SynthDef(\alonKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
 	var dying = group, dyingBufs = buffers;
+	var tail = 0.9;
 
 	OSCdef(hitKey) !? (_.free);
 	trig !? (_.free);
@@ -180,7 +180,7 @@ SynthDef(\alonKit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	if (dying.notNil, {
 		fork {
 			dying.set(\gate, 0);
-			(relTime + 0.5).wait;
+			tail.wait;
 			dying.freeAll;
 			s.sync;
 			dying.free;

@@ -3,7 +3,6 @@ var m = ~model;
 var dev = ~device;
 var group, trig;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
-var relTime = 0.8;
 
 // Chord sets, one per section. Motion picks which note of the current set
 // sounds, and the set moves on once it has been exhausted `reps` times.
@@ -123,6 +122,7 @@ SynthDef(\miniMoogVoice, {
 
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
+			var relTime = 0.8;
 			var set = noteSets.wrapAt(setIdx);
 			var band = setIdx;
 
@@ -202,6 +202,7 @@ SynthDef(\miniMoogVoice, {
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
 	var dying = group;
+	var tail = 1.3;
 
 	OSCdef(hitKey) !? (_.free);
 	trig !? (_.free);
@@ -211,7 +212,7 @@ SynthDef(\miniMoogVoice, {
 	if (dying.notNil) {
 		fork {
 			dying.set(\gate, 0);
-			(relTime + 0.5).wait;
+			tail.wait;
 			dying.free;
 		};
 	};

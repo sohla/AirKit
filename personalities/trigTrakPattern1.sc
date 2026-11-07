@@ -2,7 +2,6 @@ var m = ~model;
 var dev = ~device;
 var group, trig;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
-var relTime = 0.5;
 
 var lastHit = 0;
 var lastIoi = 0.5;
@@ -99,6 +98,7 @@ SynthDef(\trigTone, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
+			var relTime = 0.5;
 			var vol = dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 			var vel = msg[3];
 			var now = SystemClock.seconds;
@@ -209,6 +209,7 @@ SynthDef(\trigTone, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
 	var dying = group;
+	var tail = 1.0;
 
 	Pdef(m.ptn).remove;
 	OSCdef(hitKey) !? (_.free);
@@ -218,7 +219,7 @@ SynthDef(\trigTone, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 	if (dying.notNil) {
 		fork {
-			(relTime + 0.5).wait;
+			tail.wait;
 			dying.freeAll;
 			s.sync;
 			dying.free;

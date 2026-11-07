@@ -3,7 +3,6 @@ var m = ~model;
 var dev = ~device;
 var group, trig;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
-var relTime = 3.0;
 
 var dblDelay = 0.3;
 var dblVel = 0.9;
@@ -70,6 +69,7 @@ SynthDef(\bellVoice, { |out = 0, amp = 0.3, freq = 523, vel = 1.0,
 	OSCdef(hitKey, { |msg|
 
 		if (msg[1] == trig.nodeID) {
+			var relTime = 3.0;
 			var sens = dev.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 			var vol = dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 			var notes = [0,7,12,16] + 52;
@@ -101,6 +101,7 @@ SynthDef(\bellVoice, { |out = 0, amp = 0.3, freq = 523, vel = 1.0,
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
 	var dying = group;
+	var tail = 3.5;
 
 	OSCdef(hitKey) !? (_.free);
 	trig !? (_.free);
@@ -110,7 +111,7 @@ SynthDef(\bellVoice, { |out = 0, amp = 0.3, freq = 523, vel = 1.0,
 	if (dying.notNil) {
 		fork {
 			dying.set(\gate, 0);
-			(relTime + 0.5).wait;
+			tail.wait;
 			dying.free;
 		};
 	};

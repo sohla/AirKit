@@ -63,11 +63,12 @@ var snareBus = 1;
 
 var floorDbMark = -32;
 var peak = [0, 0];
+var muted = [false, false];
 
 var kickBuf, snareBuf;
 var group, mute, probe, seq, clock, cmdPeriod;
 var win, playhead, playBtn, bpmText, levelText, meter;
-var ensureGroup, ensureProbe, fire, start, stop, cells, labelled;
+var ensureGroup, ensureProbe, fire, start, stop, cells, muteBtn, labelled;
 
 SynthDef(\drumInputVoice, { |bufnum = 0, amp = 0.5, inBus = 0|
 	var sig = PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum), doneAction: 2);
@@ -95,9 +96,9 @@ ensureProbe = { if(probe.isNil, { probe = Synth(\drumInputProbe, [], s.defaultGr
 
 // addToTail, NOT the default addToHead : the voice has to run after the mute
 // or the mute wipes it and the input bus goes silent.
-fire = { |row, buf, inBus|
+fire = { |row, buf, inBus, lane|
 	var v = row[step];
-	if(v > 0, { Synth(\drumInputVoice, [\bufnum, buf, \amp, vels[v] * level, \inBus, inBus], group, \addToTail) });
+	if(v > 0 and: { muted[lane].not }, { Synth(\drumInputVoice, [\bufnum, buf, \amp, vels[v] * level, \inBus, inBus], group, \addToTail) });
 };
 
 start = {
@@ -108,7 +109,7 @@ start = {
 	mute = Synth(\drumInputMute, [], group);
 	step = -1;
 	clock.tempo = bpm / 60;
-	seq = Routine({ loop({ step = (step + 1) % steps; fire.(kickRow, kickBuf, kickBus); fire.(snareRow, snareBuf, snareBus); { playhead !? (_.refresh) }.defer; stepDur.wait }) }).play(clock, quant: 0);
+	seq = Routine({ loop({ step = (step + 1) % steps; fire.(kickRow, kickBuf, kickBus, 0); fire.(snareRow, snareBuf, snareBus, 1); { playhead !? (_.refresh) }.defer; stepDur.wait }) }).play(clock, quant: 0);
 };
 
 stop = {
@@ -133,6 +134,17 @@ cells = { |row|
 			.value_(row[i])
 			.action_({ |b| row.put(i, b.value) })
 	})
+};
+
+muteBtn = { |lane|
+	Button()
+		.fixedSize_(50 @ 26)
+		.states_([
+			["MUTE", Color.white, Color.grey(0.25)],
+			["MUTE", Color.black, Color.new(0.9, 0.35, 0.2)]
+		])
+		.value_(muted[lane].binaryValue)
+		.action_({ |b| muted.put(lane, b.value == 1) })
 };
 
 labelled = { |name, items| HLayout(*([StaticText().string_(name).fixedWidth_(56)] ++ items ++ [nil])).spacing_(2) };
@@ -192,14 +204,14 @@ labelled = { |name, items| HLayout(*([StaticText().string_(name).fixedWidth_(56)
 		bpmText = StaticText().string_(bpm.asInteger.asString ++ " bpm").fixedWidth_(70);
 		levelText = StaticText().string_(level.round(0.01).asString).fixedWidth_(70);
 
-		win = Window("dr🥁m b🤖t", Rect(120, 420, 580, 230))
+		win = Window("dr🥁m b🤖t", Rect(120, 420, 650, 230))
 			.front
 			.background_(Color.grey(0.1));
 
 		win.layout_(VLayout(
 			labelled.("", [playhead]),
-			labelled.("KICK", cells.(kickRow)),
-			labelled.("SNARE", cells.(snareRow)),
+			labelled.("KICK", cells.(kickRow) ++ [muteBtn.(0)]),
+			labelled.("SNARE", cells.(snareRow) ++ [muteBtn.(1)]),
 			labelled.("", [
 				StaticText().string_("tempo").fixedWidth_(50),
 				Slider().orientation_(\horizontal).fixedHeight_(22).fixedWidth_(220).value_(bpm.linlin(40, 200, 0, 1)).action_({ |sl| bpm = sl.value.linlin(0, 1, 40, 200).round(1); clock.tempo = bpm / 60; bpmText.string_(bpm.asInteger.asString ++ " bpm") }),

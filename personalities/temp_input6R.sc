@@ -3,7 +3,6 @@ var m = ~model;
 var dev = ~device;
 var group, trig;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
-var relTime = 2.0;
 
 m.accelMassFilteredAttack = 0.7;
 m.accelMassFilteredDecay = 0.2;
@@ -18,7 +17,7 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 
-SynthDef(\inputTrigger, { |inputBus = 0, ratio = 3.0, floorDb = -68,
+SynthDef(\inputTrigger6R, { |inputBus = 0, ratio = 3.0, floorDb = -68,
 	deadtime = 0.01, slowAtk = 0.100, slowRel = 0.150, inGain = 0.7,
 	fullScale = 0.35, curve = 1.5, window = 0.003|
 
@@ -39,7 +38,7 @@ SynthDef(\inputTrigger, { |inputBus = 0, ratio = 3.0, floorDb = -68,
 
 //------------------------------------------------------------
 
-SynthDef(\miniMoogVoice, {
+SynthDef(\miniMoogVoice6R, {
 	|freq = 440, amp = 0.5, attack = 0.1, decay = 0.2, sustain = 0.7, release = 0.3, gate = 1, filterFreq = 800, fq=0.5, pan = 0, dur = 0.2|
 
 	var g = gate * Trig1.kr(Impulse.kr(0), dur);
@@ -58,7 +57,7 @@ SynthDef(\miniMoogVoice, {
 	var rel = m.accelMassFiltered.lincurve(0, 2, 0.02, 4, -1);
 	group = Group.new;
 
-	trig = Synth(\inputTrigger, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -30,
+	trig = Synth(\inputTrigger6R, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -30,
 		\fullScale, 0.7, \curve, 0.3, \deadtime, 0.001], group);
 
 	OSCdef(hitKey, { |msg|
@@ -71,7 +70,7 @@ SynthDef(\miniMoogVoice, {
 			var ff = m.accelMassFiltered.lincurve(0.0, 2.0 * sens, 200, 2000, -2).clip(200, 12000);
 			var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger.clip(0, notes.size - 1);
 
-			Synth(\miniMoogVoice, [
+			Synth(\miniMoogVoice6R, [
 				\freq, notes[rt].midicps,
 				\amp, vel.linlin(0.0, 1.0, 0.05, 0.2) * vol,
 				\filterFreq, ff,
@@ -93,6 +92,7 @@ SynthDef(\miniMoogVoice, {
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
 	var dying = group;
+	var tail = 6.5;
 
 	OSCdef(hitKey) !? (_.free);
 	trig !? (_.free);
@@ -102,7 +102,7 @@ SynthDef(\miniMoogVoice, {
 	if (dying.notNil) {
 		fork {
 			dying.set(\gate, 0);
-			(relTime + 4.5).wait;
+			tail.wait;
 			dying.free;
 		};
 	};

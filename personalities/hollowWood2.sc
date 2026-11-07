@@ -3,7 +3,6 @@ var m = ~model;
 var dev = ~device;
 var group, trig, voice;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
-var relTime = 1.5;
 
 var lastHit = 0;
 var lastIoi = 0.5;
@@ -89,6 +88,7 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 //------------------------------------------------------------
 ~init = ~init <> {
+	var relTime = 1.5;
 	group = Group.new;
 
 	lastHit = SystemClock.seconds;
@@ -150,6 +150,7 @@ rate        -> decay   2.5 .. 0.2s   fast playing goes dry and clipped, slow rin
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
 	var dying = group;
+	var tail = 2.0;
 
 	OSCdef(hitKey) !? (_.free);
 	trig !? (_.free);
@@ -160,7 +161,7 @@ rate        -> decay   2.5 .. 0.2s   fast playing goes dry and clipped, slow rin
 	if (dying.notNil) {
 		fork {
 			dying.set(\gate, 0);
-			(relTime + 0.5).wait;
+			tail.wait;
 			dying.free;
 		};
 	};

@@ -3,7 +3,6 @@ var m = ~model;
 var dev = ~device;
 var group, trig;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
-var relTime = 0.8;
 
 var notes = [0, 16, 4, 7, 14, 19, 11];
 var roots = [50,53,48].stutter(16) + 12;
@@ -119,6 +118,7 @@ SynthDef(\warmPadVoice, {
 		if (msg[1] == trig.nodeID) {
 			// var roots = [60].stutter(16) - 12;
 			// var ri = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,roots.size,0).asInteger;
+			var relTime = 0.8;
 			var note = roots.wrapAt(step) + notes.wrapAt(step);
 			var vol = dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 
@@ -184,6 +184,7 @@ SynthDef(\warmPadVoice, {
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
 	var dying = group;
+	var tail = 1.3;
 
 	OSCdef(hitKey) !? (_.free);
 	trig !? (_.free);
@@ -193,7 +194,7 @@ SynthDef(\warmPadVoice, {
 	if (dying.notNil) {
 		fork {
 			dying.set(\gate, 0);
-			(relTime + 0.5).wait;
+			tail.wait;
 			dying.free;
 		};
 	};

@@ -3,7 +3,6 @@ var m = ~model;
 var dev = ~device;
 var group, trig;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
-var relTime = 1.5;
 
 var lastHit = 0;
 var lastIoi = 0.5;
