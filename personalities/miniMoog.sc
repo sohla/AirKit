@@ -57,7 +57,7 @@ SynthDef(\miniMoog, {
 			\instrument, \miniMoog,
             \note, Pseq([0,5,2,9,4], inf),
             \octave, Pseq([1,2,3].stutter(2) + 2, inf),
-            \root, Pseq([0,4,8].stutter(60), inf),
+            \root, Pseq([0,4,-4,2,8].stutter(60), inf),
             // \amp, 0.3,
             \decay, 0.1,
             \sustain, 0.1,
@@ -120,17 +120,12 @@ SynthDef(\miniMoog, {
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var dur = 0.2;
-	
-	// var ff = (d.sensors.gyroEvent.x/pi).linexp(-0.5,0.5,300,10000); 
-	// var oct = (d.sensors.gyroEvent.y/pi).linlin(-0.4,0.4,3.0,8.0); //left right
-
-	var amp = m.accelMassFiltered.lincurve(0, 3 * sens,-15,-1,-1);
-	var atk = m.accelMassFiltered.lincurve(0, 3 * sens,0.1,0.0001,-3);
-	var rel = m.accelMassFiltered.lincurve(0, 2 * sens,0.01, 3.0,-1);
-	// var ff = m.accelMassFiltered.linexp(0, 1 * sens,60,18000);
+	var amp = m.accelMassFiltered.lincurve(0, 2 * sens,-20,-1,-1);
+	var atk = m.accelMassFiltered.lincurve(0, 2 * sens,0.1,0.001,-3);
+	var rel = m.accelMassFiltered.lincurve(0, 2 * sens,0.01, 6.0,-1);
 	var ff = m.rrateMassFiltered.linexp(0, 0.4 * sens,60,15000);
 
-	if(amp < 14.neg, {amp = 110.neg});
+	if(amp < 18.neg, {amp = 110.neg});
 
 	// tells the visual router which device these shapes came from
 	Pdef(m.ptn).set(\viewID, d.port);
@@ -141,15 +136,6 @@ SynthDef(\miniMoog, {
 	Pdef(m.ptn).set(\rel, rel);
     Pdef(m.ptn).set(\filterFreq, ff);
 
-	// if(m.accelMassFiltered > 0.02,{
-	// 	if( Pdef(m.ptn).isPlaying.not,{
-	// 		Pdef(m.ptn).resume(quant:dur);
-	// 	});
-	// },{
-	// 	if( Pdef(m.ptn).isPlaying,{
-	// 		Pdef(m.ptn).pause();
-	// 	});
-	// });
 };
 
 //------------------------------------------------------------

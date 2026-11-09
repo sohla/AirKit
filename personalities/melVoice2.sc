@@ -9,7 +9,7 @@ var verbB;
 
 var noteSets = [
 	[0,2,-2,7],
-	[2,5,10],
+	[2,5,7,-2],
 	[1,5,8],
 	[0,5,9],
 	[2,3,5,7]
@@ -52,6 +52,7 @@ SynthDef(\melVoice2Verb, {|in=0, out=0, gate=1, release=2|
 	// var path = PathName("~/Downloads/alessioSamples/ahAirEveryPig.wav");
 	postf("loading sample : % \n", path.fileName);
 
+	m.com.scaleIdx = 2;
 
 	group = Group.new;
 	fxBusA = Bus.audio(s, 2);

@@ -56,8 +56,8 @@ var folder = PathName("~/Downloads/nicSamples/twoNote");
 
 var cellBase = 60;					
 var noteSets = [
-	[0,7,5,2],
-	[2,5,7],
+	[0,7,5,2,-2],
+	[2,5,7,0],
 
 	[1,5,8,0],
 	[0,5,-3],
@@ -67,8 +67,8 @@ var noteSets = [
 
 // var noteSets = [[0]];
 
-var octaves = [-2,-1,0,1];			
-
+// var octaves = [-2,-1,0,1];			
+var octaves = [0];
 
 //------------------------------------------------------------
 // harp1's filter tuning, unchanged
@@ -82,15 +82,15 @@ m.gyroFilteredDecay = 0.7;
 //------------------------------------------------------------
 SynthDef(\nicVoice2Sampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, freq=440,
 	attack=0.01, decay=0.1, sustain=0.3, release=3.2, gate=1|
-	var lr = rate * BufRateScale.kr(bufnum);
+	var lr = rate * BufRateScale.kr(bufnum) * 0.5;
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate,doneAction: 2);
-	var sig = PlayBuf.ar(2, bufnum, rate: [lr, lr * 1.0017] - 0.04, startPos: start * BufFrames.kr(bufnum), loop: 0);
+	var sig = PlayBuf.ar(2, bufnum, rate: [lr, lr * 1.0017] - 0.02, startPos: start * BufFrames.kr(bufnum), loop: 0);
 	// var penv = EnvGen.kr(Env.new([0, 2], [0.27], '\hold'), gate);
 	var li = LocalIn.ar(2);
-	var tone = LFTri.ar((freq.cpsmidi - 24).midicps + 1.5, 0, 0.4) + li;
+	var tone = SinOsc.ar((freq.cpsmidi - 24).midicps, 0, 0.8) + li;
 	var fil = RLPF.ar(sig, freq, 0.1) + tone; 
-	var verb = FreeVerb.ar(fil + sig, mix: 0.4, room: 0.9, damp: 0.2);
-	LocalOut.ar(PitchShift.ar(verb,0.3,7.midiratio,0,0.3,1));
+	var verb = FreeVerb.ar(fil + sig, mix: 0.5, room: 0.9, damp: 0.2);
+	LocalOut.ar(PitchShift.ar(verb,0.3,12.midiratio,0.007,0.3,1));
 
 	Out.ar(out, verb * amp * env);
 }).add;
@@ -122,7 +122,7 @@ SynthDef(\nicVoice2Sampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, fr
 
 	group = Group.new;
 
-	m.com.scaleIdx = 0;
+	// m.com.scaleIdx = 3;
 
 	samplesLib = folder.entries.collect({ |path|
 		var stem = path.fileNameWithoutExtension;

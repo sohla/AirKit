@@ -8,11 +8,11 @@ var verbA;
 var verbB;
 
 var noteSets = [
-	[0,2,-2,7],
-	[2,5,10],
-	[1,5,8],
+	[0,7,10],
+	[-2,2,5],
+	[1,5,-4],
 	[0,5,9],
-	[2,3,5,7]
+	[-2,3,5]
 
 ];
 // var noteSets = [[0]];
@@ -43,7 +43,7 @@ m.gyroFilteredDecay = 0.4;
 //------------------------------------------------------------
 SynthDef(\melSynth2Harp, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, freq=440,
     attack=0.01, decay=0.1, sustain=0.3, release=1.2, gate=1,cutoff=20000, rq=1|
-	var lr = rate * BufRateScale.kr(bufnum);// * (freq/440.0);
+	var lr = rate * BufRateScale.kr(bufnum) * 0.5;//* (freq/440.0);
     var env = EnvGen.kr(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum, rate: [lr, lr * 1.0017], startPos: start * BufFrames.kr(bufnum), loop: 0);
 	// sig = RLPF.ar(sig, cutoff, rq);
@@ -66,7 +66,7 @@ SynthDef(\melSynth2Verb, {|in=0, out=0, gate=1, release=2|
 		sample !? { (buffer: sample.buffer, rate: (n - sample.midiNote).midiratio) }
 	};
 	
-	m.com.scaleIdx = 4;
+	m.com.scaleIdx = 0;
 
 	group = Group.new;
 	fxBusA = Bus.audio(s, 2);
@@ -173,8 +173,8 @@ SynthDef(\melSynth2Verb, {|in=0, out=0, gate=1, release=2|
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\amp, amp * bal * vol);
 	Pdef(m.ptn).set(\range, range);
-	Pdef(m.ptn).set(\octave, 2);
-	Pdef(m.ptn).set(\attack, attack);
+	Pdef(m.ptn).set(\octave, 1);
+	Pdef(m.ptn).set(\attack, 0.03);
 
 };
 

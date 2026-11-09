@@ -3,11 +3,14 @@
 		"silence",
 
 		"dulcimer2",
+		"dulcimer3",
 
 		"miniDroplet",
 		"violin2",
 
 		"nicVoice1",
+		"nicVoice2",
+		"nicSynth2",
 
 		"pluck1",
 		"gendy3",

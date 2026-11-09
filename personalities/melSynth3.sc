@@ -3,11 +3,11 @@ var group;
 var bass;
 
 var noteSets = [
-	[0,2,-2,7],
-	[2,5,10],
-	[1,5,8],
-	[0,5,9],
-	[2,3,5,7]
+	[0,5],
+	[2,5],
+	[1,5],
+	[0,5],
+	[-2,5]
 
 ];
 // var noteSets = [[0]];
@@ -38,6 +38,8 @@ SynthDef(\melSynth3Bass, {|out=0, freq=65, amp=0, cutoff=300, drive=1, glide=0.1
 		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 		m.accelMassFiltered.lincurve(0, 2 * sens, 0, 1, -4) * vol
 	};
+
+	m.com.scaleIdx = 1;
 
 	group = Group.new;
 	bass = Synth.head(group, \melSynth3Bass);

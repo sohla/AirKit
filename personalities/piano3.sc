@@ -192,6 +192,7 @@ SynthDef(\pianoVerb, {
 			\type, eventTypeName,
 
 			\scaleIdx, Pfunc({ setIdx }),
+			// \scaleIdx, 5,
 			\note, Pfunc({ |e| var n = scales[e[\scaleIdx]].wrapAt(step); step = step + 1; n }),
 			\func, Pfunc({ |e| ~onEvent.(e) }),
 			\start, Pwhite(0.0, 0.04, inf),
