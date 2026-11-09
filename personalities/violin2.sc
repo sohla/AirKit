@@ -206,7 +206,7 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, 
 
 	synth.set(\rate, (rate/2) + 0.158);
 	synth.set(\speed, speed);
-	synth.set(\amp, amp * 12 * vol);
+	synth.set(\amp, amp * 3 * vol);
 	synth.set(\pan, pan);
 };
 //------------------------------------------------------------

@@ -49,7 +49,7 @@ SynthDef(\miniMoog, {
 
 	if(amp < 0.02, { amp = 0 });
 	if(amp > 0.9, { amp = 0.9 });
-	synth.set(\amp, amp * 1.5);
+	synth.set(\amp, amp * 1.0);
   synth.set(\filterFreq, filterFreq);
   synth.set(\detune, detune);
   synth.set(\freq, freq);

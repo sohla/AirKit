@@ -3,20 +3,28 @@
 		"silence",
 
 		"piano2",
-		"multiBeat1",
-		"hollowWood1L",
-		"hollowWood1R",
-		"gendy1",
+
 		"miniMoog",
+
+		"violin1",
 		"waves2",
-		"melVoice1",
+
 		"melVoice2",
+
+		"gendy1",
+
+		"mel4",
+
+
+		"miniMoog",
+		"miniHarp",
+		"miniMarimba",
+
 		"melSynth2",
 		"melSynth3",
 
-		"nicVoice1",
-		"nicVoice2",
-		"nicSynth2",
+		"hollowWood1L",
+		"hollowWood1R",
 
 		"silence",
 	]

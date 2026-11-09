@@ -3,24 +3,33 @@
 		"silence",
 
 		"dulcimer2",
-		"multiBeat4",
+
+		"miniDroplet",
+		"violin2",
+
+		"nicVoice1",
+
+		"pluck1",
+		"gendy3",
+		"nicMouth1",
+
+		"celeste1",
+
+		"miniDroplet",
+		"miniHarp",
+		"miniMarimba",
+
+
+		"nicPrrr1",
+		"nicMouthPerc",
+		"waves",
+
 		"hollowWood2",
 		"hollowWood3",
-		"gendy3",
-		"nicPrrr1",
-		"nicMouth1",
-		"nicMouthPerc",
-		"miniDroplet",
-		"waves",
-		"nicVoice1",
-		"nicVoice2",
+
+		"nicSynth1",
 		"nicSynth2",
-
-		"melVoice1",
-		"melVoice2",
-		"melSynth2",
-		"melSynth3",
-
+		
 		"silence",
 	]
 )

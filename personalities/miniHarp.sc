@@ -6,7 +6,7 @@ var folder = PathName("~/Downloads/openLabSamples/harp");
 
 var beat = 0.8;
 var divs = [1, 2, 4,4,4,4,8];
-var notes = [2,4,0,-1,-3].stutter(4);
+var notes = [2,4,0,-1,-3,7,11].stutter(4);
 
 //------------------------------------------------------------
 // harp1's sample naming : HA_ES_mf_<note><octave>.wav

@@ -141,7 +141,8 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 	var amp = m.accelMassFiltered.linlin(0,2.5 * sens,0.07,1);
 
 	var pch = 40 + ((m.accelMass * 150) * sens.linlin(0.0,1.0,1,0.0));
-	var frq= 110 + ((m.accelMassFiltered * 100) * sens.linlin(0.0,1.0,1,0.0));
+	// var frq= 110 + ((m.accelMassFiltered * 100) * sens.linlin(0.0,1.0,1,0.0));
+	var frq= 50 + m.accelMassFiltered.linlin(0,2.5 * sens,0.0,300,-2	);
 	synth.set(\pch,pch);
 	synth.set(\frq,frq);
 

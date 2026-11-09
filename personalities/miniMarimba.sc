@@ -7,12 +7,12 @@ var eventTypeName = (\customEvent_ ++ m.ptn).asSymbol;
 var kitFolder = "~/Downloads/cotf_samples/African Marimba";
 var sampleFilter = "Marimba ln f l1x";
 
-var beat = 4;
+var beat = 2;
 
 var bassLine = [0, 7, 12];
 
-var divs = [6, 12];
-var run = [0];
+var divs = [3, 6];
+var run = [0,7,14];
 
 var interval = 12;
 var transpose = 2;
@@ -47,6 +47,8 @@ SynthDef(\miniMarimbaPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 	sig = Splay.ar([sig, DelayC.ar(sig, 0.03, 0.013)], 0.6);
 	Out.ar(out, sig * env * amp.lagud(0.4, 1.8));
 }).add;
+
+
 
 //------------------------------------------------------------
 ~init = ~init <> {
@@ -114,6 +116,9 @@ SynthDef(\miniMarimbaPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 				\step, Pkey(\count) % 3,
 				\note, Pfunc({ |e| bassLine.wrapAt(e[\count]) }),
 				\octave, 3,
+				\root, Pseq([0,-2].stutter(9), inf),	
+				\func, Pfunc({|e| ~onEvent.(e)}),
+
 				\amp, Pkey(\bassAmp),
 				\release, 1.6,
 				\pan, -0.15,
@@ -215,6 +220,11 @@ SynthDef(\miniMarimbaPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 };
 
 //------------------------------------------------------------
+~onEvent = {|e|
+	m.com.root = e.root;
+};
+
+//------------------------------------------------------------
 ~next = { |d|
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, -2);
@@ -234,12 +244,14 @@ SynthDef(\miniMarimbaPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);
 	Pdef(m.ptn).set(\bassAmp, bassAmp.dbamp * vol);
-	Pdef(m.ptn).set(\runAmp, runAmp.dbamp * vol * 0.06);
+	Pdef(m.ptn).set(\runAmp, runAmp.dbamp * vol * 0.3);
 	Pdef(m.ptn).set(\cutoff, cutoff);
-	Pdef(m.ptn).set(\root, m.com.root ? 0);
+	// Pdef(m.ptn).set(\root, m.com.root ? 0);
+
+
 
 	if (pad.notNil) {
-		pad.set(\amp, padAmp.dbamp * vol * 3, \cutoff, cutoff, \blend, blend);
+		pad.set(\amp, padAmp.dbamp * vol * 1, \cutoff, cutoff, \blend, blend);
 	};
 };
 

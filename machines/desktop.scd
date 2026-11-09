@@ -13,23 +13,23 @@
 	outAddr: ["192.168.70.211", 5005],
 	numDevices: 10,
 
-	list: "list_BtB_Dev.sc",
+	// list: "list_BtB_Dev.sc",
 	// list: "list_glenroy.sc",
 	// list: "list_yourDNA26.sc",	
 	// list: "list_circus26.sc",
 
-	// list: [
-	// 	"list_BtB_Nic.sc",
-	// 	"list_BtB_Mel.sc",
-	// 	"list_BtB_Nic.sc",
-	// 	"list_BtB_Mel.sc",
-	// 	"list_BtB_Nic.sc",
-	// 	"list_BtB_Mel.sc",
-	// 	"list_BtB_Nic.sc",
-	// 	"list_BtB_Mel.sc",
-	// 	"list_BtB_Nic.sc",
-	// 	"list_BtB_Mel.sc",
-	// ],
+	list: [
+		"list_BtB_Nic.sc",
+		"list_BtB_Mel.sc",
+		"list_BtB_Nic.sc",
+		"list_BtB_Mel.sc",
+		"list_BtB_Nic.sc",
+		"list_BtB_Mel.sc",
+		"list_BtB_Nic.sc",
+		"list_BtB_Mel.sc",
+		"list_BtB_Nic.sc",
+		"list_BtB_Mel.sc",
+	],
 
 	secs: 0.01,
 	latency: 0.03,
@@ -44,5 +44,5 @@
 	bgColor: Color.white,
 	screenProbe: \osx,
 
-	drumInput: true
+	drumInput: false
 )

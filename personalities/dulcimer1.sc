@@ -17,8 +17,8 @@ var sampleFilter = "Dlcmr-hrd";
 
 var beat = 0.5;
 var divs = [2, 4, 6];
-// var pool = [0, 11, 7, 4, 2, -5];
 var pool = [0, 11, 7, 4, 2, -5];
+// var pool = [0, 11, 7, 4, 2, -5];
 
 //------------------------------------------------------------
 var noteToMidi = { |noteName|

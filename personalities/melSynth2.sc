@@ -16,7 +16,7 @@ var noteSets = [
 
 ];
 // var noteSets = [[0]];
-var noteOffset = -12;
+var noteOffset = -24;
 
 var noteToMidi = { |noteName|
 	var pattern = "([A-G](#|b)?)([0-9])";
@@ -66,7 +66,7 @@ SynthDef(\melSynth2Verb, {|in=0, out=0, gate=1, release=2|
 		sample !? { (buffer: sample.buffer, rate: (n - sample.midiNote).midiratio) }
 	};
 	
-	m.com.scaleIdx = 1;
+	m.com.scaleIdx = 4;
 
 	group = Group.new;
 	fxBusA = Bus.audio(s, 2);
@@ -173,7 +173,7 @@ SynthDef(\melSynth2Verb, {|in=0, out=0, gate=1, release=2|
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\amp, amp * bal * vol);
 	Pdef(m.ptn).set(\range, range);
-	Pdef(m.ptn).set(\octave, octave);
+	Pdef(m.ptn).set(\octave, 2);
 	Pdef(m.ptn).set(\attack, attack);
 
 };

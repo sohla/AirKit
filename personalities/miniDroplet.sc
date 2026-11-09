@@ -85,7 +85,7 @@ SynthDef(\dropletVerb, {
 
 			\accent, Pfunc({ |e|
 				var st = e[\step] ? 0, dv = e[\div] ? 1;
-				if (st == 0, { 1.0 }, {
+				if (st == 0, { 0.45 }, {
 					if ((dv > 3) and: { st == (dv div: 2) }, { 0.7 }, { 0.45 })
 				})
 			}),
@@ -93,7 +93,7 @@ SynthDef(\dropletVerb, {
 			\scale, Scale.minor,
 			\pick, Pfunc({ |e| if(e[\step] == 0, { 0 }, { (e[\pal] ? 1).rand }) }),
 			\note, Pfunc({ |e| notes[e[\pick].clip(0, notes.size - 1)] }),
-			\octave, Pfunc({ |e| if(e[\step] == 0, { 3 }, { [3,4,5].choose }) }),
+			\octave, Pfunc({ |e| if(e[\step] == 0, { 3 }, { [2,3,4].choose }) }),
 
 			\attack, 0.001,
 			\filterRQ, Pwhite(0.5, 1.5),
