@@ -11,9 +11,10 @@ var hosts = if(isOSX,
 	{"ipconfig getifaddr $(route -n get default 2>/dev/null | awk '/interface:/{print $2}')"},
 	{"hostname -I"}).unixCmdGetStdOut.stripWhiteSpace.replace($ ," | ");
 
+var pidLine = "pgrep -f sclang | tr '\n' ',' | sed 's/,$//'".unixCmdGetStdOut.stripWhiteSpace;
+
 var getSCLoad = {
-	var pidLine, sumLine, raw, norm;
-    pidLine = "pgrep -f sclang | tr '\n' ',' | sed 's/,$//'".unixCmdGetStdOut.stripWhiteSpace;
+	var sumLine, raw, norm;
     if (pidLine.notEmpty) {
 		// `-o %cpu=` suppresses the header on both BSD and GNU ps
         sumLine = ("ps -p " ++ pidLine ++ " -o %cpu= | awk '{s+=$1} END{print s}'")
@@ -55,15 +56,30 @@ var thermalString = {
 		{ "Temp: "++temp.asStringPrec(2)++"°C"++".   Fan: "++getFan.() })
 };
 
+// the probes shell out and block the GUI thread, so they poll here, never in drawFunc
+var loadStrings = ["", "", ""];
+
+var loadPoll = Routine {
+	loop {
+		loadStrings = [
+			"System Load: "++getSystemLoad.().asStringPrec(2)++"%",
+			"SC Load: "++getSCLoad.()[1].asStringPrec(2)++"%",
+			thermalString.()
+		];
+		2.wait;
+	}
+}.play(AppClock);
+
 var cpuView = UserView()
 	.minWidth_(60)
 	.maxHeight_(30)
 	.frameRate_(10)
 	.animate_(true)
+	.onClose_({ loadPoll.stop })
 	.drawFunc_({|uv|
-			("System Load: "++getSystemLoad.().asStringPrec(2)++"%").drawAtPoint(10@4, Font.default, Color.yellow);
-			("SC Load: "++getSCLoad.()[1].asStringPrec(2)++"%").drawAtPoint(200@4, Font.default, Color.yellow);
-			thermalString.().drawAtPoint(300@4, Font.default, Color.yellow);
+			loadStrings[0].drawAtPoint(10@4, Font.default, Color.yellow);
+			loadStrings[1].drawAtPoint(200@4, Font.default, Color.yellow);
+			loadStrings[2].drawAtPoint(300@4, Font.default, Color.yellow);
 });
 
 var serverView = UserView()
