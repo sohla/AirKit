@@ -23,6 +23,6 @@
 - name: start_airkit.sh launcher
   become: false
   ansible.builtin.copy:
-    src: start_airkit.sh
+    src: "{{ role_path }}/../../../../start_airkit.sh"
     dest: /home/pi/start_airkit.sh
     mode: "0755"

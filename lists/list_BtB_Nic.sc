@@ -19,7 +19,6 @@
 		"miniHarp",
 		"miniMarimba",
 
-
 		"nicPrrr1",
 		"nicMouthPerc",
 		"waves",
@@ -27,7 +26,6 @@
 		"hollowWood2",
 		"hollowWood3",
 
-		"nicSynth1",
 		"nicSynth2",
 		
 		"silence",
