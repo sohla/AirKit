@@ -11,15 +11,15 @@ which kit this is; it does not decide anything about the network.
 
 ## The access point
 
-Each kit runs a WPA2 hotspot on its onboard Wi-Fi, with the sticks on static IPs and
-OSC arriving on UDP 57120.
+Each kit runs a WPA2 hotspot on its onboard Wi-Fi, with the sticks taking addresses
+from its DHCP and OSC arriving on UDP 57120.
 
 | | |
 |---|---|
 | Profile | `AirKit<N>_Network`, NetworkManager, `802-11-wireless.mode=ap` |
 | Passphrase | the same string as the SSID |
 | Addressing | `ipv4.method=shared`, `192.168.200.1/24`, DHCP `.10–.254` via NM's own dnsmasq |
-| Sticks | **static IPs**, no DHCP lease is ever issued to them |
+| Sticks | **DHCP** from the AP (airkit5: `.182`, `.193`). This table said static IPs until Nov 2026; that was wrong for airkit5's sticks. Nothing depends on a stick's address: AirKit identifies sticks by their OSC ID, and `stick-config.py` by MAC |
 | OSC | stick `:8888` → Pi `:57120`, tag `IMUFusedData`, ~100 Hz per device |
 
 ### Settings that matter — verify these first
@@ -50,6 +50,63 @@ Order matters. The sticks must be **off** while the AP restarts.
 
 **The Network button is correct as written.** Restarting NetworkManager is the only thing
 that clears stale per-station state, and NM's AP mode does not age out dead stations.
+
+### Setting up a stick
+
+A stick stores three settings, and keeps them across power cycles: its **ID**, its
+**LED colour**, and where it **streams** to. It takes them as OSC on UDP `8888`. Set them
+once per stick, from the kit's Pi, with one stick at a time in hand.
+
+1. Power the stick on and let it join the kit's AP. Check it's there and sending:
+   ```bash
+   sudo utils/network/tools/sticks.sh
+   ```
+   ```
+   AirKit5Network on wlan0: 1 connected
+   MAC                IP                 pkt/s  connected
+   90:70:69:23:b7:90  192.168.250.182      440       101s
+   ```
+   A streaming stick shows ~100+ pkt/s. Joined but 0 pkt/s means it isn't sending.
+2. Edit the manifest, `utils/network/stick.md`, for this stick:
+   ```
+   id:     1                   # OSC prefix, /1/IMUFusedData
+   led:    255, 0, 0, 255      # R, G, B, alpha/brightness, 0-255
+   stream: auto                # this kit's AP address, port 57120
+   ```
+   The **ID must be 1 to the kit's `numDevices`** (`machines/<kit>.scd`). AirKit only
+   listens for `/1/IMUFusedData` to `/<numDevices>/IMUFusedData`; any other ID streams
+   to the right place and is silently ignored.
+3. See what would change, then send it:
+   ```bash
+   sudo utils/network/tools/stick-config.py --dry-run
+   sudo utils/network/tools/stick-config.py
+   ```
+   It sends only the settings that differ, reads the stick back with `GetConfig`, and
+   prints `done` or `NOT CONFIRMED`. With several sticks on the AP it lists them; pick
+   one with `--ip` or `--mac`. `--show` only reads the stick.
+4. The stick appears on AirKit's device tab in its new colour.
+
+Then edit the manifest for the next stick and repeat.
+
+**The manifest is edited on the Pi**, so the Pi's clone has a local change. If a later
+`git pull` refuses because of it, reset it first: `git checkout -- utils/network/stick.md`.
+
+**What `GetConfig` returns.** The stick replies to the port sent with the request (the
+tool uses `9999`, so a running AirKit isn't disturbed), on `/<id>/Config`:
+
+| Values | Meaning |
+|---|---|
+| 1 | ID (a string) |
+| 2–3 | unknown (`0, 4` seen) |
+| 4–7, 8 | the stick's own IP, and its config port (`8888`) |
+| 9–12, 13 | stream destination IP and port |
+| last 4 | LED: R, G, B, alpha (how AirKit reads it, `code3.0/oscController.scd`) |
+
+The same commands as SuperCollider snippets are in `utils/configureAirStickOSC.sc`.
+
+**Seen on airkit5 (Nov 2026):** a stick with ID `Stick` streamed 440 pkt/s to the
+right address and never appeared in AirKit. Its address came from the AP's DHCP
+(`.182`).
 
 ### Things not to do
 
@@ -196,6 +253,8 @@ transmitting them. `tx_errors` will still read `0`.
 |---|---|
 | `wifi-monitor.sh 7200` then `wifi-report.sh` | The fault is intermittent. Samples rails, SDIO counters, station churn, nl80211 events and the firmware console every 2 s |
 | `akwifi.sh timeline` | Reconstruct any past boot from the journal — AP lifecycle, associations, handshake failures |
+| `sticks.sh` | Which sticks are on the AP, and whether each is sending (pkt/s) |
+| `stick-config.py` | Set a stick's ID, LED and stream from `stick.md` (see **Setting up a stick**) |
 | `osc-trace.sh 150` | Application layer. Captures `wlan0` **and loopback**, so it shows the stick's first data packet, the app's `/Config/GetConfig`, the reply, and `addDevice` |
 
 ### Instruments worth knowing about

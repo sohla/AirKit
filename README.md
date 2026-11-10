@@ -69,7 +69,7 @@ macOS/Linux.
 | `analysis/` | Python scripts and generated HTML for inspecting commit history, file networks, and personality code over time. |
 | `embed/` | Firmware-side artifacts (M5Stick, Wemos + BNO055, etc.) — the hardware that produces the OSC stream. |
 | `network/` | Network config files for the RPi setup. |
-| `configureAirStickOSC.sc` | Snippets for configuring an AirStick over OSC (LED, ID, stream destination). |
+| `configureAirStickOSC.sc` | Snippets for configuring an AirStick over OSC (LED, ID, stream destination). On a kit, use `network/tools/stick-config.py` instead (`network/README.md`). |
 | `configPlan.md` | Why machines differ by file rather than by branch, and how the machine mechanism works. |
 | `gatePlan.md` | Release/rollback gating: what ships, what must never be a class file. |
 | `product_report.md` | Where the project stands as a product, and the sequenced moves. |
@@ -229,7 +229,9 @@ The AirStick configuration commands (`/Config/SetID`, `/Config/SetLED`,
      ```
    The app boots the server, opens fullscreen, and starts listening.
 4. Power on the AirStick(s) and point them at this host's IP/port (57120).
-   `configureAirStickOSC.sc` has the snippets for `/Config/RequestStream`.
+   `configureAirStickOSC.sc` has the snippets for `/Config/RequestStream`; on a
+   kit's Pi, `utils/network/tools/stick-config.py` does it from a manifest
+   (**Setting up a stick** in `utils/network/README.md`).
 
 ### Running on the Raspberry Pi (this branch)
 
