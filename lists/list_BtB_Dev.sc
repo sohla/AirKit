@@ -72,6 +72,8 @@
 		"hollowWood1L",
 		"hollowWood4L",
 		"hollowWood1R",
+		"hollowWood1L_2",
+		"hollowWood1R_2",
 		"hollowWood3",
 		"alonPerc1",
 

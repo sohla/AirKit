@@ -29,9 +29,10 @@
 //  control block it would read a microphone, and no p-file, machine file or
 //  main.sc knows this exists. Check it in s.plotTree : drumInput above group 1.
 //
-//  While PLAY is on, the mic is silenced at the head of that group, so the
-//  drummer is the only thing in the input bus -- Out.ar sums, so otherwise the
-//  room triggers the p-files right alongside the drums. STOP gives it back.
+//  The mic is silenced at the head of that group for as long as this is
+//  loaded, PLAY or STOP, so the drummer is the only thing in the input bus --
+//  Out.ar sums, so otherwise the room triggers the p-files right alongside the
+//  drums, and with the drums stopped the p-files hear the room alone.
 //
 //  The bar beside PLAY is the input as the PERSONALITIES see it. Do not use
 //  systemView's s.meter to judge this: ServerMeter plays its input synth at
@@ -68,7 +69,7 @@ var muted = [false, false];
 var kickBuf, snareBuf;
 var group, mute, probe, seq, clock, cmdPeriod;
 var win, playhead, playBtn, bpmText, levelText, meter;
-var ensureGroup, ensureProbe, fire, start, stop, cells, muteBtn, labelled;
+var ensureGroup, ensureMute, ensureProbe, fire, start, stop, cells, muteBtn, labelled;
 
 SynthDef(\drumInputVoice, { |bufnum = 0, amp = 0.5, inBus = 0|
 	var sig = PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum), doneAction: 2);
@@ -92,6 +93,8 @@ SynthDef(\drumInputProbe, { |rate = 20|
 
 ensureGroup = { if(group.isNil, { group = Group.new(s.defaultGroup, \addBefore) }); group };
 
+ensureMute = { if(mute.isNil, { mute = Synth(\drumInputMute, [], ensureGroup.value) }); mute };
+
 ensureProbe = { if(probe.isNil, { probe = Synth(\drumInputProbe, [], s.defaultGroup, \addToHead) }); probe };
 
 // addToTail, NOT the default addToHead : the voice has to run after the mute
@@ -103,10 +106,9 @@ fire = { |row, buf, inBus, lane|
 
 start = {
 	ensureGroup.value;
+	ensureMute.value;
 	ensureProbe.value;
 	seq !? (_.stop);
-	mute !? (_.free);
-	mute = Synth(\drumInputMute, [], group);
 	step = -1;
 	clock.tempo = bpm / 60;
 	seq = Routine({ loop({ step = (step + 1) % steps; fire.(kickRow, kickBuf, kickBus, 0); fire.(snareRow, snareBuf, snareBus, 1); { playhead !? (_.refresh) }.defer; stepDur.wait }) }).play(clock, quant: 0);
@@ -114,8 +116,6 @@ start = {
 
 stop = {
 	seq !? (_.stop);
-	mute !? (_.free);
-	mute = nil;
 	step = -1;
 	{ playhead !? (_.refresh) }.defer;
 };
@@ -158,6 +158,7 @@ labelled = { |name, items| HLayout(*([StaticText().string_(name).fixedWidth_(56)
 
 		clock = TempoClock(bpm / 60);
 		ensureGroup.value;
+		ensureMute.value;
 		ensureProbe.value;
 
 		OSCdef(\drumInputLevel, { |msg|

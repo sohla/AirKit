@@ -44,5 +44,5 @@
 	bgColor: Color.white,
 	screenProbe: \osx,
 
-	drumInput: false
+	drumInput: true
 )

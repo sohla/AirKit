@@ -55,9 +55,8 @@ SynthDef(\miniMoogVoice6R_2, {
 ~init = ~init <> {
 
 	var rel = m.accelMassFiltered.lincurve(0, 2, 0.02, 4, -1);
-	// var notes = [0,7,12,16] + 40;
 	var notes = [2,4,5,7,9,11,12,14] + 40 + 12;
-	var interval = 4;
+	var interval = -24;
 	group = Group.new;
 
 	hold = Synth(\miniMoogVoice6R_2, [

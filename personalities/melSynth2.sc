@@ -8,11 +8,11 @@ var verbA;
 var verbB;
 
 var noteSets = [
-	[0,7,10],
-	[-2,2,5],
-	[1,5,-4],
-	[0,5,9],
-	[-2,3,5]
+	[0,10],
+	[-2,5],
+	[1, 8],
+	[5,-3],
+	[-2,5]
 
 ];
 // var noteSets = [[0]];
@@ -95,7 +95,7 @@ SynthDef(\melSynth2Verb, {|in=0, out=0, gate=1, release=2|
 			// \attack,0.2,
 			\decay, 0.2,
 			\sustain,0.1,
-			\release,1.3,
+			// \release,1.3,
 			\baseNote, 72,
 			\midinote, Pn(Plazy({ |e| var set = noteSets.wrapAt(m.com.scaleIdx ? 0); Pseq(Array.fill(e[\range] ? 1, { |i| set.wrapAt(i) }) + noteOffset + (e[\baseNote] ? 72), 1) })),
 			\bufnum, Pfunc({ |e| findSample.(e[\midinote]) !? { |found| found[\buffer] } ?? { Rest(0) } }),
@@ -154,14 +154,15 @@ SynthDef(\melSynth2Verb, {|in=0, out=0, gate=1, release=2|
 
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var dur = m.accelMassFiltered.lincurve(0, 2 * sens,0.9,0.04,-3);
+	var dur = m.accelMassFiltered.lincurve(0, 2 * sens,0.9,0.02,-3);
 	var start = m.gyroXFiltered.lincurve(0.0,1.0,0.1,0.9,0);
 	var amp = m.accelMassFiltered.lincurve(0, 2 * sens,0,1,-8);
 	var rate= m.accelMass.linlin(0, 2 * sens,0,2);
 	var range = m.accelMassFiltered.lincurve(0, 1 * sens,1,noteSets.wrapAt(m.com.scaleIdx ? 0).size,-2).asInteger;
 	var octave = m.gyroYFiltered.lincurve(-1.0,1.0,0,4,0).asInteger;
 	var bal = m.gyroYFiltered.lincurve(-1.0,1.0,1,1,0).asInteger;
-	var attack = m.accelMassFiltered.lincurve(0, 2 * sens,0.5,0.003,3);
+	var attack = m.accelMassFiltered.lincurve(0, 2 * sens,0.07,0.003,-3);
+	var release = m.accelMassFiltered.lincurve(0, 2 * sens,1.4,0.1,-4);
 
 	if(amp < 0.02, {amp = 0});
 
@@ -174,7 +175,9 @@ SynthDef(\melSynth2Verb, {|in=0, out=0, gate=1, release=2|
 	Pdef(m.ptn).set(\amp, amp * bal * vol);
 	Pdef(m.ptn).set(\range, range);
 	Pdef(m.ptn).set(\octave, 1);
-	Pdef(m.ptn).set(\attack, 0.03);
+	Pdef(m.ptn).set(\attack, attack);
+	Pdef(m.ptn).set(\release, release);
+	
 
 };
 

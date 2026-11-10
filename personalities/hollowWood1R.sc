@@ -123,8 +123,9 @@ SynthDef(\hollowWoodR, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 		nil
 	});
 
-	trig = Synth(\hollowWoodTriggerR, [\ratio, 0.3, \slowRel, 0.25, \floorDb, -47,
-		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.001], group);
+	trig = Synth(\hollowWoodTriggerR, [\inputBus, inputBus, \ratio, 0.9, \slowAtk, 0.1,\slowRel, 0.01, \floorDb, -28,
+		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.06], group);
+
 
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
@@ -136,7 +137,7 @@ SynthDef(\hollowWoodR, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			var rate, dec, cf, bod, rt, note;
 			var roll = m.gyroXFiltered.fold(-0.5,0.5).linlin(-0.5,0.5,0.0,1.0);
 			// var ang = (dev.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1);
-			var ang = m.accelMassFiltered.lincurve(0.0, 0.1 * sens, 0.0, 1.0, -1);
+			var ang = m.accelMassFiltered.lincurve(0.0, 0.5 * sens, 0.0, 1.0, -1);
 
 			if (hitCount > 0, {
 				var drift = ((ioi - avgIoi).abs / avgIoi).clip(0.0, 1.0);
@@ -144,6 +145,7 @@ SynthDef(\hollowWoodR, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 				steadiness = (steadiness * (1 - smooth)) + ((1 - drift) * smooth);
 				lastIoi = ioi;
 			});
+			"hit".postln;
 
 			lastHit = now;
 			hitCount = hitCount + 1;
@@ -167,7 +169,7 @@ SynthDef(\hollowWoodR, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			Synth(\hollowWoodR, [
 				\freq, note.midicps,
 				\vel, vel,
-				\amp, 0.3 * ang * vol,
+				\amp, 0.8 * ang * vol,
 				\decay, ang * 5,
 				\coef, cf * roll,
 				\body, ang * 5,

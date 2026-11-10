@@ -52,7 +52,7 @@ SynthDef(\melVoice2Verb, {|in=0, out=0, gate=1, release=2|
 	// var path = PathName("~/Downloads/alessioSamples/ahAirEveryPig.wav");
 	postf("loading sample : % \n", path.fileName);
 
-	m.com.scaleIdx = 2;
+	m.com.scaleIdx = 0;
 
 	group = Group.new;
 	fxBusA = Bus.audio(s, 2);

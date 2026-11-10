@@ -1,0 +1,388 @@
+/*
+
+ inGain    │ 0.7 (default)    │ Scales the input before anything else. So the floor and full scale are measured after this gain: −32 dB on the processed       │
+  │           │                  │ signal is about −29 dB at the input.                                                                                           │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ floorDb   │ −32 (default     │ The absolute minimum level. It's added to the ratio term (slow × ratio + floor), not compared separately. Anything quieter     │
+  │           │ −68)             │ never fires.                                                                                                                   │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ratio     │ 0.3 (default 3)  │ How far above the recent level the input must jump. At 3 it has to triple, so it detects real attacks. At 0.3 the condition is │
+  │           │                  │  almost always met, so the trigger becomes a level gate: it fires each time the level crosses back above the floor.            │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ slowAtk   │ 0.1 s (default)  │ How quickly the background level rises to follow the input.                                                                    │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ slowRel   │ 0.25 s (default  │ How quickly it falls back. This only matters through ratio, so at 0.3 it does very little.                                     │
+  │           │ 0.15)            │                                                                                                                                │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ deadtime  │ 0.001 s (default │ The minimum time between hits. 1 ms is effectively none.                                                                       │
+  │           │  0.01)           │                                                                                                                                │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ window    │ 0.003 s          │ Waits 3 ms after the hit before reading the peak, so the velocity is the top of the attack rather than its first sample.       │
+  │           │ (default)        │                                                                                                                                │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ fullScale │ 0.7 (default     │ The peak level, after inGain, that counts as velocity 1. Louder hits clip to 1.                                                │
+  │           │ 0.35)            │                                                                                                                                │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ curve     │ 0.5 (default     │ Shapes the velocity. Below 1 it lifts soft hits, above 1 it pushes them down. 0.5 is a square root.                            │
+  │           │ 1.5)             │                                                                                                                                │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ inputBus  │ hollowWood       │ Which input to listen to. L and R build it into their SynthDefs from the file-level var inputBus (0 and 1), so passing it does │
+  │           │ passes 0         │  nothing there.
+
+
+*/
+
+var m = ~model;
+var dev = ~device;
+
+var inputBus = 0;
+
+var group, trig, chord;
+var hitKey = ('hit_' ++ m.ptn).asSymbol;
+
+var lastHit = 0;
+var lastIoi = 0.5;
+var avgIoi = 0.5;
+var steadiness = 0.5;
+var hitCount = 0;
+
+var ioiMin = 0.04;
+var ioiMax = 2.0;
+var smooth = 0.99;
+
+// var notes = [0,7,10,12,19,24,29,36] - 12;
+var notes = [-12,0,7,10,12,17,22,24,31] - 9;
+
+var bodyRatios = [1, 1.34, 2.71];
+var bodyAmps = [0.5, 0.25, 0.12];
+var bodyRings = [0.30, 0.18, 0.10];
+
+m.accelMassFilteredAttack = 0.9;
+m.accelMassFilteredDecay = 0.3;
+m.rrateMassFilteredAttack = 0.9;
+m.rrateMassFilteredDecay = 0.5;
+m.gyroFilteredAttack = 0.7;
+m.gyroFilteredDecay = 0.7;
+
+//------------------------------------------------------------
+
+// Left input. The name has to be unique across every loaded personality -
+// SynthDefs are global on the server, so while this and hollowWood1R both
+// called themselves \inputTrigger the last roster entry to load decided
+// which channel BOTH of them listened to.
+SynthDef(\hollowWoodTriggerL2, { |ratio = 3.0, floorDb = -68,
+	deadtime = 0.01, slowAtk = 0.100, slowRel = 0.150, inGain = 0.7,
+	fullScale = 0.35, curve = 1.5, window = 0.003|
+
+	var in   = SoundIn.ar(inputBus) * inGain;
+	var fast = Amplitude.kr(in, 0.001, 0.05);
+	var slow = LagUD.kr(fast, slowAtk, slowRel);
+	var over = fast > ((slow * ratio) + floorDb.dbamp);
+	var edge = over > Delay1.kr(over);
+	var trg  = Trig1.kr(edge, deadtime);
+
+	var peak   = RunningMax.kr(fast, trg);
+	var report = TDelay.kr(trg, window);
+
+	var vel = Latch.kr(peak, report).linlin(0.0, fullScale, 0.0, 1.0).clip(0, 1).pow(curve);
+
+	SendReply.kr(report, '/akHit', [vel]);
+}).add;
+
+//------------------------------------------------------------
+
+SynthDef(\hollowWoodL2, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
+	decay = 1.5, coef = 0.3, body = 0.6, tone = 4000,
+	gate = 1, rel = 1.5, pan = 0, lfoA=1, lfoF=7, filtf=200|
+
+	var fire = Impulse.ar(0);
+	var exc  = LPF.ar(WhiteNoise.ar(1), (tone * vel).clip(200, 18000));
+	var lfoe = EnvGen.kr(Env.perc(3,1), gate);	
+	var lfo = SinOsc.kr(lfoF, 0, lfoA.lag(2).linlin(0,1.0,0,0.4).clip(0,0.4) * lfoe, 1);
+	var plk = Pluck.ar(exc, fire, 0.05, freq.reciprocal.clip(0.0001, 0.05) * 0.5 * lfo,
+		decay, coef.clip(0.0, 0.95));
+
+	var knock = Decay2.ar(fire, 0.0005, 0.008) * PinkNoise.ar(1);
+	var bod = Klank.ar(`[
+		[freq * 1, freq * 1.34, freq * 2.71] * lfo,
+		[0.5, 0.25, 0.12],
+		[0.30, 0.18, 0.10] * body
+	], knock);
+
+	var filter = RLPF.ar(plk + bod, filtf, 0.9);
+
+	var sig = (filter * 0.5) * vel;
+	var env = EnvGen.kr(Env.cutoff(rel, 1, \sin), gate, doneAction: 2);
+
+	// sig = sig + DelayL.ar(sig, 0.3, 0.3, 0.5);
+
+	DetectSilence.ar(sig, 0.0001, 0.2, doneAction: 2);
+
+	Out.ar(out, Pan2.ar(sig * env * amp, pan).tanh);
+}).add;
+
+//------------------------------------------------------------
+
+SynthDef(\hollowWoodChordL2, { |out = 0, amp = 0, drive = 0, atk = 0.4, rel = 3, slide = 1.6, detune = 0.08, lo = 1, hi = 8, gate = 1|
+	var numChans = s.options.numOutputBusChannels;
+	var freqs = \freqs.kr([48, 55, 64, 71].midicps);
+	var f = freqs.lag(slide);
+	var env = drive.lagud(atk, rel);
+	var tone = Saw.ar(f * detune.neg.midiratio) + Saw.ar(f * detune.midiratio) + SinOsc.ar(f * 0.5, 0, 0.5);
+	var release = EnvGen.kr(Env.asr(0.01, 1, 3), gate, doneAction: 2);
+	var sig = MoogFF.ar(tone, (f * env.linexp(0, 1, lo, hi)).clip(20, 18000), 1.2);
+	sig = SplayAz.ar(numChans, sig, 1);
+	Out.ar(out, (sig * env * amp * release * 0.3).tanh);
+}).add;
+
+//------------------------------------------------------------
+~init = ~init <> {
+	group = Group.new;
+	chord = Synth(\hollowWoodChordL2, [\amp, 0, \atk, 0.4, \rel, 3, \slide, 0.6, \detune, 0.08, \lo, 1, \hi, 8], group);
+
+	lastHit = SystemClock.seconds;
+	lastIoi = 0.1;
+	avgIoi = 0.5;
+	steadiness = 0.5;
+	hitCount = 0;
+
+	~vdef.(\echoArc, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var n = ev[\numPoints] ? 40;
+		var span = mod[\span] ? 0.5pi;
+		var decay = mod[\decay] ? 1;
+		var body = mod[\body] ? 1;
+		var hold = mod[\hold] ? 1;
+		var reach = mod[\reach] ? 1;
+		var t = c[\elapsed];
+		var mid = c[\pos];
+		var twist = 1 + (m.rrateMassFiltered * (mod[\twist] ? 0.5));
+		var arc = { |r, sp|
+			Array.fill(n, { |j| mid + Polar(r, (j / (n - 1) - 0.5) * sp).asPoint })
+		};
+		var pluck = exp(t.neg * 6.9 / (decay * hold).max(0.01));
+
+		if(pluck > 0.01, {
+			c[\render].(arc.(c[\size], span * twist * (0.3 + (0.7 * pluck))), pluck.sqrt, pluck.sqrt, false);
+		});
+		bodyRatios.do { |ratio, i|
+			var a = bodyAmps[i] * 2 * exp(t.neg * 6.9 / (bodyRings[i] * body * hold).max(0.01));
+			if(a > 0.01, {
+				c[\render].(arc.(c[\size] * (1 + ((ratio - 1) * reach)), span * twist / ratio), a * 0.5, a.sqrt, false);
+			});
+		};
+		nil
+	});
+
+	trig = Synth(\hollowWoodTriggerL2, [\inputBus, inputBus, \ratio, 0.9, \slowAtk, 0.1,\slowRel, 0.01, \floorDb, -28,
+		\fullScale, 0.7, \curve, 0.1, \deadtime, 0.06], group);
+
+
+	OSCdef(hitKey, { |msg|
+		if (msg[1] == trig.nodeID) {
+			var sens = dev.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+			var vol = dev.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+			var vel = msg[3];
+			var now = SystemClock.seconds;
+			var ioi = (now - lastHit).clip(ioiMin, ioiMax);
+			var rrate = m.rrateMassFiltered.lincurve(0.0, 1.0 * sens, 40.0, 2000.0, -1).clip(20, 18000);
+			var hitsPerChord = 16;
+			var rate, dec, cf, bod, rt, note;
+			var roll = m.gyroXFiltered.fold(-0.5,0.5).linlin(-0.5,0.5,0.0,1.0);
+			// var ang = (dev.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1);
+			var ang = m.accelMassFiltered.lincurve(0.0, 0.5 * sens, 0.0, 1.0, -1);
+
+			if (hitCount > 0, {
+				var drift = ((ioi - avgIoi).abs / avgIoi).clip(0.0, 1.0);
+				avgIoi = (avgIoi * (1 - smooth)) + (ioi * smooth);
+				steadiness = (steadiness * (1 - smooth)) + ((1 - drift) * smooth);
+				lastIoi = ioi;
+			});
+
+			lastHit = now;
+			hitCount = hitCount + 1;
+			if (hitCount % hitsPerChord == 0, { m.com.chordIndex = (m.com.chordIndex ? 0) + 1 });
+			
+			/*
+			rate        -> decay   2.5 .. 0.2s   fast playing goes dry and clipped, slow rings
+			steadiness  -> coef    0.12 .. 0.45  even playing damps the string toward woodblock
+			rate        -> body    1.0 .. 0.25   the hollow box backs off as you speed up
+			*/
+			rate = avgIoi.reciprocal;
+			dec  = rate.linexp(0.5, 12.0, 12.5, 0.01);
+			cf   = steadiness.linlin(0.0, 1.0, 0.82, 0.25);
+			bod  = rate.linlin(0.5, 12.0, 2.0, 0.8);
+
+			rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(0.0, 1.0, 0.0, notes.size, 0).asInteger;
+			// rt = rate.linlin(0.5, 12.0, 0.2, notes.size).asInteger;	
+			// rt = rate.linlin(0.5, 15.0, 25, 200);	
+			// (d.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1)
+			// rt = ang.linlin(0.0, 1.0, 0, notes.size - 1).asInteger;	
+			note = notes.clipAt(rt) + 45;
+			Synth(\hollowWoodL2, [
+				\freq, note.midicps,
+				\vel, vel,
+				\amp, 0.2 * ang * vol,
+				\decay, ang * 5,
+				\coef, cf * roll,
+				\filtf, rrate,
+				\body, ang * 5,
+				\lfoA, ang * 0.1,
+				\lfoF, ang * 7,
+				\rel, ang * 4,
+				\pan, (dev.sensors.gyroEvent.z / pi).clip(-1, 1) * 0.5
+			], group);
+
+			if(ang > 0.02, {
+				var mark = (
+					type: \customVisualEvent,
+					amp: 0,
+					dur: 0.01,
+					viewID: dev.port,
+
+					shape: \echoArc,
+					numPoints: 40,
+					closed: false,
+
+					rotation: (hitCount * 2pi / 12) - 0.5pi,
+					startSize: rt.linlin(0, notes.size - 1, 60, 140),
+					endSize: rt.linlin(0, notes.size - 1, 60, 140),
+
+					startWidth: vel.linlin(0, 1, 3, 62 * ang),
+					endWidth: vel.linlin(0, 1, 3, 62 * ang),
+
+					startColor: Color.hsv(0.76, 0.95, 1.0, 0.95),
+					endColor: Color.hsv(0.76, 0.95, 1.0, 0.95),
+
+					duration: (ang * 5 * 1.5).clip(0.3, 6),
+
+					modulation: (
+						type: \radial,
+						freq: 5 + (rt * 5),
+						amp: ang * 1,
+						harmonics: 2,
+						span: (ang * 5).linlin(0, 5, 0.25pi, 0.9pi),
+						decay: ang * 5,
+						body: ang * 5,
+						hold: 1.5,
+						reach: 0.8,
+						twist: 0.6
+					)
+				);
+				mark.copy.play;
+				// SystemClock.sched(0.2, {
+				// 	mark.copy.putAll((
+				// 		rotation: mark[\rotation] + pi,
+				// 		startColor: Color.hsv(0.47, 0.95, 1.0, 0.95),
+				// 		endColor: Color.hsv(0.47, 0.95, 1.0, 0.95)
+				// 	)).play;
+				// 	nil
+				// });
+			});
+
+			// SystemClock.sched(0.2, {
+			// Synth(\hollowWood, [
+			// 	\freq, note.midicps,
+			// 	\vel, vel,
+			// 	\amp, 0.5 * ang * vol,
+			// 	\decay, ang * 5,
+			// 	\coef, cf,
+			// 	\body, ang * 5,
+			// 	\rel, ang * 5,
+			// 	\pan, (dev.sensors.gyroEvent.z / pi).clip(-1, 1) * 0.5
+			// ], group);
+			// });
+
+		};
+	}, '/akHit', s.addr);
+};
+
+//------------------------------------------------------------
+~deinit = ~deinit <> {
+	var dying = group;
+
+	OSCdef(hitKey) !? (_.free);
+	trig !? (_.free);
+	trig = nil;
+	chord = nil;
+	group = nil;
+
+	if (dying.notNil) {
+		fork {
+			dying.set(\gate, 0);
+			4.5.wait;
+			dying.free;
+		};
+	};
+};
+
+//------------------------------------------------------------
+~next = {|d|
+	var since = SystemClock.seconds - lastHit;
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var drive = m.accelMassFiltered.lincurve(0.0, 2.5 * sens, 0.0, 1.0, -1);
+	var chords = [
+ 		[0, 7] - 4,
+ 		[0, 7] - 5,
+		[0, 7] - 9,
+ 		[0, 7] - 7,
+
+ 		[0, 7] - 4,
+ 		[0, 7] - 5,
+		[0, 7] - 9,
+ 		[0, 7] - 7,
+
+ 		[0, 7] ,
+ 		[0, 7] + 2,
+ 		[0, 7] + 1,
+ 		[0, 7] ,
+ 		[0, 5] ,
+ 		[0, 5] ,
+ 		[0, 4] ,
+ 		[0, 4] ,
+
+	] + 60 + 12;
+
+	if (since > (avgIoi * 3), {
+		avgIoi = min(ioiMax, avgIoi * 1.02);
+		steadiness = steadiness * 0.995;
+	});
+
+	chord !? { chord.set(\freqs, chords.wrapAt(m.com.chordIndex ? 0).wrapExtend(4).midicps, \drive, drive, \amp, vol * 0.5) };
+};
+
+//------------------------------------------------------------
+~plotMin = -1;
+~plotMax = 1;
+~plot = { |d,p|
+
+	// [yellow, cyan , magenta]??
+
+	// TRACKER : rate, steadiness, time since last hit
+	// [
+	// 	avgIoi.reciprocal.explin(0.5, 12.0, 0.0, 1.0),
+	// 	steadiness,
+	// 	(SystemClock.seconds - lastHit).linlin(0.0, ioiMax, 0.0, 1.0)
+	// ];
+
+	// [avgIoi.linlin(ioiMin, ioiMax, 0.0, 1.0), lastIoi.linlin(ioiMin, ioiMax, 0.0, 1.0)];
+	// [hitCount % 16 / 16];
+	// [((m.com.chordIndex ? 0) % 4) / 4];//chord
+
+	// Acceleration
+	// [d.sensors.accelEvent.x, d.sensors.accelEvent.y, d.sensors.accelEvent.z] * 0.1;
+	// [m.accelMass, m.accelMassFiltered];
+
+	// Rotation
+	// [d.sensors.rrateEvent.x, d.sensors.rrateEvent.y, d.sensors.rrateEvent.z];
+	[m.rrateMass, m.rrateMassFiltered];
+//m.gyroYFiltered.fold(-0.5,0.5).lincurve(-0.5,0.5,0.0,1.0,0);
+	// Gyro
+	// [(d.sensors.gyroEvent.x / pi)];//roll
+	// [(d.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1), m.gyroXFiltered.fold(-0.5,0.5).linlin(-0.5,0.5,0.0,1.0)];
+	// [(dev.sensors.gyroEvent.y / pi.half)];
+	// [(d.sensors.gyroEvent.z / pi)];//left right
+	// [(d.sensors.gyroEvent.x / pi), (d.sensors.gyroEvent.y / pi.half), (d.sensors.gyroEvent.z / pi)];
+  // [m.gyroXFiltered, m.gyroYFiltered, m.gyroZFiltered];
+};

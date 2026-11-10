@@ -1,3 +1,37 @@
+/*
+
+ inGain    │ 0.7 (default)    │ Scales the input before anything else. So the floor and full scale are measured after this gain: −32 dB on the processed       │
+  │           │                  │ signal is about −29 dB at the input.                                                                                           │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ floorDb   │ −32 (default     │ The absolute minimum level. It's added to the ratio term (slow × ratio + floor), not compared separately. Anything quieter     │
+  │           │ −68)             │ never fires.                                                                                                                   │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ratio     │ 0.3 (default 3)  │ How far above the recent level the input must jump. At 3 it has to triple, so it detects real attacks. At 0.3 the condition is │
+  │           │                  │  almost always met, so the trigger becomes a level gate: it fires each time the level crosses back above the floor.            │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ slowAtk   │ 0.1 s (default)  │ How quickly the background level rises to follow the input.                                                                    │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ slowRel   │ 0.25 s (default  │ How quickly it falls back. This only matters through ratio, so at 0.3 it does very little.                                     │
+  │           │ 0.15)            │                                                                                                                                │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ deadtime  │ 0.001 s (default │ The minimum time between hits. 1 ms is effectively none.                                                                       │
+  │           │  0.01)           │                                                                                                                                │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ window    │ 0.003 s          │ Waits 3 ms after the hit before reading the peak, so the velocity is the top of the attack rather than its first sample.       │
+  │           │ (default)        │                                                                                                                                │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ fullScale │ 0.7 (default     │ The peak level, after inGain, that counts as velocity 1. Louder hits clip to 1.                                                │
+  │           │ 0.35)            │                                                                                                                                │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ curve     │ 0.5 (default     │ Shapes the velocity. Below 1 it lifts soft hits, above 1 it pushes them down. 0.5 is a square root.                            │
+  │           │ 1.5)             │                                                                                                                                │
+  ├───────────┼──────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ inputBus  │ hollowWood       │ Which input to listen to. L and R build it into their SynthDefs from the file-level var inputBus (0 and 1), so passing it does │
+  │           │ passes 0         │  nothing there.
+
+
+*/
+
 var m = ~model;
 var dev = ~device;
 
@@ -17,7 +51,7 @@ var ioiMax = 2.0;
 var smooth = 0.99;
 
 // var notes = [0,7,10,12,19,24,29,36] - 12;
-var notes = [0,2,4,5,7,9,11,12] - 9;
+var notes = [0,7,10,12,17] - 9 - 12;
 
 var bodyRatios = [1, 1.34, 2.71];
 var bodyAmps = [0.5, 0.25, 0.12];
@@ -125,8 +159,8 @@ SynthDef(\hollowWoodL, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 		nil
 	});
 
-	trig = Synth(\hollowWoodTriggerL, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -30,
-		\fullScale, 0.7, \curve, 0.3, \deadtime, 0.001], group);
+	trig = Synth(\hollowWoodTriggerL, [\inputBus, inputBus, \ratio, 0.9, \slowAtk, 0.1,\slowRel, 0.01, \floorDb, -32,
+		\fullScale, 0.9, \curve, 0.2, \deadtime, 0.06], group);
 
 
 	OSCdef(hitKey, { |msg|
@@ -140,7 +174,7 @@ SynthDef(\hollowWoodL, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			var rate, dec, cf, bod, rt, note;
 			var roll = m.gyroXFiltered.fold(-0.5,0.5).linlin(-0.5,0.5,0.0,1.0);
 			// var ang = (dev.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1);
-			var ang = m.accelMassFiltered.lincurve(0.0, 2.5 * sens, 0.0, 1.0, -1);
+			var ang = m.accelMassFiltered.lincurve(0.0, 0.5 * sens, 0.0, 1.0, -1);
 
 			if (hitCount > 0, {
 				var drift = ((ioi - avgIoi).abs / avgIoi).clip(0.0, 1.0);
@@ -170,8 +204,8 @@ SynthDef(\hollowWoodL, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 			note = notes.clipAt(rt) + 45;
 			Synth(\hollowWoodL, [
 				\freq, note.midicps,
-				\vel, vel * 2,
-				\amp, 0.3 * ang * vol,
+				\vel, vel,
+				\amp, 1 * ang * vol,
 				\decay, ang * 5,
 				\coef, cf * roll,
 				\filtf, rrate,

@@ -113,8 +113,8 @@ SynthDef(\hollowWood, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 		nil
 	});
 
-	trig = Synth(\inputTrigger, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -32,
-		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.001], group);
+	trig = Synth(\inputTrigger, [\inputBus, inputBus, \ratio, 0.9, \slowAtk, 0.1,\slowRel, 0.01, \floorDb, -32,
+		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.02], group);
 
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
