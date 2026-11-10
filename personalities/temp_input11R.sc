@@ -2,6 +2,7 @@ var inputBus = 1;
 var m = ~model;
 var dev = ~device;
 var group, trig, pad;
+var padGroup, padBus, padDelay;
 var samplesLib;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
 
@@ -11,12 +12,15 @@ var sampleFilter = "Marimba ln f l1x";
 // The note pool. Up/down tilt picks an index into it, and a trigger plays
 // subdivLen notes from there - so the run is a rotation of the pool and
 // the tilt decides which note it starts on.
-var notes = [0, 3, 5, 2,7,10,9] - 12;
+// var notes = [0, 3, 5, 2,7,10,9] + 12;
+var notes = [0,4,5,9,7] + 12;
+
+// var notes = [0, 3, 5, 2,7,10,9] + 12;
 
 // Mid to high for the marimba; the pad sits an octave below it and its
 // SynthDef adds a sub an octave below that again.
-var baseNote = 72-12;
-var padBase = 84-12;
+var baseNote = 72-12 + 4;
+var padBase = 84-12 + 4;
 
 // How many notes a trigger fires, and how fast. Both fixed on purpose -
 // a trigger always plays subdivLen notes at beat / subdiv seconds apart,
@@ -26,8 +30,8 @@ var padBase = 84-12;
 // with wrapAt, so a pool of 3 played 4 long wraps back to the first note,
 // and a long pool played 3 long only ever sounds 3 of its notes per hit.
 var beat = 1;
-var subdiv = 4;
-var subdivLen = 1;
+var subdiv = 8;
+var subdivLen = 2;
 
 // Motion values owned by ~next. The OSCdef and the sequence routine read
 // them rather than computing anything themselves.
@@ -94,6 +98,13 @@ SynthDef(\mellowPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 	Out.ar(out, sig * env * amp.lagud(0.4, 1.8));
 }).add;
 
+SynthDef(\padDelay11R, { |in = 0, out = 0, time = 0.375, decay = 3, mix = 0.4, gate = 1|
+	var sig = In.ar(in, 2);
+	var env = EnvGen.kr(Env.asr(0.01, 1, 0.5), gate, doneAction: 2);
+	var wet = CombL.ar(sig, 2, time, decay);
+	Out.ar(out, (sig + (wet * mix)) * env);
+}).add;
+
 //------------------------------------------------------------
 ~init = ~init <> {
 	var folder = PathName(kitFolder);
@@ -153,7 +164,10 @@ SynthDef(\mellowPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 	// at silence. glide is shortened from the SynthDef's 0.25 because the
 	// run's notes are 0.25s apart - at the default the pitch lag never
 	// arrives and the four notes smear into one slide.
-	pad = Synth.tail(group, \mellowPad, [\freq, padBase.midicps, \amp, 0, \glide, 0.08]);
+	padGroup = Group.tail(group);
+	padBus = Bus.audio(s, 2);
+	pad = Synth.head(padGroup, \mellowPad, [\out, padBus, \freq, padBase.midicps, \amp, 0, \glide, 0.08]);
+	padDelay = Synth.tail(padGroup, \padDelay11R, [\in, padBus, \out, 0, \time, 0.2, \decay, 3, \mix, 0.3]);
 
 	trig = Synth(\inputTriggerR, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -22,
 		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.02], group);
@@ -188,9 +202,9 @@ SynthDef(\mellowPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 						// The drone takes the same note, in its own register.
 						// Set here rather than in ~next so it tracks the run
 						// note for note; between runs it holds the last one.
-						if (pad.notNil, {
-							pad.set(\freq, (padBase + notes.wrapAt(idxAtHit + i)).midicps);
-						});
+						// if (pad.notNil, {
+						// 	pad.set(\freq, (padBase + notes.wrapAt(idxAtHit + i)).midicps);
+						// });
 
 						step = step + 1;
 						x = ((((step - 1) % 16) + 0.5) / 8) - 1;
@@ -246,17 +260,22 @@ SynthDef(\mellowPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 ~deinit = ~deinit <> {
 	var dying = group;
 	var dyingLib = samplesLib;
+	var dyingBus = padBus;
+	var tail = 6.0;
 
 	OSCdef(hitKey) !? (_.free);
 	trig !? (_.free);
 	trig = nil;
 	if (pad.notNil) { pad.set(\gate, 0) };
 	pad = nil;
+	padDelay = nil;
+	padGroup = nil;
+	padBus = nil;
 	group = nil;
 	samplesLib = nil;
 
 	fork {
-		2.6.wait;
+		tail.wait;
 		if (dying.notNil) {
 			s.bind { dying.freeAll };
 			s.sync;
@@ -269,6 +288,7 @@ SynthDef(\mellowPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 				s.sync;
 			});
 		};
+		if (dyingBus.notNil) { dyingBus.free };
 	};
 };
 
@@ -280,37 +300,22 @@ SynthDef(\mellowPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var e = m.accelMassFiltered;
-
-	// up/down picks which of the four notes the run starts on, and the
-	// note the drone holds
 	var ud = m.gyroYFiltered.clip(-0.5, 0.5).lincurve(-0.5, 0.5, 0, notes.size - 1, 0);
+	var amp = e.lincurve(0, 2 * sens, -15, -1, -1);
 
-	// temp_input10's mapping, unchanged.
-	var amp = e.lincurve(0, 3 * sens, -15, -1, -1);
-
-	// Positive curve, so the drone stays down until there is real energy in
-	// the stick instead of coming most of the way up on a small move.
-	var padAmp = e.lincurve(0.0, 1.5 * sens, -60, -14, 2);
-
+	var padAmp = e.lincurve(0.0, 2.0 * sens, -60, -14, 2);
 	idxNow = ud.round.asInteger.clip(0, notes.size - 1);
 
-	// Floor to actual silence. The curve bottoms out at -60dB, which is
-	// still audible on a sustained drone, so a still stick never went
-	// quiet. Same idiom as miniMarimba.sc and hollowWood1L - drop below
-	// the threshold and slam to -120dB. The pad's own amp.lagud(0.4, 1.8)
-	// turns that into a 1.8s fade rather than a cut.
 	if (padAmp < 22.neg, { padAmp = 120.neg });
 
-	ampNow = amp.dbamp * vol;
-	padAmpNow = padAmp.dbamp * vol * 3;
+	ampNow = amp.dbamp * vol * 0.5;
+	padAmpNow = padAmp.dbamp * vol * 7;
 	cutoffNow = m.rrateMassFiltered.linexp(0.0, 2.0 * sens, 250, 4500);
 	blendNow = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0, 1);
 
-	// No \freq here - the sequence routine owns the drone's pitch, so that
-	// it follows the marimba. At this rate ~next would overwrite the note
-	// within a control tick of it being set.
 	if (pad.notNil) {
 		pad.set(
+			\freq, (padBase + notes.wrapAt(idxNow) - 12).midicps,
 			\amp, padAmpNow,
 			\cutoff, cutoffNow,
 			\blend, blendNow

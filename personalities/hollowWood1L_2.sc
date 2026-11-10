@@ -221,8 +221,8 @@ SynthDef(\hollowWoodChordL2, { |out = 0, amp = 0, drive = 0, atk = 0.4, rel = 3,
 			note = notes.clipAt(rt) + 45;
 			Synth(\hollowWoodL2, [
 				\freq, note.midicps,
-				\vel, vel,
-				\amp, 0.4 * ang * vol,
+				\vel, vel * 2,
+				\amp, 2 * ang * vol,
 				\decay, ang * 5,
 				\coef, cf * roll,
 				\filtf, rrate,

@@ -13,12 +13,13 @@ var sampleFilter = "Marimba ln f l1x";
 // The note pool. Up/down tilt picks an index into it, and a trigger plays
 // subdivLen notes from there - so the run is a rotation of the pool and
 // the tilt decides which note it starts on.
-var notes = [0, 3, 5, 2,7,10,9] - 12;
+var notes = [0,7,9,12] - 24;
+// var notes = [0, 3, 5, 2,7,10,9] + 12;
 
 // Mid to high for the marimba; the pad sits an octave below it and its
 // SynthDef adds a sub an octave below that again.
-var baseNote = 72-12;
-var padBase = 84-12;
+var baseNote = 72-12 + 4;
+var padBase = 84-12 + 4;
 
 // How many notes a trigger fires, and how fast. Both fixed on purpose -
 // a trigger always plays subdivLen notes at beat / subdiv seconds apart,
@@ -28,7 +29,7 @@ var padBase = 84-12;
 // with wrapAt, so a pool of 3 played 4 long wraps back to the first note,
 // and a long pool played 3 long only ever sounds 3 of its notes per hit.
 var beat = 1;
-var subdiv = 4;
+var subdiv = 2;
 var subdivLen = 1;
 
 // Motion values owned by ~next. The OSCdef and the sequence routine read
@@ -211,9 +212,9 @@ SynthDef(\mellowPad11, { |out = 0, spread = 1, numChans = 2, freq = 130, amp = 0
 						// The drone takes the same note, in its own register.
 						// Set here rather than in ~next so it tracks the run
 						// note for note; between runs it holds the last one.
-						if (pad.notNil, {
-							pad.set(\freq, (padBase + notes.wrapAt(idxAtHit + i)).midicps);
-						});
+						// if (pad.notNil, {
+						// 	// pad.set(\freq, (padBase + notes.wrapAt(idxAtHit + i)).midicps);
+						// });
 
 						step = step + 1;
 						x = ((((step - 1) % 16) + 0.5) / 8) - 1;
@@ -303,37 +304,22 @@ SynthDef(\mellowPad11, { |out = 0, spread = 1, numChans = 2, freq = 130, amp = 0
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var e = m.accelMassFiltered;
-
-	// up/down picks which of the four notes the run starts on, and the
-	// note the drone holds
 	var ud = m.gyroYFiltered.clip(-0.5, 0.5).lincurve(-0.5, 0.5, 0, notes.size - 1, 0);
-
-	// temp_input10's mapping, unchanged.
-	var amp = e.lincurve(0, 3 * sens, -15, -1, -1);
-
-	// Positive curve, so the drone stays down until there is real energy in
-	// the stick instead of coming most of the way up on a small move.
-	var padAmp = e.lincurve(0.0, 1.5 * sens, -60, -14, 2);
+	var amp = e.lincurve(0, 2 * sens, -15, -1, -1);
+	var padAmp = e.lincurve(0.0, 2.5 * sens, -20, -10, -1);
 
 	idxNow = ud.round.asInteger.clip(0, notes.size - 1);
 
-	// Floor to actual silence. The curve bottoms out at -60dB, which is
-	// still audible on a sustained drone, so a still stick never went
-	// quiet. Same idiom as miniMarimba.sc and hollowWood1L - drop below
-	// the threshold and slam to -120dB. The pad's own amp.lagud(0.4, 1.8)
-	// turns that into a 1.8s fade rather than a cut.
-	if (padAmp < 22.neg, { padAmp = 120.neg });
+	if (padAmp < 18.neg, { padAmp = 120.neg });
 
 	ampNow = amp.dbamp * vol;
-	padAmpNow = padAmp.dbamp * vol * 3;
+	padAmpNow = padAmp.dbamp * vol * 8;
 	cutoffNow = m.rrateMassFiltered.linexp(0.0, 2.0 * sens, 250, 4500);
 	blendNow = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0, 1);
 
-	// No \freq here - the sequence routine owns the drone's pitch, so that
-	// it follows the marimba. At this rate ~next would overwrite the note
-	// within a control tick of it being set.
 	if (pad.notNil) {
 		pad.set(
+			\freq, (padBase + notes.wrapAt(idxNow) - 12).midicps,
 			\amp, padAmpNow,
 			\cutoff, cutoffNow,
 			\blend, blendNow
