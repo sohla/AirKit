@@ -3,6 +3,7 @@
 		"silence",
 
 		"piano3",
+		"piano4",
 
 		"miniMoog",
 		"miniMoog2",

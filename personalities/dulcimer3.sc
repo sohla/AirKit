@@ -75,7 +75,7 @@ SynthDef(\dulcimer3Voice, {|out=0, bufnum=0, amp=0.2, rate=1, fromRate=1, start=
 	// var ex = HPF.ar(BrownNoise.ar(0.03), 5250);
 	// var klan = Klank.ar(`[[32, 16, 8] * freq, [0.04, 0.2, 0.3, 0.4], 0.3], ex);
 	var mix = (sig + tone) * amp * env * 0.5;
-	Out.ar(out, mix);
+	Out.ar(0, mix);
 }).add;
 
 // The tail of the group. FreeVerb2 carries its own dry signal, so mix is
@@ -88,7 +88,7 @@ SynthDef(\dulcimer3Verb, {|in=0, out=0, mix=0.2, room=1.12, damp=0.2, amp=1,
 	sig = FreeVerb2.ar(sig[0], sig[1], mix, room, damp);
 	sig = LeakDC.ar(sig);
 	// Out.ar(out, sig * env * amp);
-	Out.ar(out, sig * env * amp);
+	Out.ar(0, sig * env * amp);
 }).add;
 
 //------------------------------------------------------------

@@ -21,14 +21,15 @@ SynthDef(\miniDroplet, {
 
 	  var sig, env;
     env = EnvGen.ar(Env.perc(attack, decay), gate);
-    sig = SinOsc.ar(freq * LFPar.ar(wobble,pi/2, 0.2,1)) * env;
-    sig = BPF.ar(sig, filterFreq, filterRQ);
+    sig = SinOsc.ar(freq * LFPar.ar(wobble,pi/2, 0.1, 1)) * env;
+    sig = BPF.ar(sig, filterFreq, filterRQ).tanh;
 	// sig = BLowShelf.ar(sig, 90, 0.3, );
 	sig = Pan2.ar(sig, pan);
 	Out.ar(out, sig * amp);
   	DetectSilence.ar(sig, doneAction: 2);
     // Out.ar(out, PanAz.ar(2, sig, pan, 1, 2, 0.8) * amp);
     Out.ar(out, Pan2.ar(sig, pan) * amp);
+    // Out.ar(out, Mix.ar(sig) * amp);
 }).add;
 
 SynthDef(\dropletVerb, {
@@ -181,10 +182,12 @@ SynthDef(\dropletVerb, {
 	var idx = e.lincurve(0, 2.0 * sens, 0, divs.size - 1, 1).round.asInteger.clip(0, divs.size - 1);
 	var pal = e.lincurve(0, 2.0 * sens, 1, notes.size, 1).round.asInteger.clip(1, notes.size);
 	var amp = e.lincurve(0.0, 2.0 * sens, -50, -1, -2);
-	var wob = ((d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5) * 2).lincurve(-1.0, 1.0, 0.01, 14000.0, -2);
-	var cut = m.rrateMassFiltered.linexp(0.0, 2.0 * sens, 180, 4000);
+	
+	// var wob = e.lincurve(0, 3.0 * sens, 0.000001, 130, 28);
+	// var wob = 400;
+	var wob = ((d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5) * 2).lincurve(-1.0, 1.0, 100, 400.0, -2);
+	var cut = m.rrateMassFiltered.linexp(0.0, 2.0 * sens, 180, 14000);
 	var ring = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0, 1.0, 0.05, 1.9, 2);
-
 	if(amp < 39.neg, { amp = 120.neg });
 
 	Pdef(m.ptn).set(\viewID, d.port);

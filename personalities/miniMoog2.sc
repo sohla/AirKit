@@ -13,11 +13,13 @@ m.rrateMassFilteredDecay = 0.5;
 SynthDef(\miniMoog2, {
 	|freq = 440, amp = 0.5, attack = 0.1, decay = 0.2, sustain = 0.7, release = 0.3, gate = 1, filterFreq = 800, fq=0.5, pan = 0|
 
-    var env, osc, filt, sig;
+    var env, osc, filt, sig, sub;
     env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
 	osc = Saw.ar([freq, freq * 1.004],1) + SinOsc.ar([freq-1, freq -1 * 1.005] * 1,0,1) + LFTri.ar([freq+1, freq * 1.004],0,1);
     filt = RLPF.ar(osc.tanh, filterFreq, fq).tanh;
+	sub = SinOsc.ar(freq * 0.25, 0, amp.linexp(0.0001,1,0.001,4));
     sig = filt * env * amp * 0.5;
+	sig = sig + (sub * env);
     sig = Pan2.ar(sig, pan);
     Out.ar(0, sig.tanh);
 }).add;
@@ -31,7 +33,7 @@ SynthDef(\miniMoog2Chord, { |out = 0, amp = 0, slide = 0.6, breath = 0.4, bright
 	var env = EnvGen.kr(Env.asr(2, 1, 3), gate, doneAction: 2);
 	var sig = LPF.ar(((tone * (1 - breath.lag(0.2))) + (air * breath.lag(0.2))) * swell, bright.lag(0.3));
 	sig = Splay.ar(sig, 0.6);
-	Out.ar(out, (sig * amp.lag(1.5) * env * 0.5).tanh);
+	Out.ar(out, (sig * amp.lag(1.5) * env ).tanh);
 }).add;
 
 //------------------------------------------------------------
@@ -69,7 +71,7 @@ SynthDef(\miniMoog2Chord, { |out = 0, amp = 0, slide = 0.6, breath = 0.4, bright
 		Pbind(
 			\instrument, \miniMoog2,
             \note, Pseq([0,5,2,9,4], inf),
-            \octave, Pseq([1,2,3].stutter(2) + 2, inf),
+            // \octave, 3,//Pseq([1,2,3].stutter(2) + 2, inf),
             \root, Pseq([0,4,8].stutter(60), inf),
             // \amp, 0.3,
             \decay, 0.1,
@@ -149,6 +151,7 @@ SynthDef(\miniMoog2Chord, { |out = 0, amp = 0, slide = 0.6, breath = 0.4, bright
 	var chordAmp = m.accelMassFiltered.lincurve(0, 2 * sens, -30, -10, -1);
 	var chordBreath = m.accelMassFiltered.linlin(0, 2.4 * sens, 1.0, 8.0);
 	var chordBright = m.rrateMassFiltered.linexp(0, 0.4 * sens, 100, 16000);
+	var octave = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0, 1.0, 3, 6, -1).asInteger;
 
 	if(amp < 19.neg, {amp = 110.neg});
 	if(chordAmp < 29.neg, { chordAmp = 110.neg });
@@ -159,6 +162,7 @@ SynthDef(\miniMoog2Chord, { |out = 0, amp = 0, slide = 0.6, breath = 0.4, bright
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\attack, atk);
+	Pdef(m.ptn).set(\octave, octave);
 	Pdef(m.ptn).set(\rel, rel);
     Pdef(m.ptn).set(\filterFreq, ff);
 	chord !? { chord.set(\amp, chordAmp.dbamp * vol, \breath, chordBreath, \bright, chordBright) };
