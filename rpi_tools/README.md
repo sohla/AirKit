@@ -96,6 +96,10 @@ run, and again after any reboot:
   the Pi took the N600's `10.1.1.x`), join the N600's network and pass the
   Pi's IP: `./verify.sh airkit5 10.1.1.9`. Provisioning still needs
   sharing for internet.
+- For internet on the Pi outside provisioning (`git pull`, `apt`), run
+  `./uplink.sh 10.1.1.9`: the same runtime-only fix, gone on reboot. The
+  N600 stays on the switch: it's the AP for the lab's sticks and the Mac
+  takes their data through it.
 - It waits for the **clock** to sync. A fresh card's clock is the image date,
   and TLS rejects every newer certificate ("certificate is not yet valid").
 
