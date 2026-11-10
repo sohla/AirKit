@@ -11,7 +11,12 @@
 		"nicSynth2",
 
 		"hollowWood1R_2",
-		"temp_input6R_2",
+
+		"temp_input6L_3",
+		"temp_input6L_4",
+
+
+		"temp_input6L_4",
 		"temp_input11R",
 
 		"nicPrrr1",

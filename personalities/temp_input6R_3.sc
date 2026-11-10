@@ -4,6 +4,10 @@ var dev = ~device;
 var group, trig, hold;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
 
+
+var notes = [-5,-4,-1,0,1,4,5] + 33 + 24;
+var interval = 0;
+
 m.accelMassFilteredAttack = 0.7;
 m.accelMassFilteredDecay = 0.2;
 m.rrateMassFilteredAttack = 0.9;
@@ -39,7 +43,7 @@ SynthDef(\inputTrigger6R_2, { |inputBus = 0, ratio = 3.0, floorDb = -68,
 //------------------------------------------------------------
 
 SynthDef(\miniMoogVoice6R_2, {
-	|freq = 440, amp = 0.5, attack = 0.1, decay = 0.2, sustain = 0.7, release = 0.3, gate = 1, filterFreq = 800, fq=0.5, pan = 0, dur = 0.2|
+	|freq = 440, amp = 0.5, attack = 0.1, decay = 0.2, sustain = 0.7, release = 0.3, gate = 1, filterFreq = 800, fq=0.7, pan = 0, dur = 0.2|
 
 	var g = gate * Trig1.kr(Impulse.kr(0), dur);
     var env, osc, filt, sig;
@@ -55,14 +59,15 @@ SynthDef(\miniMoogVoice6R_2, {
 ~init = ~init <> {
 
 	var rel = m.accelMassFiltered.lincurve(0, 2, 0.02, 4, -1);
-	var notes = [2,4,5,7,9,11,12,14] + 40 + 12;
-	var interval = -24;
+	// var notes = [0,1,4,5,7,8,10,12] + 45;
+	// var interval = 12;
+
 	group = Group.new;
 
 	hold = Synth(\miniMoogVoice6R_2, [
 		\freq, (notes[0] + interval).midicps,
 		\amp, 0,
-		\filterFreq, 200,
+		\filterFreq, 100,
 		\attack, 0.5,
 		\decay, 0.1,
 		\sustain, 1,
@@ -71,8 +76,8 @@ SynthDef(\miniMoogVoice6R_2, {
 		\dur, 86400
 	], group);
 
-	trig = Synth(\inputTrigger6R_2, [\inputBus, inputBus, \ratio, 0.3, \slowRel, 0.25, \floorDb, -28,
-		\fullScale, 0.3, \curve, 0.3, \deadtime, 0.001], group);
+	trig = Synth(\inputTrigger6R_2, [\inputBus, inputBus, \ratio, 0.9, \slowAtk, 0.1,\slowRel, 0.01, \floorDb, -24,
+		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.06], group);
 
 	OSCdef(hitKey, { |msg|
 		if (msg[1] == trig.nodeID) {
@@ -83,18 +88,18 @@ SynthDef(\miniMoogVoice6R_2, {
 			var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger.clip(0, notes.size - 1);
 
 			Synth(\miniMoogVoice6R_2, [
-				\freq, notes[rt].midicps,
-				\amp, vel.linlin(0.0, 1.0, 0.05, 0.2) * vol,
+				\freq, (notes[rt] - 12).midicps,
+				\amp, vel.linlin(0.0, 1.0, 0.05, 0.5) * vol,
 				\filterFreq, ff,
-				\attack, rel * 0.03,//vel.lincurve(0.0, 1.0, 1.01, 0.002,-2),
+				\attack, rel * 0.7,//vel.lincurve(0.0, 1.0, 1.01, 0.002,-2),
 				\decay, 0.12,
 				\sustain, 0.1,
-				\release, 2,//relTime * vel.lincurve(0.0, 1.0, 2.01, 0.002,-2),
+				\release, 2,
 				\fq, 0.3,
 				\dur, 0.2
 			], group);
 
-			hold !? { hold.set(\freq, (notes[rt] + interval).midicps * 2) };
+			// hold !? { hold.set(\freq, (notes[rt] + interval).midicps * 2) };
 
 			(type: \customVisualEvent, amp: 0, dur: 0.01, viewID: dev.port, shape: \circle,
 				startSize: vel.linlin(0, 1, 20, 160), endSize: vel.linlin(0, 1, 40, 240),
@@ -127,12 +132,13 @@ SynthDef(\miniMoogVoice6R_2, {
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var amp = m.accelMassFiltered.lincurve(0, 2 * sens, 0, 0.1, -2);
-	var ff = m.rrateMassFiltered.linexp(0, 0.4 * sens, 200, 4000);
+	var amp = m.accelMassFiltered.lincurve(0, 2 * sens, 0, 0.06, -2);
+	var ff = m.rrateMassFiltered.linexp(0, 0.4 * sens, 290, 3000);
+	var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger.clip(0, notes.size - 1);
 
 	if(amp < 0.005, { amp = 0 });
 
-	hold !? { hold.set(\amp, amp * vol, \filterFreq, ff) };
+	hold !? { hold.set(\freq, (notes[rt] + interval).midicps * 2, \amp, amp * vol, \filterFreq, ff) };
 
 };
 

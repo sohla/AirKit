@@ -175,7 +175,7 @@ SynthDef(\hollowWoodChordL2, { |out = 0, amp = 0, drive = 0, atk = 0.4, rel = 3,
 	});
 
 	trig = Synth(\hollowWoodTriggerL2, [\inputBus, inputBus, \ratio, 0.9, \slowAtk, 0.1,\slowRel, 0.01, \floorDb, -28,
-		\fullScale, 0.7, \curve, 0.1, \deadtime, 0.06], group);
+		\fullScale, 0.7, \curve, 0.5, \deadtime, 0.06], group);
 
 
 	OSCdef(hitKey, { |msg|
@@ -190,7 +190,7 @@ SynthDef(\hollowWoodChordL2, { |out = 0, amp = 0, drive = 0, atk = 0.4, rel = 3,
 			var rate, dec, cf, bod, rt, note;
 			var roll = m.gyroXFiltered.fold(-0.5,0.5).linlin(-0.5,0.5,0.0,1.0);
 			// var ang = (dev.sensors.gyroEvent.y / pi.half).linlin(0,1,0,1);
-			var ang = m.accelMassFiltered.lincurve(0.0, 0.5 * sens, 0.0, 1.0, -1);
+			var ang = m.accelMassFiltered.lincurve(0.0, 2.5 * sens, 0.0, 1.0, -1);
 
 			if (hitCount > 0, {
 				var drift = ((ioi - avgIoi).abs / avgIoi).clip(0.0, 1.0);
@@ -222,7 +222,7 @@ SynthDef(\hollowWoodChordL2, { |out = 0, amp = 0, drive = 0, atk = 0.4, rel = 3,
 			Synth(\hollowWoodL2, [
 				\freq, note.midicps,
 				\vel, vel,
-				\amp, 0.2 * ang * vol,
+				\amp, 0.4 * ang * vol,
 				\decay, ang * 5,
 				\coef, cf * roll,
 				\filtf, rrate,
@@ -339,7 +339,7 @@ SynthDef(\hollowWoodChordL2, { |out = 0, amp = 0, drive = 0, atk = 0.4, rel = 3,
  		[0, 7] ,
  		[0, 5] ,
  		[0, 5] ,
- 		[0, 4] ,
+ 		[0, 5] ,
  		[0, 4] ,
 
 	] + 60 + 12;

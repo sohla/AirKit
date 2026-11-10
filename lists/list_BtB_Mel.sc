@@ -13,7 +13,10 @@
 		"melSynth3",
 
 		"hollowWood1L_2",
-		"temp_input6L",
+
+
+		"temp_input6R_3",
+
 		"temp_input11",
 
 		"waves2",
