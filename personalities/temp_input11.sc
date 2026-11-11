@@ -13,7 +13,7 @@ var sampleFilter = "Marimba ln f l1x";
 // The note pool. Up/down tilt picks an index into it, and a trigger plays
 // subdivLen notes from there - so the run is a rotation of the pool and
 // the tilt decides which note it starts on.
-var notes = [0,7,9,12] - 24;
+var notes = [0,7,9,12] - 24 +1;
 // var notes = [0, 3, 5, 2,7,10,9] + 12;
 
 // Mid to high for the marimba; the pad sits an octave below it and its
@@ -30,7 +30,7 @@ var padBase = 72 + 4;
 // and a long pool played 3 long only ever sounds 3 of its notes per hit.
 var beat = 1;
 var subdiv = 2;
-var subdivLen = 1;
+var subdivLen = 2;
 
 // Motion values owned by ~next. The OSCdef and the sequence routine read
 // them rather than computing anything themselves.
@@ -201,7 +201,7 @@ SynthDef(\mellowPad11, { |out = 0, spread = 1, numChans = 2, freq = 130, amp = 0
 							\numChans, numChans,
 							\bufnum, found[\buffer],
 							\rate, found[\rate],
-							\amp, ampNow * vel,
+							\amp, ampNow * vel * 4,
 							\attack, 0.02,
 							\sustain, 0.04,
 							\release, 1.2,

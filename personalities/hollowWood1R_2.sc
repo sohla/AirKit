@@ -184,7 +184,7 @@ SynthDef(\hollowWoodChordR2, { |out = 0, amp = 0, drive = 0, atk = 0.4, rel = 3,
 			Synth(\hollowWoodR2, [
 				\freq, note.midicps,
 				\vel, vel,
-				\amp, 0.3 * ang * vol,
+				\amp, 1  * vol,
 				\decay, ang * 5,
 				\coef, cf * roll,
 				\body, ang * 5,

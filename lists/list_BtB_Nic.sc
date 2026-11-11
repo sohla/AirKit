@@ -16,6 +16,9 @@
 
 		"temp_input11R",
 
+
+		"multiBeat4",
+
 		"nicPrrr1",
 		"nicMouthPerc",
 		"waves",

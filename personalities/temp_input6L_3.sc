@@ -80,7 +80,7 @@ SynthDef(\holdVoice6L, { |out = 0, freq = 55, amp = 0, drive = 0, atk = 0.4, rel
 			var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger.clip(0, notes.size - 1);
 			Synth(\miniMoogVoice6L, [
 				\freq, (notes[rt] + [0, 12, 0, 0].choose).midicps,
-				\amp, vel.linlin(0.0, 1.0, 0.01, 0.1) * vol,
+				\amp, vel.linlin(0.0, 1.0, 0.01, 0.3) * vol,
 				\attack, vel.linexp(0.0, 1.0, 0.05, 0.001),
 				\filterFreq, ff,
 				\attack, 0.08,//vel.lincurve(0.0, 1.0, 1.01, 0.002,-2),

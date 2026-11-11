@@ -7,7 +7,7 @@ var kickIdx = 0;
 var kickNames = ["drum", "kick", "bd"];
 
 var beat = 0.5;
-var divs = [2,3,4,6];
+var divs = [2,4,6,8,16];
 
 var rates = [1, 1, 1, 0.5, 2, 1.5, -1] * 1;
 
@@ -164,11 +164,11 @@ SynthDef(\dpulse, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var e = m.accelMassFiltered;
-	var idx = e.lincurve(0, 1.3 * sens, 0, divs.size - 1, 1).round.asInteger.clip(0, divs.size - 1);
+	var idx = e.lincurve(0, 4.3 * sens, 0, divs.size - 1, 1).round.asInteger.clip(0, divs.size - 1);
 	var pal = e.lincurve(0, 1.2 * sens, 1, buffers.size, 1).round.asInteger.clip(1, buffers.size);
 	var amp = e.lincurve(0, 0.5 * sens, -10, -5, -1);
 	var roll = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.75, 1.25);
-	var cutoff = ((d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5) * 2).lincurve(-1.0, 1.0, 40, 900, 1);
+	var cutoff = ((d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5) * 2).lincurve(-1.0, 1.0, 40, 200, 1);//tune to pitch!!
 
 	if(amp< 9.neg, { amp = 90.neg });
 

@@ -5,8 +5,8 @@ var group, trig, hold;
 var hitKey = ('hit_' ++ m.ptn).asSymbol;
 
 
-var notes = [-5,-4,-1,0,1,4,5] + 33 + 24;
-var interval = 0;
+var notes = [-5,-4,-1,0,1,4,5,7] + 33 + 24;
+var interval = 12;
 
 m.accelMassFilteredAttack = 0.7;
 m.accelMassFilteredDecay = 0.2;
@@ -89,12 +89,12 @@ SynthDef(\miniMoogVoice6R_2, {
 
 			Synth(\miniMoogVoice6R_2, [
 				\freq, (notes[rt]).midicps,
-				\amp, vel.linlin(0.0, 1.0, 0.01, 0.2) * vol,
+				\amp, vel.linlin(0.0, 1.0, 0.01, 0.6) * vol,
 				\filterFreq, ff,
 				\attack, rel * 0.2,//vel.lincurve(0.0, 1.0, 1.01, 0.002,-2),
 				\decay, 0.12,
 				\sustain, 0.1,
-				\release, 2,
+				\release, 0.4,
 				\fq, 0.3,
 				\dur, 0.2
 			], group);
@@ -132,7 +132,7 @@ SynthDef(\miniMoogVoice6R_2, {
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var amp = m.accelMassFiltered.lincurve(0, 2 * sens, 0, 0.1, -2);
+	var amp = m.accelMassFiltered.lincurve(0, 2 * sens, 0, 0.5, -2);
 	var ff = m.rrateMassFiltered.linexp(0, 0.4 * sens, 290, 3000);
 	var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger.clip(0, notes.size - 1);
 

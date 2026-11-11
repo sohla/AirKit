@@ -18,6 +18,8 @@
 
 		"temp_input11",
 
+		"multiBeat1",
+
 		"waves2",
 		"gendy1",
 		"mel4",

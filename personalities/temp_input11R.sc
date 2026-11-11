@@ -13,7 +13,7 @@ var sampleFilter = "Marimba ln f l1x";
 // subdivLen notes from there - so the run is a rotation of the pool and
 // the tilt decides which note it starts on.
 // var notes = [0, 3, 5, 2,7,10,9] + 12;
-var notes = [0,4,5,9,7] + 12;
+var notes = [0,4,5,9,7] + 12 + 1;
 
 // var notes = [0, 3, 5, 2,7,10,9] + 12;
 
@@ -30,8 +30,8 @@ var padBase = 84-12 + 4;
 // with wrapAt, so a pool of 3 played 4 long wraps back to the first note,
 // and a long pool played 3 long only ever sounds 3 of its notes per hit.
 var beat = 1;
-var subdiv = 5;
-var subdivLen = 2;
+var subdiv = 4;
+var subdivLen = 4;
 
 // Motion values owned by ~next. The OSCdef and the sequence routine read
 // them rather than computing anything themselves.
@@ -191,7 +191,7 @@ SynthDef(\padDelay11R, { |in = 0, out = 0, time = 0.375, decay = 3, mix = 0.4, g
 						Synth(\marimbaVoice, [
 							\bufnum, found[\buffer],
 							\rate, found[\rate],
-							\amp, ampNow * vel,
+							\amp, ampNow * vel * 0.7,
 							\attack, 0.02,
 							\sustain, 0.04,
 							\release, 1.2,
