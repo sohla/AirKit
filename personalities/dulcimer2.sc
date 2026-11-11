@@ -84,7 +84,7 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 	// sig = FreeVerb2.ar(sig[0], sig[1], mix, room, damp);
 	sig = LeakDC.ar(sig);
 	// Out.ar(out, sig * env * amp);
-	Out.ar(2, sig * env * amp);
+	Out.ar(out, sig * env * amp);
 }).add;
 
 //------------------------------------------------------------

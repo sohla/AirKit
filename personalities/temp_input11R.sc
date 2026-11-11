@@ -30,7 +30,7 @@ var padBase = 84-12 + 4;
 // with wrapAt, so a pool of 3 played 4 long wraps back to the first note,
 // and a long pool played 3 long only ever sounds 3 of its notes per hit.
 var beat = 1;
-var subdiv = 8;
+var subdiv = 5;
 var subdivLen = 2;
 
 // Motion values owned by ~next. The OSCdef and the sequence routine read

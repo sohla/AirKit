@@ -21,7 +21,7 @@ var threeCh = (\x: 0, \y:0, \z:0);
 var fourCh = (\w: 0, \x: 0, \y:0, \z:0);
 
 var paramsProto = (
-    \volume: 0,
+    \volume: 0.5,
     \sensitivity: 0,
 );
 

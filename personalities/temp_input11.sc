@@ -312,8 +312,8 @@ SynthDef(\mellowPad11, { |out = 0, spread = 1, numChans = 2, freq = 130, amp = 0
 
 	if (padAmp < 18.neg, { padAmp = 120.neg });
 
-	ampNow = amp.dbamp * vol * 0.5;
-	padAmpNow = padAmp.dbamp * vol * 6;
+	ampNow = amp.dbamp * vol * 0.2;
+	padAmpNow = padAmp.dbamp * vol * 3;
 	cutoffNow = m.rrateMassFiltered.linexp(0.0, 2.0 * sens, 250, 4500);
 	blendNow = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0, 1);
 
