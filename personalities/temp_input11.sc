@@ -18,8 +18,8 @@ var notes = [0,7,9,12] - 24;
 
 // Mid to high for the marimba; the pad sits an octave below it and its
 // SynthDef adds a sub an octave below that again.
-var baseNote = 72-12 + 4;
-var padBase = 84-12 + 4;
+var baseNote = 72 + 4;
+var padBase = 72 + 4;
 
 // How many notes a trigger fires, and how fast. Both fixed on purpose -
 // a trigger always plays subdivLen notes at beat / subdiv seconds apart,
@@ -312,8 +312,8 @@ SynthDef(\mellowPad11, { |out = 0, spread = 1, numChans = 2, freq = 130, amp = 0
 
 	if (padAmp < 18.neg, { padAmp = 120.neg });
 
-	ampNow = amp.dbamp * vol;
-	padAmpNow = padAmp.dbamp * vol * 8;
+	ampNow = amp.dbamp * vol * 0.5;
+	padAmpNow = padAmp.dbamp * vol * 6;
 	cutoffNow = m.rrateMassFiltered.linexp(0.0, 2.0 * sens, 250, 4500);
 	blendNow = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0, 1);
 

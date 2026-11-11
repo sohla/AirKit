@@ -88,10 +88,10 @@ SynthDef(\miniMoogVoice6R_2, {
 			var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger.clip(0, notes.size - 1);
 
 			Synth(\miniMoogVoice6R_2, [
-				\freq, (notes[rt] - 12).midicps,
-				\amp, vel.linlin(0.0, 1.0, 0.05, 0.5) * vol,
+				\freq, (notes[rt]).midicps,
+				\amp, vel.linlin(0.0, 1.0, 0.01, 0.2) * vol,
 				\filterFreq, ff,
-				\attack, rel * 0.7,//vel.lincurve(0.0, 1.0, 1.01, 0.002,-2),
+				\attack, rel * 0.2,//vel.lincurve(0.0, 1.0, 1.01, 0.002,-2),
 				\decay, 0.12,
 				\sustain, 0.1,
 				\release, 2,
@@ -132,7 +132,7 @@ SynthDef(\miniMoogVoice6R_2, {
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var amp = m.accelMassFiltered.lincurve(0, 2 * sens, 0, 0.06, -2);
+	var amp = m.accelMassFiltered.lincurve(0, 2 * sens, 0, 0.1, -2);
 	var ff = m.rrateMassFiltered.linexp(0, 0.4 * sens, 290, 3000);
 	var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger.clip(0, notes.size - 1);
 

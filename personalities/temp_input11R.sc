@@ -303,13 +303,13 @@ SynthDef(\padDelay11R, { |in = 0, out = 0, time = 0.375, decay = 3, mix = 0.4, g
 	var ud = m.gyroYFiltered.clip(-0.5, 0.5).lincurve(-0.5, 0.5, 0, notes.size - 1, 0);
 	var amp = e.lincurve(0, 2 * sens, -15, -1, -1);
 
-	var padAmp = e.lincurve(0.0, 2.0 * sens, -60, -14, 2);
+	var padAmp = e.lincurve(0.0, 2.0 * sens, -40, -5, -2);
 	idxNow = ud.round.asInteger.clip(0, notes.size - 1);
 
-	if (padAmp < 22.neg, { padAmp = 120.neg });
+	// if (padAmp < 18.neg, { padAmp = 120.neg });
 
 	ampNow = amp.dbamp * vol * 0.5;
-	padAmpNow = padAmp.dbamp * vol * 7;
+	padAmpNow = padAmp.dbamp * vol * 1;
 	cutoffNow = m.rrateMassFiltered.linexp(0.0, 2.0 * sens, 250, 4500);
 	blendNow = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0, 1);
 
