@@ -28,7 +28,7 @@ SynthDef(\miniDroplet, {
 	Out.ar(out, sig * amp);
   	DetectSilence.ar(sig, doneAction: 2);
     // Out.ar(out, PanAz.ar(2, sig, pan, 1, 2, 0.8) * amp);
-    Out.ar(2, Pan2.ar(sig, pan) * amp);
+    Out.ar(out, Pan2.ar(sig, pan) * amp);
     // Out.ar(out, Mix.ar(sig) * amp);
 }).add;
 
@@ -38,7 +38,7 @@ SynthDef(\dropletVerb, {
 	var env = EnvGen.kr(Env.asr(0.01, 1, release), gate, doneAction: 2);
 	sig = FreeVerb2.ar(sig[0], sig[1], mix, room.clip(0, 0.95), damp);
 	sig = LeakDC.ar(sig);
-	Out.ar(2, sig * env * amp);
+	Out.ar(out, sig * env * amp);
 }).add;
 
 //------------------------------------------------------------
@@ -107,15 +107,15 @@ SynthDef(\dropletVerb, {
 			\numPoints, 72,
 			\fill, false,//Pfunc({ |e| e[\step] == 0 }),
 			\rim, Pfunc({ |e| ((e[\step] ? 0) / (e[\div] ? 1) * 4 + 0.5).wrap(0, 4) }),
-			// \sx, Pfunc({ |e| var f = e[\rim].frac; [f * 2 - 1, 1, 1 - (f * 2), -1][e[\rim].floor.asInteger] * 0.56 }),
-			// \sy, Pfunc({ |e| var f = e[\rim].frac; [-1, f * 2 - 1, 1, 1 - (f * 2)][e[\rim].floor.asInteger] * 0.16 }),
-			// \ey, Pfunc({ |e| e[\sx] * (e[\decay] ? 0.3).explin(0.05, 1.9, 0.9, 0.35) }),
-			// \ex, Pfunc({ |e| e[\sy] * (e[\decay] ? 0.3).explin(0.05, 1.9, 0.9, 0.35) }),
+			\sx, Pfunc({ |e| var f = e[\rim].frac; [f * 2 - 1, 1, 1 - (f * 2), -1][e[\rim].floor.asInteger] * 0.56 }),
+			\sy, Pfunc({ |e| var f = e[\rim].frac; [-1, f * 2 - 1, 1, 1 - (f * 2)][e[\rim].floor.asInteger] * -0.16 } * 5),
+			\ey, Pfunc({ |e| e[\sx] * (e[\decay] ? 0.3).explin(0.05, 1.9, 0.9, 0.85) * 10 }),
+			\ex, Pfunc({ |e| e[\sy] * (e[\decay] ? 0.3).explin(0.05, 1.9, 0.9, 0.35) }),
 
-			\sx, 0.1,
-			\sy, 0.4,
-			\ey, -4.0,
-			\ex, 0.1,
+			// \sx, 0.1,
+			// \sy, 0.4,
+			// \ey, -4.0,
+			// \ex, 0.1,
 
 			\xEnv, Pfunc({ Env([0, 1], [1], 3) }),
 			\yEnv, Pfunc({ Env([0, 1], [1], 3) }),

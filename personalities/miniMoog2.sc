@@ -89,15 +89,15 @@ SynthDef(\miniMoog2Chord, { |out = 0, amp = 0, slide = 0.6, breath = 0.4, bright
 			\fill, true,
 			\duration, Pkey(\release),
 
-			\sx, 0.4,
-			\sy, 0.4,
-			\ey, 0.0,
-			\ex, 0.4,
+			// \sx, 0.4,
+			// \sy, 0.4,
+			// \ey, 0.0,
+			// \ex, 0.4,
 
-			// \ey, 0.8,
-			// \sy, 0.0 - (Pkey(\release) * 0.5),
-			// \sx, (Pkey(\note) + (Pkey(\octave) * 12)).linlin(36, 69, 0.55, -0.55),
-			// \ex, (Pkey(\note) + (Pkey(\octave) * 12)).linlin(36, 69, 0.55, -0.55),
+			\ey, 0.1,
+			\sy, 0.0 - (Pkey(\release) * 0.1),
+			\sx, (Pkey(\note) + (Pkey(\octave) * 12)).linlin(36, 69, 0.55, -0.55),
+			\ex, (Pkey(\note) + (Pkey(\octave) * 12)).linlin(36, 69, 0.55, -0.55),
 			\startSize, Pkey(\amp).lincurve(0.018, 0.89, 8, 30, -1),
 			\endSize, Pkey(\amp).lincurve(0.018, 0.89, 1, 20, -1),
 			\startWidth, 2,
@@ -169,7 +169,7 @@ SynthDef(\miniMoog2Chord, { |out = 0, amp = 0, slide = 0.6, breath = 0.4, bright
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\attack, atk);
-	Pdef(m.ptn).set(\octave, octave);
+	Pdef(m.ptn).set(\octave, octave - 1);
 	Pdef(m.ptn).set(\rel, rel);
     Pdef(m.ptn).set(\filterFreq, ff);
 	chord !? { chord.set(\amp, chordAmp.dbamp * vol, \breath, chordBreath, \bright, chordBright) };

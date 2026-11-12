@@ -29,23 +29,10 @@ SynthDef(\rainSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 
 	group = Group.new;
 
-	~vdef.(\rainLayers, { |ev, c|
-		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
-		var levels = [
-			m.accelMassFiltered.clip2(0.8 * sens).linlin(0, 0.8 * sens,0,1),
-			m.accelMassFiltered.clip2(1.6 * sens).linlin(0.8 * sens, 1.6 * sens,0,1),
-			m.accelMassFiltered.clip2(2.8 * sens).linlin(1.6 * sens, 2.8 * sens,0,1),
-			m.accelMassFiltered.clip2(6.0 * sens).linlin(2.8 * sens, 6.0 * sens,0,1)];
-		var n = ev[\numPoints] ? 48;
-		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-		levels.do({ |lv, i|
-			var r = c[\size] * (i + 1);
-			if((lv * vol) > -80.dbamp, { c[\render].(Array.fill(n, { |j| c[\pos] + Polar(r * (1 + (lv * 0.3.rand2)), j / n * 2pi).asPoint }), 1, lv.max(0.05)) });
-		});
-		nil
+	~vdef.(\drop, { |ev, c|
+		var n = ev[\numPoints] ? 32;
+		Array.fill(n, { |i| var t = i / n * 2pi; c[\pos] + ((c[\size] * 0.6 * sin(t) * sin(t / 2)) @ (c[\size] * cos(t).neg)) })
 	});
-
-	(type: \customVisualEvent, amp: 0, dur: 0.01, viewID: d.port, shape: \rainLayers, numPoints: 48, startSize: 60, endSize: 60, startWidth: 1.5, endWidth: 1.5, startColor: Color.white.alpha_(0.7), endColor: Color.white.alpha_(0.7), duration: inf).play;
 
 	buffers = folder.entries.collect({ |path,i|
 		Buffer.read(s, path.fullPath, action:{|buf|
@@ -114,11 +101,22 @@ SynthDef(\rainSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 	var mix = [0.6,1,1,1.5] * 4;
 	var cutoff = m.accelMassFiltered.lincurve(0, 3 * sens,600,20,-2);
 	var pan = d.sensors.gyroEvent.z.linlin(-1,1,-0.3,0.3);
+	var drive = levels.sum / 4;
+	var now = Main.elapsedTime;
+	var gap = 0.1;//drive.linlin(0, 1, 2.0, 0.3);
+	var size = rrand(8, 18);
+	var col = Color.hsv([rrand(0.55, 0.66), rrand(0.40, 0.48)].wchoose([0.8, 0.2]), 0.6, 0.9, drive.linlin(0, 1, 0.4, 0.9));
+	var x = rrand(-0.9, 0.9);
 
 	synths.do({|synth, i|
 		synth.set(\amp, levels[i] * mix[i] * vol);
 		synth.set(\cutoff, cutoff);
 		synth.set(\pan, pan);
+	});
+
+	if(((drive * vol) > 0.02) and: { now > (lastTime + gap) }, {
+		lastTime = now;
+		(type: \customVisualEvent, amp: 0, dur: 0.01, viewID: d.port, shape: \drop, numPoints: 32, fill: true, sx: x, ex: x, sy: -1.1, ey: 1.1, startSize: size, endSize: size, startWidth: 1, endWidth: 1, startColor: col, endColor: col.copy.alpha_(0), duration: rrand(2.0, 6.0)).play;
 	});
 	
 };

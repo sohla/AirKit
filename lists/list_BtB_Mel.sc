@@ -2,12 +2,14 @@
 	[
 		"silence",
 
-		"piano3",
 		"piano4",
-
 		"miniMoog2",
+		"melVoice3",
+		"rain1",
+		
+		"silence",
 
-		"melVoice2",
+
 		"melSynth2",
 		"melSynth3",
 

@@ -129,7 +129,7 @@ SynthDef(\piano4Verb, {
 		~bufnum = found.buffer;
 		~rate = found.rate;
 
-		~sx = target.linlin(24, 71, -0.85, 0.85);
+		~sx = target.linlin(24, 71, -0.95, 0.95);
 		~ex = ~sx;
 		~sy = found.shift.linlin(-6, 6, 0.7, -0.7);
 		~ey = ~sy;
@@ -188,7 +188,9 @@ SynthDef(\piano4Verb, {
 			\scaleIdx, Pfunc({ |e| setIdx % e[\scales].size }),
 			// \scaleIdx, 5,
 			\note, Pfunc({ |e| var n = e[\scales][e[\scaleIdx]].wrapAt(step); step = step + 1; n }),
-			\spk, Pseq((0, 0.1 .. 3.9), inf),
+			// \spk, Pseq((0, 0.1 .. 3.9), inf),
+			\spk, Pseq((0, 0.1 .. 0.9), inf),
+			
 			\send, 0.3,
 			\func, Pfunc({ |e| ~onEvent.(e) }),
 			\start, Pwhite(0.0, 0.04, inf),

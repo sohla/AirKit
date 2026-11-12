@@ -2,13 +2,16 @@
 	[
 		"silence",
 
-		"dulcimer2",
 		"dulcimer3",
-
 		"miniDroplet",
+		"nicVoice3",
+		"thunder",
 
-		"nicVoice2",
+		"silence",
+
 		"nicSynth2",
+
+
 
 		"hollowWood1R_2",
 		"temp_input6R_3",
