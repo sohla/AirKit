@@ -112,7 +112,7 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 		endSize: 50,
 		startWidth: 10,
 		endWidth: 1,
-		startColor: Color.green.alpha_(0.8),
+		startColor: Color.black.alpha_(0.8),
 		endColor: d.color,
 		duration: inf,
 		modulation: (

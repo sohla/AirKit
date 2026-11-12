@@ -33,6 +33,7 @@ s.reboot
 
 s.meter
 
+{Pan4.ar(BrownNoise.ar(0.3), MouseX.kr(-1,1), MouseY.kr(-1,1))}.play
 (
 SynthDef(\blip, { |out, freq=440, az=0|
     var sig = SinOsc.ar(freq) * EnvGen.kr(Env.perc, doneAction: 2) * 0.2;
@@ -46,10 +47,10 @@ Synth(\blip, [\out, ~quad]);
 
 (
 SynthDef(\noise, { |out, freq=440, az=0|
-	var sig = BrownNoise.ar(0.1);
+	var sig = BrownNoise.ar(0.6);
 	var mx = MouseX.kr(-1,1);
 	var my = MouseY.kr(-1,1);
-    Out.ar(out, Pan4.ar(sig, mx, my)); // Pan4.ar(in, xpos, ypos)
+    Out.ar(0, Pan4.ar(sig, mx, my)); // Pan4.ar(in, xpos, ypos)
 }).add;
 )
 Synth(\noise, [\out, ~quad]);

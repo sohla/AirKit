@@ -28,7 +28,7 @@ SynthDef(\miniDroplet, {
 	Out.ar(out, sig * amp);
   	DetectSilence.ar(sig, doneAction: 2);
     // Out.ar(out, PanAz.ar(2, sig, pan, 1, 2, 0.8) * amp);
-    Out.ar(out, Pan2.ar(sig, pan) * amp);
+    Out.ar(2, Pan2.ar(sig, pan) * amp);
     // Out.ar(out, Mix.ar(sig) * amp);
 }).add;
 
@@ -38,7 +38,7 @@ SynthDef(\dropletVerb, {
 	var env = EnvGen.kr(Env.asr(0.01, 1, release), gate, doneAction: 2);
 	sig = FreeVerb2.ar(sig[0], sig[1], mix, room.clip(0, 0.95), damp);
 	sig = LeakDC.ar(sig);
-	Out.ar(out, sig * env * amp);
+	Out.ar(2, sig * env * amp);
 }).add;
 
 //------------------------------------------------------------
@@ -107,10 +107,16 @@ SynthDef(\dropletVerb, {
 			\numPoints, 72,
 			\fill, false,//Pfunc({ |e| e[\step] == 0 }),
 			\rim, Pfunc({ |e| ((e[\step] ? 0) / (e[\div] ? 1) * 4 + 0.5).wrap(0, 4) }),
-			\sx, Pfunc({ |e| var f = e[\rim].frac; [f * 2 - 1, 1, 1 - (f * 2), -1][e[\rim].floor.asInteger] * 0.56 }),
-			\sy, Pfunc({ |e| var f = e[\rim].frac; [-1, f * 2 - 1, 1, 1 - (f * 2)][e[\rim].floor.asInteger] * 0.16 }),
-			\ex, Pfunc({ |e| e[\sx] * (e[\decay] ? 0.3).explin(0.05, 1.9, 0.9, 0.35) }),
-			\ey, Pfunc({ |e| e[\sy] * (e[\decay] ? 0.3).explin(0.05, 1.9, 0.9, 0.35) }),
+			// \sx, Pfunc({ |e| var f = e[\rim].frac; [f * 2 - 1, 1, 1 - (f * 2), -1][e[\rim].floor.asInteger] * 0.56 }),
+			// \sy, Pfunc({ |e| var f = e[\rim].frac; [-1, f * 2 - 1, 1, 1 - (f * 2)][e[\rim].floor.asInteger] * 0.16 }),
+			// \ey, Pfunc({ |e| e[\sx] * (e[\decay] ? 0.3).explin(0.05, 1.9, 0.9, 0.35) }),
+			// \ex, Pfunc({ |e| e[\sy] * (e[\decay] ? 0.3).explin(0.05, 1.9, 0.9, 0.35) }),
+
+			\sx, 0.1,
+			\sy, 0.4,
+			\ey, -4.0,
+			\ex, 0.1,
+
 			\xEnv, Pfunc({ Env([0, 1], [1], 3) }),
 			\yEnv, Pfunc({ Env([0, 1], [1], 3) }),
 			\rotation, Pfunc({ |e| (e[\rim].floor + 1) * 0.5pi * 0.3}),
@@ -181,7 +187,7 @@ SynthDef(\dropletVerb, {
 	var e = m.accelMassFiltered;
 	var idx = e.lincurve(0, 2.0 * sens, 0, divs.size - 1, 1).round.asInteger.clip(0, divs.size - 1);
 	var pal = e.lincurve(0, 2.0 * sens, 1, notes.size, 1).round.asInteger.clip(1, notes.size);
-	var amp = e.lincurve(0.0, 2.0 * sens, -50, -1, -2);
+	var amp = e.lincurve(0.0, 0.2 * sens, -50, -1, -2);
 	
 	// var wob = e.lincurve(0, 3.0 * sens, 0.000001, 130, 28);
 	// var wob = 400;

@@ -181,7 +181,7 @@ s.waitForBoot({
 			placeholder.(visualHost, "visuals on HDMI");
 		},{
 			visualCore.moveSurface(visualHost);
-			if(hdmiHost.notNil, { placeholder.(hdmiHost, "visuals on panel") });
+			if(hdmiHost.notNil, { placeholder.(hdmiHost, "") });
 		});
 
 		NetAddr.new("127.0.0.1", 57120).sendMsg("/airkit/visualTargetIs", target.asString);

@@ -5,7 +5,6 @@
 		"piano3",
 		"piano4",
 
-		"miniMoog",
 		"miniMoog2",
 
 		"melVoice2",
@@ -13,7 +12,7 @@
 		"melSynth3",
 
 		"hollowWood1L_2",
-		"temp_input6R_3",
+		"temp_input6L_3",
 
 
 		"temp_input11",

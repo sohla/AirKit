@@ -127,7 +127,7 @@ SynthDef(\holdVoice6L, { |out = 0, freq = 55, amp = 0, drive = 0, atk = 0.4, rel
 	var drive = m.accelMassFiltered.lincurve(0.0, 2.0 * sens, 0.0, 1.0, -1);
 	var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger.clip(0, notes.size - 1);
 
-	hold !? { hold.set(\freq, (notes[rt]).midicps, \drive, drive, \amp, vol, \lo, 0.1, \hi, 8) };
+	hold !? { hold.set(\freq, (notes[rt]).midicps, \drive, drive, \amp, vol * 1.3, \lo, 0.1, \hi, 8) };
 };
 
 //------------------------------------------------------------

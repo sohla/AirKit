@@ -132,7 +132,7 @@ SynthDef(\miniMoogVoice6R_2, {
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var amp = m.accelMassFiltered.lincurve(0, 2 * sens, 0, 0.5, -2);
+	var amp = m.accelMassFiltered.lincurve(0, 2 * sens, 0, 0.09, -2);
 	var ff = m.rrateMassFiltered.linexp(0, 0.4 * sens, 290, 3000);
 	var rt = (dev.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,0.0,notes.size,0).asInteger.clip(0, notes.size - 1);
 

@@ -71,6 +71,7 @@ SynthDef(\miniMoog2Chord, { |out = 0, amp = 0, slide = 0.6, breath = 0.4, bright
 		Pbind(
 			\instrument, \miniMoog2,
             \note, Pseq([0,5,2,9,4], inf),
+            // \note, Pseq([5], inf),
             // \octave, 3,//Pseq([1,2,3].stutter(2) + 2, inf),
             \root, Pseq([0,4,8].stutter(60), inf),
             // \amp, 0.3,
@@ -87,10 +88,16 @@ SynthDef(\miniMoog2Chord, { |out = 0, amp = 0, slide = 0.6, breath = 0.4, bright
 			\numPoints, 64,
 			\fill, true,
 			\duration, Pkey(\release),
-			\sy, 0.8,
-			\ey, 0.0 - (Pkey(\release) * 0.5),
-			\sx, (Pkey(\note) + (Pkey(\octave) * 12)).linlin(36, 69, 0.55, -0.55),
-			\ex, (Pkey(\note) + (Pkey(\octave) * 12)).linlin(36, 69, 0.55, -0.55),
+
+			\sx, 0.4,
+			\sy, 0.4,
+			\ey, 0.0,
+			\ex, 0.4,
+
+			// \ey, 0.8,
+			// \sy, 0.0 - (Pkey(\release) * 0.5),
+			// \sx, (Pkey(\note) + (Pkey(\octave) * 12)).linlin(36, 69, 0.55, -0.55),
+			// \ex, (Pkey(\note) + (Pkey(\octave) * 12)).linlin(36, 69, 0.55, -0.55),
 			\startSize, Pkey(\amp).lincurve(0.018, 0.89, 8, 30, -1),
 			\endSize, Pkey(\amp).lincurve(0.018, 0.89, 1, 20, -1),
 			\startWidth, 2,

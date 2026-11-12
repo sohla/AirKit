@@ -123,10 +123,14 @@ SynthDef(\dropletVerb, {
       \fill, false,
       \closed, true,
 
-      \sx, Pkey(\pan) * 0.85,
-      \ex, Pkey(\sx),
-      \sy, Pwhite(-0.75, 0.75),
-      \ey, Pkey(\sy),
+      // \sx, Pkey(\pan) * 0.85,
+      // \ex, Pkey(\sx),
+      // \sy, Pwhite(-0.75, 0.75),
+      // \ey, Pkey(\sy),
+      \sx, 0.4,
+      \ex, 0.4,
+      \sy, 0.41,
+      \ey, 0.41,
 
       \startSize, Pfunc({ |e| (e[\amp] ? 0.5).linlin(0, 1, 0, 200) }),
       \endSize, Pkey(\startSize),
