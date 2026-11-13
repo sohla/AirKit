@@ -2,20 +2,23 @@
 	[
 		"silence",
 
-		"celeste1",
+		"circusCeleste",
+		"currawong1",
 		"drumWind1",
-
-
+		"piano2",
+		
 		"whipbird",
 		"whipbird2",
 		"birdsong",
 		"birdy",
 		"birdy2",
+		
+		"wingChimes2",
+		
 		"thunder",
 		"droplet",
 		"wind1",
 		"wind2",
-		"wingChimes2",
 		"insects1",
 		"insects2",
 		"miniDroplet",
@@ -28,7 +31,6 @@
 
 		"multiBeatSynth1",
 
-		"piano2",
 		"multiBeat1",
 		"gendy1",
 		"miniMoog",
