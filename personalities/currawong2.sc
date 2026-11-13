@@ -78,7 +78,7 @@ SynthDef(\currawong2Wind, {
 			\group, group,
 			\out, fxBus,
 			\bufnum, buffer,
-			\note, Pseq([0,-2].stutter(3), inf),
+			\note, Pseq([0,-2,5].stutter(3), inf),
 			\dur, Pwhite(1.9,3.2),
 			\rate, Pfunc({ |e| e[\note].value.midiratio }),
 			\vibRate, 6,
@@ -135,14 +135,14 @@ SynthDef(\currawong2Wind, {
 	if(Pdef(m.ptn).isPlaying.not and: { m.accelMassFiltered > startAt }, { Pdef(m.ptn).play });
 	if(Pdef(m.ptn).isPlaying and: { m.accelMassFiltered < stopAt }, { Pdef(m.ptn).pause });
 
-	Pdef(m.ptn).set(\amp, 3);
+	Pdef(m.ptn).set(\amp, 1.5);
 	verbSynth !? { verbSynth.set(\pos, pos) };
 
 	windFreq = windFreq.linexp(0,1,600,1600);
 	if(windAmp<0.03,{windAmp=0});
 	if(windAmp>0.9,{windAmp=0.9});
 	wind !? {
-		wind.set(\amp, windAmp * 1 * vol);
+		wind.set(\amp, windAmp * 1.3 * vol);
 		wind.set(\my, windMy);
 		wind.set(\mx, windMx);
 		wind.set(\filterFreq, windFreq);

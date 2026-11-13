@@ -93,7 +93,7 @@ SynthDef(\currawong1Verb, { |in = 0, out = 0, mix = 0.75, room = 2.8, damp = 0.4
 	if(Pdef(m.ptn).isPlaying.not and: { m.accelMassFiltered > startAt }, { Pdef(m.ptn).play });
 	if(Pdef(m.ptn).isPlaying and: { m.accelMassFiltered < stopAt }, { Pdef(m.ptn).pause });
 
-	Pdef(m.ptn).set(\amp, 3);
+	Pdef(m.ptn).set(\amp, 1.5);
 	verbSynth !? { verbSynth.set(\pos, pos) };
 };
 

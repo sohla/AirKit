@@ -4,6 +4,7 @@
 
 		"circusCeleste",
 		"currawong1",
+		"currawong2",
 		"drumWind1",
 		"piano2",
 		
