@@ -3,6 +3,6 @@
 Edit for the stick in hand, then on the Pi:
 `sudo network/tools/stick-config.py` (`--dry-run` first to see what it sends).
 
-id:     1                   # OSC prefix, /1/IMUFusedData. AirKit wants 1 to numDevices
-led:    255, 0, 0, 255      # R, G, B, alpha/brightness, 0-255
+id:     4                   # OSC prefix, /1/IMUFusedData. AirKit wants 1 to numDevices
+led:    255, 255, 0, 1      # R, G, B, alpha/brightness, 0-255
 stream: auto                # where it sends: auto = this kit's AP, port 57120

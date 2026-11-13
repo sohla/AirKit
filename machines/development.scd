@@ -11,7 +11,7 @@
 	macs: [],
 	platform: \linux,
 
-	numDevices: 9,
+	numDevices: 5,
 
 	// list: unconfirmed — falls back to list_dev.sc until set.
 	// list: "list_Mel_26.sc",
@@ -21,7 +21,18 @@
 	// list: "list_BtB_Dev.sc",
 	// list: "list_glenroy.sc",
 	
-	list: "list_yarraGallery.sc",
+	// list: "list_MATS.sc",
+
+
+	list: [
+		"list_MATS.sc",
+		"list_MATS.sc",
+		"list_MATS.sc",
+		"list_MATS.sc",
+		"list_MATS.sc",
+	],
+
+
 
 	secs: 0.01,
 	latency: 0.1,

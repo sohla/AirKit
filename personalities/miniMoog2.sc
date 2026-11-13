@@ -155,7 +155,7 @@ SynthDef(\miniMoog2Chord, { |out = 0, amp = 0, slide = 0.6, breath = 0.4, bright
 	var atk = m.accelMassFiltered.lincurve(0, 2 * sens,0.1,0.001,-3);
 	var rel = m.accelMassFiltered.lincurve(0, 2 * sens,0.01, 6.0,-1);
 	var ff = m.rrateMassFiltered.linexp(0, 0.4 * sens,60,15000);
-	var chordAmp = m.accelMassFiltered.lincurve(0, 2 * sens, -30, -10, -1);
+	var chordAmp = m.accelMassFiltered.lincurve(0, 2 * sens, -30, -20, -1);
 	var chordBreath = m.accelMassFiltered.linlin(0, 2.4 * sens, 1.0, 8.0);
 	var chordBright = m.rrateMassFiltered.linexp(0, 0.4 * sens, 100, 16000);
 	var octave = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0, 1.0, 3, 6, -1).asInteger;
@@ -169,7 +169,7 @@ SynthDef(\miniMoog2Chord, { |out = 0, amp = 0, slide = 0.6, breath = 0.4, bright
 	Pdef(m.ptn).set(\dur, dur);
 	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\attack, atk);
-	Pdef(m.ptn).set(\octave, octave - 1);
+	Pdef(m.ptn).set(\octave, octave);
 	Pdef(m.ptn).set(\rel, rel);
     Pdef(m.ptn).set(\filterFreq, ff);
 	chord !? { chord.set(\amp, chordAmp.dbamp * vol, \breath, chordBreath, \bright, chordBright) };
