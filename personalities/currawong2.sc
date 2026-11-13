@@ -36,7 +36,7 @@ SynthDef(\currawong2Wind, {
      filterFreq=1000, filterQ=0.5,
      reverbMix=0.6, reverbRoom=0.5, reverbDamp=0.2, gate=0, my=0.5, mx=1x|
 
-    var wind, filtered, reverbed;
+    var wind, filtered, reverbed, dust;
     var densityMod, strengthMod;
 	var env = EnvGen.ar(Env.asr(1.3,1.0,5.0), gate, doneAction:Done.freeSelf);
 
@@ -45,13 +45,13 @@ SynthDef(\currawong2Wind, {
 	strengthMod = LFNoise2.kr(0.2).range(0.8, 1.2) * my.lag(3.5);
 
     // Base wind sound
-	wind = [WhiteNoise.ar(1),WhiteNoise.ar(1)] * 1;
+	wind = [WhiteNoise.ar(0.7),PinkNoise.ar(1)] * 1;
 
     // Apply density control (affects graininess of the wind)
-    wind = Dust.ar(densityMod * 10000) * wind * [1, pi];	
+    dust = HPF.ar(Dust.ar(densityMod * 10000) * wind * [1, 2], 4000);	
 
     // Apply strength control (affects amplitude and filter)
-    wind = wind * strengthMod;
+    wind = (wind + dust) * strengthMod;
 
     // Apply resonant filter
 	filtered = RLPF.ar(wind, filterFreq.lag(3)  * strengthMod.linexp(0, 1, 0.5, 2), filterQ);
@@ -142,7 +142,7 @@ SynthDef(\currawong2Wind, {
 	if(windAmp<0.03,{windAmp=0});
 	if(windAmp>0.9,{windAmp=0.9});
 	wind !? {
-		wind.set(\amp, windAmp * 1.3 * vol);
+		wind.set(\amp, windAmp * 0.5 * vol);
 		wind.set(\my, windMy);
 		wind.set(\mx, windMx);
 		wind.set(\filterFreq, windFreq);

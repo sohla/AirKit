@@ -1,6 +1,6 @@
 var m = ~model;
 var bi = 0;
-var dur = 0.12;
+var dur = 0.11;
 var buffers;
 var lastTime = 0;
 
@@ -98,7 +98,7 @@ SynthDef(\drumkit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var rate = m.rrateMassFiltered.linlin(0, 0.6 * sens,0.2,10.4);
-	var amp = m.accelMassFiltered.lincurve(0, 0.6 * sens,0.0,2, 2);
+	var amp = m.accelMassFiltered.lincurve(0, 0.6 * sens,0.0,1, 2);
 	var roll = ((d.sensors.gyroEvent.x / pi).fold(-0.5,0.5) * 2).lincurve(-1.0,1.0,0.5,1.0,0);
 	var thr = (d.sensors.accelEvent.y.abs).lincurve(0,0.5,0.0,1.0,-2).asInteger;
 	var ff = ((d.sensors.gyroEvent.z / pi).fold(-0.5,0.5) * 2).lincurve(-1.0,1.0,500,50.0,1);
