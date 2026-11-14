@@ -11,7 +11,6 @@ var pool = [0, 3, 5, 7, 10];
 var laneSplits = [55, 72];
 var laneY = [0.5, 0, -0.5];
 var lanePan = [0, -0.3, 0.3];
-var laneHue = [0.02, 0.12, 0.5];
 
 var grids = [
 	[
@@ -65,15 +64,48 @@ SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, st
 }).add;
 
 //------------------------------------------------------------
+~vdef.(\splotch, { |ev, c|
+	var mod = ev[\modulation] ? ();
+	var lumps = mod[\lumps] ? [];
+	var drops = mod[\drops] ? [];
+	var bleed = mod[\bleed] ? 2;
+	var bleedGrow = mod[\bleedGrow] ? 0.15;
+	var bleedAlpha = mod[\bleedAlpha] ? 0.3;
+	var n = ev[\numPoints] ? 48;
+	var blob = { |pos, r| Array.fill(n, { |i| var a = i / n * 2pi; pos + Polar(r * (1 + lumps.sum({ |l| l[1] * sin((a * l[0]) + l[2]) })), a).asPoint }) };
+	bleed.do({ |j| c[\render].(blob.(c[\pos], c[\size] * (1 + ((bleed - j) * bleedGrow))), 1, bleedAlpha / (bleed - j)) });
+	c[\render].(blob.(c[\pos], c[\size]), 1, 1);
+	drops.do({ |d| c[\render].(blob.(c[\pos] + Polar(c[\size] * d[1], d[0]).asPoint, c[\size] * d[2]), 1, 1) });
+	nil
+});
+
+//------------------------------------------------------------
 ~init = ~init <> {
+	var solo = nil;
+	var looks = (
+		'nic_07_g2':  (hue: 0.98, sat: 0.85, val: 0.70, alpha: 0.85, scale: 1.5, spread: 1.25, lump: 0.25, drops: 2, bleed: 3),
+		'nic_09_g2':  (hue: 0.03, sat: 0.90, val: 0.80, alpha: 0.85, scale: 1.4, spread: 1.30, lump: 0.30, drops: 3, bleed: 3),
+		'nic_11_b2':  (hue: 0.08, sat: 0.90, val: 0.90, alpha: 0.80, scale: 1.3, spread: 1.20, lump: 0.20, drops: 1, bleed: 2),
+		'nic_10_c4':  (hue: 0.13, sat: 0.85, val: 0.90, alpha: 0.80, scale: 1.0, spread: 1.20, lump: 0.25, drops: 3, bleed: 2),
+		'nic_12_c#4': (hue: 0.30, sat: 0.70, val: 0.70, alpha: 0.80, scale: 1.0, spread: 1.15, lump: 0.15, drops: 2, bleed: 2),
+		'nic_13_e4':  (hue: 0.45, sat: 0.80, val: 0.70, alpha: 0.80, scale: 0.9, spread: 1.25, lump: 0.30, drops: 4, bleed: 2),
+		'nic_14_f#4': (hue: 0.55, sat: 0.85, val: 0.85, alpha: 0.80, scale: 0.9, spread: 1.20, lump: 0.20, drops: 2, bleed: 2),
+		'nic_15_c5':  (hue: 0.62, sat: 0.85, val: 0.85, alpha: 0.75, scale: 0.8, spread: 1.30, lump: 0.25, drops: 5, bleed: 1),
+		'nic_17_d#5': (hue: 0.70, sat: 0.75, val: 0.80, alpha: 0.75, scale: 0.8, spread: 1.20, lump: 0.15, drops: 3, bleed: 1),
+		'nic_08_f5':  (hue: 0.78, sat: 0.70, val: 0.85, alpha: 0.75, scale: 0.7, spread: 1.25, lump: 0.30, drops: 4, bleed: 1),
+		'nic_06_f#5': (hue: 0.85, sat: 0.80, val: 0.90, alpha: 0.75, scale: 0.7, spread: 1.20, lump: 0.20, drops: 6, bleed: 1),
+		'nic_05_d6':  (hue: 0.92, sat: 0.65, val: 0.95, alpha: 0.70, scale: 0.6, spread: 1.30, lump: 0.25, drops: 5, bleed: 1),
+		'default':    (hue: 0.00, sat: 0.00, val: 0.30, alpha: 0.80, scale: 1.0, spread: 1.20, lump: 0.20, drops: 2, bleed: 2)
+	);
+
 	group = Group.new;
 
-	samplesLib = folder.entries.select({ |p| p.extension == "wav" }).collect({ |path|
+	samplesLib = folder.entries.select({ |p| p.extension == "wav" and: { solo.isNil or: { p.fileNameWithoutExtension.asSymbol == solo } } }).collect({ |path|
 		var stem = path.fileNameWithoutExtension;
 		var midiNote = noteToMidi.(stem.split($_).last.toUpper);
 		var buffer = Buffer.read(s, path.fullPath, action: { |buf| postf("buffer alloc [%] \n", buf) });
 		postf("loading mouth perc : % (midi %) \n", stem, midiNote);
-		(name: stem, buffer: buffer, midiNote: midiNote)
+		(name: stem, buffer: buffer, midiNote: midiNote, look: looks[stem.asSymbol] ?? { looks[\default] })
 	});
 
 	lanes = [
@@ -98,21 +130,25 @@ SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, st
 				\sustain, 2,
 
 				\type, \customVisualEvent,
-				\shape, \circle,
+				\shape, \splotch,
 				\fill, true,
-				\sx, Pfunc({ |e| ((e[\step] + 0.5) / 16 * 1.8) - 0.9 }),
+				\look, Pfunc({ |e| e[\smp][\look] }),
+				\sx, Pfunc({ |e| ((e[\step] + 0.5) / 16 * 1.8) - 0.9 + 0.03.rand2 }),
 				\ex, Pkey(\sx),
-				\sy, laneY[lane],
-				\ey, laneY[lane],
-				\startSize, Pfunc({ |e| e[\vel].value * 40 }),
-				\endSize, 3,
-				\startColor, Color.hsv(laneHue[lane], 0.8, 1.0, 0.9),
-				\endColor, Color.hsv(laneHue[lane], 0.8, 0.4, 0.0),
+				\sy, Pfunc({ laneY[lane] + 0.08.rand2 }),
+				\ey, Pkey(\sy),
+				\startSize, Pfunc({ |e| e[\vel].value * 30 * e[\look][\scale] }),
+				\endSize, Pfunc({ |e| e[\startSize] * e[\look][\spread] }),
+				\startWidth, 1,
+				\endWidth, 1,
+				\startColor, Pfunc({ |e| var k = e[\look]; Color.hsv(k[\hue], k[\sat], k[\val], k[\alpha]) }),
+				\endColor, Pfunc({ |e| var k = e[\look]; Color.hsv(k[\hue], k[\sat], k[\val] * 0.7, 0.0) }),
+				\modulation, Pfunc({ |e| var k = e[\look]; (amp: 0, bleed: k[\bleed], lumps: Array.fill(3, { |i| [i + 2, rrand(0.0, k[\lump]), 2pi.rand] }), drops: Array.fill(rrand(0, k[\drops]), { [2pi.rand, rrand(1.2, 2.2), rrand(0.08, 0.25)] })) }),
 				\duration, beat * 6,
 
 				\args, #[],
 			)
-		}))
+		}).select({ |ptn, lane| lanes[lane].notEmpty }))
 	);
 
 	Pdef(m.ptn).set(\level, 0);

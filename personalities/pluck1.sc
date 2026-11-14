@@ -65,8 +65,11 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 		var pluckRate = pch.linlin(30, 300, 1, 30);
 		var modes = pch.linlin(40, 190, modeMin, modeMax).round.asInteger.clip(1, 16);
 		var gate = m.accelMassFiltered * 1.3;
-		var a = c[\posStart];
-		var b = c[\posEnd];
+		var drift = mod[\drift] ? 0;
+		var driftHz = mod[\driftHz] ? 0.05;
+		var shift = 0 @ (drift * c[\bounds].height * 0.5 * sin(2pi * driftHz * c[\now]));
+		var a = c[\posStart] + shift;
+		var b = c[\posEnd] - shift;
 		var normal = Polar(1, (b - a).theta + 0.5pi).asPoint;
 		var throwPx = c[\size];
 		var now = c[\now];
@@ -103,24 +106,26 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 		dur: 0.01,
 		viewID: d.port,
 		shape: \rubberBand,
-		numPoints: 14,
+		numPoints: 44,
 		fill: false,
 		closed: false,
-		sx: -0.85, sy: 0,
-		ex: 0.85, ey: 0,
-		startSize: 50,
-		endSize: 50,
-		startWidth: 10,
+		sx: -1.1, sy: 0,
+		ex: 1.1, ey: 0,
+		startSize: 160,
+		endSize: 10,
+		startWidth: 3,
 		endWidth: 1,
-		startColor: Color.black.alpha_(0.8),
+		startColor: Color.red(0.4),
 		endColor: d.color,
 		duration: inf,
 		modulation: (
-			decay: 0.03,
+			decay: 10.3,
 			vibScale: 0.02,
 			modeMin: 1,
-			modeMax: 10,
-			ampLag: 0.2,
+			modeMax: 3,
+			ampLag: 0.9,
+			drift: 0.0,
+			driftHz: 1.1,
 			amp: 0
 		)
 	).play;
