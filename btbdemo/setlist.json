@@ -1,0 +1,89 @@
+{
+  "seconds": 45,
+  "prepare": 60,
+  "settle": 3,
+  "pieces": [
+    {
+      "title": "Shhhh",
+      "file": "Shhhh",
+      "parts": {
+        "nic": [
+          "gendy3",
+          "nicPrrr1",
+          "nicMouth1",
+          "nicMouthPerc"
+        ],
+        "mel": [
+          "gendy1",
+          "mel4"
+        ]
+      }
+    },
+    {
+      "title": "Circling",
+      "file": "Circling",
+      "parts": {
+        "nic": [
+          "multiBeat4"
+        ],
+        "mel": [
+          "multiBeat1"
+        ]
+      }
+    },
+    {
+      "title": "Conversation table",
+      "file": "Conversation table",
+      "parts": {
+        "nic": [
+          "miniDroplet"
+        ],
+        "mel": [
+          "miniMoog2"
+        ]
+      }
+    },
+    {
+      "title": "The Song",
+      "file": "The Song",
+      "parts": {
+        "nic": [
+          "nicVoice3",
+          "nicSynth2"
+        ],
+        "mel": [
+          "melVoice3",
+          "melSynth3"
+        ]
+      }
+    },
+    {
+      "title": "Stillness",
+      "file": "Stillness",
+      "parts": {
+        "nic": [
+          "dulcimer3"
+        ],
+        "mel": [
+          "piano4"
+        ]
+      }
+    },
+    {
+      "title": "Triggers Sonata Part 1",
+      "file": "Triggers Sonata Part 1",
+      "parts": {
+        "nic": [
+          "hollowWood1R_2",
+          "temp_input6R_3",
+          "temp_input11R"
+        ],
+        "mel": [
+          "hollowWood1L_2",
+          "temp_input6L_3",
+          "temp_input11"
+        ]
+      }
+    }
+  ]
+}

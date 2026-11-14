@@ -18,23 +18,23 @@ m.gyroFilteredDecay = 0.8;
 //------------------------------------------------------------
 
 SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
-	freq = 45, detune = 0.12, ampdist = 1, durdist = 0,
-	adparam = 0.001, ddparam = 1, ampscale = 0, durscale = 0.0,
+	freq = 60, detune = 0.07, ampdist = 1, durdist = 0.9,
+	adparam = 0.001, ddparam = 1, ampscale = 0, durscale = 0.2,
 	atk = 2.0, rel = 6.0, glide = 0.6,
 	cutoff = 6000, roomsize = 1, revtime = 0.1, revmix = 0.35,
-	shelfFreq = 250, shelfDb = -2|
+	shelfFreq = 90, shelfDb = 10|
 
 	var env = EnvGen.kr(Env.asr(atk, 1, rel), gate, doneAction: Done.freeSelf);
 	var f   = freq.lag(glide);
 	var det = detune.lag(glide);
-
-	var dry = Splay.ar({
+	var sub = SinOsc.ar(f/2,0,1);
+	var dry = Splay.arFill(nvoices, {|i|
 		Gendy1.ar(ampdist, durdist, adparam, ddparam,
 			f, f + (f * det), ampscale, durscale, mul: 1)
-	} ! nvoices).softclip * 3;
+	}).softclip * 1;
 
 	var wet = GVerb.ar(dry.sum * 0.5, roomsize, revtime);
-	var sig = (dry * (1 - revmix)) + (wet * revmix);
+	var sig = (dry * (1 - revmix)) + (wet * revmix) + sub;
 
 	sig = LPF.ar(sig, cutoff.clip(120, 18000).lag(glide));
 	sig = BLowShelf.ar(sig, shelfFreq, db: shelfDb);
@@ -128,17 +128,21 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 
 //------------------------------------------------------------
 ~next = {|d|
+	
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
- 
-	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+ 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	
 	var amp    = m.accelMassFiltered.lincurve(0.0, 0.8 * sens, -50, -25, -2);
 	var freq   = (d.sensors.gyroEvent.y / pi.half).linexp(-1.0, 1.0, 40, 90);
 	var detune = m.rrateMassFiltered.lincurve(0.0, 1.2, 0.10, 0.45, -1);
-	var cutoff = m.accelMassFiltered.linexp(0.0, 2.0, 700, 9000);
-
+	var cutoff = m.accelMassFiltered.linexp(0.0, 2.0 * sens, 700, 9000);
+	
+	var durscale = m.accelMassFiltered.lincurve(0.0, 2.0 * sens, 0.1, 1, -9);
+	
 	synth !? { |x|
 		x.set(\amp, amp.dbamp * vol);
-		x.set(\freq, freq * 0.midiratio);
+		x.set(\durscale, durscale);
+		// x.set(\freq, freq * 0.midiratio);
 		x.set(\detune, detune);
 		x.set(\cutoff, cutoff);
 	};

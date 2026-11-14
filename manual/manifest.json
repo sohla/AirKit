@@ -1,0 +1,58 @@
+{
+  "title": "AirKit Manual",
+  "settle": 4,
+  "prepare": 60,
+  "fakeDevices": [],
+  "tabs": [
+    {
+      "id": "device", "index": 0, "label": "device",
+      "summary": "One column per connected Airstick. Columns appear on their own when a stick starts sending.",
+      "components": [
+        { "name": "Tabs", "at": [0.5, 0.055], "text": "Switch between the four pages: device, visual, control and system." },
+        { "name": "Device number", "at": [0.03, 0.16], "text": "Which Airstick this column is." },
+        { "name": "Network", "at": [0.12, 0.16], "text": "The IP address and port the stick's data is arriving from." },
+        { "name": "Battery", "at": [0.2, 0.16], "text": "Charge reported by the stick." },
+        { "name": "Plotter", "at": [0.12, 0.26], "text": "Live trace of the signals the loaded personality chooses to show. Goes flat while the device is muted." },
+        { "name": "3D view", "at": [0.125, 0.54], "text": "The stick's orientation. The box turns with the stick; the small yellow, magenta and cyan bars show acceleration. Tap to calibrate." },
+        { "name": "Personality", "at": [0.125, 0.805], "text": "The loaded personality, in the device's colour. Tap to mute or unmute; it greys out when muted." },
+        { "name": "Previous / next", "at": [0.125, 0.93], "text": "Load the previous or next personality in this kit's roster." }
+      ]
+    },
+    {
+      "id": "visual", "index": 1, "label": "visual",
+      "summary": "The visuals the personalities draw.",
+      "components": [
+        { "name": "Visual surface", "at": [0.5, 0.55], "text": "All devices drawn on one canvas (Overlay) or one canvas each (Grid); switch on the system page. When the visuals are on a second screen this reads \"visuals on HDMI\"." }
+      ]
+    },
+    {
+      "id": "control", "index": 2, "label": "control",
+      "summary": "Per-device settings. Moves here are shared with the web app and MIDI, and are remembered between sessions.",
+      "components": [
+        { "name": "Sliders", "at": [0.125, 0.4], "text": "Drag across to set each parameter: volume, sensitivity and any the personality adds. Some personalities show their own controls here instead." },
+        { "name": "Personality", "at": [0.125, 0.805], "text": "Same as on the device page: tap to mute or unmute." },
+        { "name": "Previous / next", "at": [0.125, 0.93], "text": "Same as on the device page." }
+      ]
+    },
+    {
+      "id": "system", "index": 3, "label": "system",
+      "summary": "Health of the kit, and the buttons that act on the whole system.",
+      "components": [
+        { "name": "Load", "at": [0.18, 0.157], "text": "System Load is CPU use across the Pi; SC Load is AirKit's share. Temp and Fan are the Pi's temperature and fan state." },
+        { "name": "Audio server", "at": [0.16, 0.2], "text": "Audio engine CPU, and how many UGens, groups and synths are running." },
+        { "name": "Hosting / Port", "at": [0.62, 0.2], "text": "This kit's IP address and port: what the web app and Airsticks should point at." },
+        { "name": "Meters", "at": [0.06, 0.37], "text": "Input and output levels." },
+        { "name": "Node tree", "at": [0.5, 0.5], "text": "What is currently running on the audio server." },
+        { "name": "Version", "at": [0.045, 0.927], "text": "The installed AirKit version." },
+        { "name": "Overlay / Grid", "at": [0.167, 0.927], "text": "Visuals as one shared canvas, or one canvas per device." },
+        { "name": "Panel / HDMI", "at": [0.264, 0.927], "text": "Show the visuals on this panel or on a second screen. Pressing HDMI checks for a screen; with none plugged in it snaps back to Panel." },
+        { "name": "Network", "at": [0.36, 0.927], "pi": true, "text": "Restarts the Pi's networking. Try this if sticks or the web app lose connection." },
+        { "name": "OSC Thru", "at": [0.458, 0.927], "text": "Forward the incoming Airstick data to another computer (set in the kit's machine file)." },
+        { "name": "Free All buffers", "at": [0.556, 0.927], "text": "Unload every sample from memory." },
+        { "name": "Free All Nodes", "at": [0.656, 0.927], "text": "Stop every sound immediately." },
+        { "name": "QUIT", "at": [0.75, 0.927], "pi": true, "text": "Quit AirKit." },
+        { "name": "TURN OFF", "at": [0.95, 0.927], "pi": true, "text": "Shut the Pi down. Wait for the screen to go dark before unplugging." }
+      ]
+    }
+  ]
+}

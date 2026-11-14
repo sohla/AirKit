@@ -2,34 +2,33 @@
 	[
 		"silence",
 
-		"dulcimer3",
-		"miniDroplet",
-		"nicVoice3",
-		"thunder",
-
-		"silence",
-
-		"nicSynth2",
-
-
-
-		"hollowWood1R_2",
-		"temp_input6R_3",
-
-
-		"temp_input11R",
-
+		"pluck1",
+		"nicMouthPerc",
+		"nicPrrr1",
+		"gendy3",
+		"nicMouth1",
 
 		"multiBeat4",
 
-		"nicPrrr1",
-		"nicMouthPerc",
 		"waves",
-		"pluck1",
-		"gendy3",
-		"nicMouth1",
 		"violin2",
 		"droplet",
+
+		"miniDroplet",
+
+		"nicSynth2",
+		"nicVoice3",
+		
+		"dulcimer3",
+	
+		"thunder",
+
+		"temp_input11R",
+		"temp_input6R_3",
+		"hollowWood1R_2",
+
+
+
 
 
 		"silence",
