@@ -21,8 +21,8 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 
 	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction:2);
-	var sig = Splay.arFill(3,{|i|
-			Warp1.ar(2, bufnum, start, rate / (i+1) , 0.3, -1, 3, windowRandRatio:0.3) * (0.2 + (i * 0.4))
+	var sig = Splay.arFill(5,{|i|
+			Warp1.ar(2, bufnum, start, rate / (i+1) , 0.1, -1, 3, windowRandRatio:0.3) * (0.2 + (i * 0.4))
 	},1,1,0);
   	sig = Compander.ar(sig, sig,
         thresh: 0.4,
@@ -119,7 +119,7 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var amp = m.accelMassFiltered.linlin(0,2.3 * sens,0.00001,1);
-	var rate =  m.gyroYFiltered.lincurve(-1.0,1.0,0.1,2.0,0);
+	var rate =  m.gyroYFiltered.lincurve(-1.0,1.0,0.9,2.0,0);
 	var start = m.gyroZFiltered.lincurve(-1.0,1.0,0.0,1.0,0);
 
 	if(amp < 0.01, {amp = 0});

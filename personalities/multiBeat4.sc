@@ -1,5 +1,7 @@
 var m = ~model;
 var group;
+var fxBus;
+var plate;
 var buffers;
 var loaded = 0;
 var kickIdx = 0;
@@ -8,8 +10,9 @@ var kickNames = ["drum", "kick", "bd"];
 
 var beat = 0.5;
 var divs = [2,4,6,8,16];
+// var divs = [4];
 
-var rates = [1, 1, 1, 0.5, 2, 1.5, -1] * 1;
+var rates = [1.5, 1.5, -2, 1.5, 2, 1.5, -2] * 1;
 
 var kitFolder = "~/Downloads/openLabSamples/kit";
 
@@ -26,12 +29,12 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 SynthDef(\multiBeatKit, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
-    attack=0.005, decay=0.1, sustain=0.8, release=0.02, gate=1, cutoff=50, rq=0.01|
+    attack=0.005, decay=0.1, sustain=0.8, release=0.02, gate=1, cutoff=50, rq=0.001|
 	var lr = rate * BufRateScale.kr(bufnum);
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
 	var sig = PlayBuf.ar(1, bufnum, rate: [lr, lr * 1.1],
 		startPos: start * BufFrames.kr(bufnum), loop: 0);
-	sig = RHPF.ar(sig, cutoff.clip(20, 8000), rq) * 2;
+	sig = RHPF.ar(sig, cutoff.clip(20, 8000), rq, 4) + sig	;
 	sig = Compander.ar(sig, sig,
 		thresh: -20.dbamp,
 		slopeBelow: 1,
@@ -43,19 +46,33 @@ SynthDef(\multiBeatKit, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
 	Out.ar(out, Mix(sig) * amp * env);
 }).add;
 
-SynthDef(\dpulse, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
-    attack=0.005, decay=0.1, sustain=0.8, release=0.02, gate=1, cutoff=50, rq=0.01, sd = 1|
-	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
-	var sig = LFPulse.ar(1);
-	Out.ar(out, sig * amp * env);
-}).add;
+// SynthDef(\dpulse, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
+//     attack=0.005, decay=0.1, sustain=0.8, release=0.02, gate=1, cutoff=50, rq=0.001, sd = 1|
+// 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
+// 	var sig = LFPulse.ar(1);
+// 	Out.ar(out, sig * amp * env);
+// }).add;
 
+SynthDef(\multiBeat4Plate, { |in = 0, out = 0, mix = 0.5, predelay = 0.01, room = 0.7, damp = 0.2, lowcut = 300, hicut = 9000, thresh = 0.02, hold = 0.25, release = 0.03, amp = 1, gate = 1|
+	var dry = In.ar(in, 2);
+	var env = EnvGen.kr(Env.asr(0.01, 1, 0.5), gate, doneAction: 2);
+	var key = Amplitude.kr(dry.sum, 0.001, 0.01);
+	var shut = EnvGen.kr(Env([0, 1, 1, 0], [0.001, hold, release]), key > thresh);
+	var wet = DelayN.ar(dry, 0.2, predelay);
+	wet = 4.collect({ |i| AllpassN.ar(_, 0.05, [0.0047, 0.0053] * (i + 1) * 1.3, 0.08) }).inject(wet, { |sig, ap| ap.(sig) });
+	wet = FreeVerb2.ar(wet[0], wet[1], 1, room, damp);
+	wet = LPF.ar(HPF.ar(wet, lowcut), hicut);
+	Out.ar(out, (dry + (wet * mix * shut)) * env * amp);
+}).add;
 
 //------------------------------------------------------------
 ~init = ~init <> {
 	var folder = PathName(kitFolder);
 
 	group = Group.new;
+	fxBus = Bus.audio(s, 2);
+	plate = Synth.tail(group, \multiBeat4Plate, [
+		\in, fxBus, \out, 0, \mix, 0.11, \predelay, 0.01, \room, 0.3, \damp, 0.3, \lowcut, 300, \hicut, 9000, \thresh, 0.08, \hold, 0.15, \release, 0.03]);
 // m.com.bgColor = Color.yellow(0.5);
 
 	postf("loading samples : % \n", kitFolder);
@@ -86,13 +103,15 @@ SynthDef(\dpulse, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
 			\dur,  Pkey(\div).reciprocal * beat,
 			\note, 0,
 			\octave, 5,
-			\out, Pseq([0,1,2,3], inf),
+			// \out, Pseq([0,1,2,3], inf),
+			\out, Pseq([0,1], inf) + fxBus.index,
 
 			\pick, Pfunc({ |e| if(e[\step] == 0, { kickIdx }, { (e[\pal] ? 1).rand }) }),
 			\bufnum, Pfunc({ |e| buffers[e[\pick].clip(0, buffers.size - 1)] }),
 
 			\amp, Pkey(\energy) * Pfunc({ |e| if(e[\step] == 0, { 1.0 }, { 0.55 }) }),
-			\rate, 0.53,//Pfunc({ |e| rates.choose * (e[\roll] ? 1) }),
+			// \rate, 0.53 * 2,//Pfunc({ |e| rates.choose * (e[\roll] ? 1) }),
+			\rate, Pfunc({ |e| rates.choose * (e[\roll] ? 1) }),
 			\start, Pfunc({ |e|
 				if(e[\rate] < 0, { 0.98 }, { [0, 0.12].wchoose([0.88, 0.12]) })
 			}),
@@ -139,9 +158,12 @@ SynthDef(\dpulse, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
 ~deinit = ~deinit <> {
 	var g = group;
 	var bufs = buffers;
+	var bus = fxBus;
 	var tail = 1.0;
 	group = nil;
 	buffers = nil;
+	fxBus = nil;
+	plate = nil;
 
 	Pdef(m.ptn).remove;
 	fork {
@@ -151,6 +173,7 @@ SynthDef(\dpulse, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
 			s.sync;
 			g.free;
 		};
+		bus !? { bus.free };
 		bufs.do({ |buf|
 			postf("buffer dealloc [%] \n", buf);
 			buf.free;
@@ -168,7 +191,7 @@ SynthDef(\dpulse, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
 	var pal = e.lincurve(0, 1.2 * sens, 1, buffers.size, 1).round.asInteger.clip(1, buffers.size);
 	var amp = e.lincurve(0, 0.5 * sens, -10, -5, -1);
 	var roll = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.75, 1.25);
-	var cutoff = ((d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5) * 2).lincurve(-1.0, 1.0, 40, 200, 1);//tune to pitch!!
+	var cutoff = ((d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5) * 2).lincurve(-1.0, 1.0, 64, 128, 1);//tune to pitch!!
 
 	if(amp< 9.neg, { amp = 90.neg });
 
@@ -177,7 +200,7 @@ SynthDef(\dpulse, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
 	Pdef(m.ptn).set(\pal, pal);
 	Pdef(m.ptn).set(\energy, amp.dbamp * vol);
 	Pdef(m.ptn).set(\roll, roll);
-	Pdef(m.ptn).set(\cutoff, cutoff);
+	Pdef(m.ptn).set(\cutoff, cutoff / 2);
 };
 
 //------------------------------------------------------------

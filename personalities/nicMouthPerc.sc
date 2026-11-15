@@ -5,7 +5,7 @@ var lanes;
 
 var folder = PathName("~/Downloads/nicSamples/mwp");
 
-var beat = 0.125;
+var beat = 0.14;
 var pool = [0, 3, 5, 7, 10];
 
 var laneSplits = [55, 72];
@@ -56,9 +56,10 @@ m.gyroFilteredAttack = 0.7;
 m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
-SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, start = 0, pan = 0,
-	attack = 0.002, sustain = 0.1, release = 0.0003|
-	var env = EnvGen.kr(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction: 2);////~~!!!!
+SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, start = 0.03, pan = 0,
+	attack = 0.002, decay=0.02, sustain = 0.1, release = 0.0003, gate=1|
+	// var env = EnvGen.kr(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction: 2);////~~!!!!
+  	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum, rate * BufRateScale.kr(bufnum), startPos: start * BufFrames.kr(bufnum));
 	sig = HPF.ar(sig, 90);
 	Out.ar(out, Balance2.ar(sig[0], sig[1], pan, amp * vel * env));
@@ -128,7 +129,9 @@ SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, st
 				\bufnum, Pfunc({ |e| e[\smp].buffer }),
 				\rate, Pfunc({ |e| (snapToPool.(e[\smp].midiNote) - e[\smp].midiNote).midiratio }),
 				\pan, lanePan[lane],
-				\sustain, 2,
+				\decay, 0.5,
+				\sustain, 0.1,
+				\legato, 0.1,
 
 				\type, \customVisualEvent,
 				\shape, \splotch,
@@ -144,7 +147,7 @@ SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, st
 				\endWidth, 1,
 				// \startColor, Pfunc({ |e| var k = e[\look]; Color.hsv(k[\hue], k[\sat], k[\val], k[\alpha]) }),
 				// \endColor, Pfunc({ |e| var k = e[\look]; Color.hsv(k[\hue], k[\sat], k[\val] * 0.7, 0.0) }),
-				\startColor, Color.black,
+				\startColor, Color.white,
 				\endColor, Color.black.alpha_(0),
 				\modulation, Pfunc({ |e| var k = e[\look]; (amp: 0, bleed: k[\bleed], lumps: Array.fill(3, { |i| [i + 2, rrand(0.0, k[\lump]), 2pi.rand] }), drops: Array.fill(rrand(0, k[\drops]), { [2pi.rand, rrand(1.2, 2.2), rrand(0.08, 0.25)] })) }),
 				\duration, beat * 12,
@@ -156,7 +159,7 @@ SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, st
 
 	Pdef(m.ptn).set(\level, 0);
 	Pdef(m.ptn).set(\amp, 0);
-	Pdef(m.ptn).play(quant: 1);
+	Pdef(m.ptn).play(quant: beat);
 };
 
 //------------------------------------------------------------

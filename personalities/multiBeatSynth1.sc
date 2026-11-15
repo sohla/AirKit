@@ -5,7 +5,7 @@ var drone;
 var droneNote = 12 * 2;
 
 var divs = [1, 2, 4];
-var pool = [0, 4, 7, 11, 12, 11, 7, 2];
+var pool = [0] - 4 - 12; // seq = [0,2,4,-3,-5]
 
 //------------------------------------------------------------
 m.accelMassFilteredAttack = 0.99;
@@ -17,7 +17,7 @@ m.gyroFilteredDecay = 0.7;
 SynthDef(\multiBeatVoice, {|out=0, freq=440, amp=0.2, pan=0,
     attack=0.005, release=0.4, ffreq=3000|
 	var env = EnvGen.kr(Env.perc(attack, release), doneAction: 2);
-	var sig = Pulse.ar(freq, 0.3, 0.5) + SinOsc.ar(freq / 2, 0, 0.6);
+	var sig = Pulse.ar(freq, 0.3, 0.5) + SinOsc.ar(freq / 2, 0, 1.4);
 	sig = RLPF.ar(sig, ffreq.clip(80, 12000), 0.4);
 	Out.ar(out, Pan2.ar(sig, pan, amp * env));
 }).add;
@@ -162,15 +162,15 @@ SynthDef(\multiBeatDrone, {|out=0, freq=110, amp=0.05, pan=0,
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var idx = m.accelMassFiltered.lincurve(0, 1.5 * sens, 0, divs.size - 1, 1)
 		.round.asInteger.clip(0, divs.size - 1);
-	var amp = m.accelMassFiltered.lincurve(0, 1.0 * sens, -40, -10, -1);
-	var ffreq = m.accelMassFiltered.lincurve(0, 1.0 * sens, 700, 6000, 2);
+	var amp = m.accelMassFiltered.lincurve(0, 1.0 * sens, -40, -18, -1);
+	var ffreq = m.accelMassFiltered.lincurve(0, 1.0 * sens, 700, 12000, 2);
 	var rel = m.accelMassFiltered.lincurve(0, 1.0 * sens, 0.1, 1.2, 2);
 
-	var droneAmp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -32, -10, -1);
+	var droneAmp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -32, -20, -1);
 	var droneFfreq = m.accelMassFiltered.lincurve(0, 1.0 * sens, 500, 3000, 2);
 
-	if(droneAmp < 31.neg, { droneAmp = 90.neg });
-	if(amp < 39.neg, { amp = 90.neg });
+	if(droneAmp < 41.neg, { droneAmp = 90.neg });
+	if(amp < 49.neg, { amp = 100.neg });
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);

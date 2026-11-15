@@ -93,10 +93,12 @@ SynthDef(\celesteVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 			\type, eventTypeName,
 
 			\dur, Pseq([0.5, Rest(0.5), 0.25, 0.25, 0.5, Rest(0.25), 0.75, 0.25, Rest(0.5), 0.5, 0.25] * 0.5, inf),
-			\note, Pseq([0, 2, 4, 7, 9], inf),
+			\note, Pseq([0, 2, 4, 7, 9] - 1, inf),
 			// \octave, Pseq([6, 6, 7, 6, 5, 6, 7], inf),
-			\root, Pseq([0,5,-2,1].stutter(64), inf),
-			\legato, 0.4,
+			// \root, Pseq([0,5,-2,1].stutter(64), inf),
+			\root, Pseq([0].stutter(64), inf),
+			\attack, 0.002,
+			\legato, 1.1,
 			\pan, Pwhite(-1.0, 1.0),
 
 			\shape, \gongPoint,
@@ -115,7 +117,7 @@ SynthDef(\celesteVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 			\fill, false,
 			// \startColor, Color.hsv(0.2, 0.8, 1.0, 1.0),
 			// \endColor, Color.hsv(0.8, 0.8, 1.0, 0.0),
-			\startColor, Color.black,
+			\startColor, Color.green,
 			\endColor, Color.black,
 			\startWidth, 3,
 			\endWidth, 0.5,
@@ -171,11 +173,11 @@ SynthDef(\celesteVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var amp = m.accelMassFiltered.lincurve(0, 1.4 * sens, -30, -10, -1);
-	var release = m.accelMassFiltered.lincurve(0, 1.4 * sens, 2.6, 0.5, 2);
+	var amp = m.accelMassFiltered.lincurve(0, 2.4 * sens, -40, -10, -1);
+	var release = m.accelMassFiltered.lincurve(0, 2.4 * sens, 2.6, 0.5, 1);
 	var oct = ((d.sensors.gyroEvent.y / pi).fold(-0.5,0.5) * 2.0).linlin(-1, 1, 4, 7).round.asInteger;
 
-	if(amp < 29.neg, { amp = 90.neg });
+	if(amp < 39.neg, { amp = 90.neg });
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\amp, amp.dbamp * vol);

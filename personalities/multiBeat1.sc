@@ -18,8 +18,8 @@ m.gyroFilteredDecay = 0.7;
 SynthDef(\multiBeatVoice, {|out=0, freq=440, amp=0.2, pan=0,
     attack=0.005, release=0.4, ffreq=3000|
 	var env = EnvGen.kr(Env.perc(attack, release), doneAction: 2);
-	var sig = Pulse.ar(freq, 0.3, 0.5) + SinOsc.ar(freq / 2, 0, 0.6);
-	sig = RLPF.ar(sig, ffreq.clip(80, 12000), 0.4);
+	var sig = Pulse.ar(freq * [1,1.007], 0.3, 0.5) + SinOsc.ar(freq * 0.5, 0, 1.1);
+	sig = RLPF.ar(sig, ffreq.clip(30, 12000), 0.3);
 	Out.ar(out, Pan2.ar(sig, pan, amp * env));
 }).add;
 
@@ -36,7 +36,7 @@ SynthDef(\multiBeatVoice, {|out=0, freq=440, amp=0.2, pan=0,
 			\step, stepPat,
 			\note, notePat,
 			\root, Pseq([0,3,-2,1].stutter(32), inf),
-			\octave, Prand([4,5,6], inf),
+			\octave, Prand([4,5,6,7], inf), // z?
 			\dur,  Pkey(\div).reciprocal * 0.5,
 			\pan, Pwhite(-0.2, 0.2),
 
@@ -61,7 +61,7 @@ SynthDef(\multiBeatVoice, {|out=0, freq=440, amp=0.2, pan=0,
 	Pdef(m.ptn).set(\amp, 0);
 	Pdef(m.ptn).set(\ffreq, 2000);
 
-	Pdef(m.ptn).play(quant: 1);
+	Pdef(m.ptn).play(quant: 0.25);
 };
 
 //------------------------------------------------------------
