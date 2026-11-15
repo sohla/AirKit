@@ -5,7 +5,7 @@ import csv, datetime, html, io, pathlib, re, subprocess, sys, tempfile, urllib.r
 SHEET = "https://docs.google.com/spreadsheets/d/141LOojjAL-YPgWICARAQv5rP0xYEFDPfE9Ve3aBmUG4/export?format=csv"
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 OUT = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else pathlib.Path(__file__).parent / "output")
-SHARED = {"piece", "words", "timeline", "energy", "task", "visuals", "intro", "notes", "movments"}
+SHARED = {"piece", "time", "words", "timeline", "energy", "task", "visuals", "intro", "notes", "movments"}
 GROUPED = {"where": "where it's worn", "airstick": "where it's worn", "pfiles": "mapping", "setup": "setup", "needs": "needs"}
 STAGED = {"mel", "nic"}
 OPTIONAL = ["actions"]
@@ -153,22 +153,63 @@ h1{margin:0;font-size:40pt;line-height:1.05}
 footer{margin-top:auto;display:flex;justify-content:space-between;font-size:9pt;color:#777}
 """
 
+PER_PAGE = 5
+
+def setlist(pieces, stamp):
+    e = html.escape
+    total = next((r.get("time") for r in pieces if r["piece"].lower() == "total time"), "")
+    cues = [r for r in pieces if r["piece"].lower() != "total time"]
+    chunks = [cues[i:i + PER_PAGE] for i in range(0, len(cues), PER_PAGE)]
+    pages = ""
+    for n, chunk in enumerate(chunks):
+        rows = "".join(f'''<div class="cue">
+    <div class="head"><span class="num">{i + 1 + n * PER_PAGE}</span><h2>{e(r["piece"])}</h2><span class="mins">{e(r.get("time", ""))}{" min" if r.get("time") else ""}</span></div>
+    <p>{e(r.get("what happens", ""))}</p>
+    <div class="lines"></div>
+  </div>''' for i, r in enumerate(chunk))
+        pages += f'''<section class="sheet">
+  <header><span>Beyond the Bones · <b>Set list</b></span><span>{f"Total {e(total)} min" if total else ""}</span></header>
+  {rows}
+  <footer><span>page {n + 1} of {len(chunks)}</span><span>score sheet {stamp}</span></footer>
+</section>'''
+    return pages
+
+SETLIST_CSS = """
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Atkinson Hyperlegible",Verdana,sans-serif;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sheet{width:210mm;height:297mm;padding:12mm 15mm 10mm;display:flex;flex-direction:column;gap:4mm;page-break-after:always;overflow:hidden}
+header{display:flex;justify-content:space-between;font-size:12pt;color:#444;border-bottom:1mm solid #111;padding-bottom:2mm}
+.cue{flex:1;display:flex;flex-direction:column;gap:1.5mm;min-height:0;border-bottom:0.4mm solid #999;padding-bottom:3mm}
+.head{display:flex;align-items:baseline;gap:4mm}
+.num{font-size:14pt;font-weight:700;color:#777;width:8mm}
+h2{margin:0;font-size:18pt;flex:1}
+.mins{font-size:14pt;font-weight:700}
+.cue p{margin:0 0 0 12mm;font-size:11pt;color:#333;min-height:4mm}
+.lines{flex:1;margin-left:12mm;background:repeating-linear-gradient(to bottom,transparent 0,transparent 7.6mm,#ccc 7.6mm,#ccc 8mm)}
+footer{display:flex;justify-content:space-between;font-size:9pt;color:#777}
+"""
+
+def render(name, pages, css, tmp):
+    doc = (f'<!doctype html><html><head><meta charset="utf-8"><title>{name}</title>'
+           '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">'
+           f'<style>{css}</style></head><body>{pages}</body></html>')
+    src = pathlib.Path(tmp) / f"{name}.html"
+    src.write_text(doc, encoding="utf-8")
+    pdf = OUT / f"{name}.pdf"
+    subprocess.run([CHROME, "--headless", "--disable-gpu", "--no-pdf-header-footer", "--virtual-time-budget=5000",
+                    f"--print-to-pdf={pdf}", src.as_uri()], check=True, capture_output=True)
+    print(pdf)
+
 def main():
     heads, people, pieces = load()
     stamp = datetime.datetime.now().strftime("%-d %b %Y %-I:%M%p").lower()
     OUT.mkdir(parents=True, exist_ok=True)
     tmp = tempfile.mkdtemp()
+    cues = [r for r in pieces if r["piece"].lower() != "total time"]
     for p in people:
         wears = any(h == f"where it's worn {p.lower()}" for h in heads)
-        pages = "".join(page(r, i, len(pieces), p, people, pieces, stamp, wears) for i, r in enumerate(pieces))
-        doc = (f'<!doctype html><html><head><meta charset="utf-8"><title>BtB {p}</title>'
-               '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">'
-               f'<style>{CSS}</style></head><body>{pages}</body></html>')
-        src = pathlib.Path(tmp) / f"BtB_{p}.html"
-        src.write_text(doc, encoding="utf-8")
-        pdf = OUT / f"BtB_{p}.pdf"
-        subprocess.run([CHROME, "--headless", "--disable-gpu", "--no-pdf-header-footer", "--virtual-time-budget=5000",
-                        f"--print-to-pdf={pdf}", src.as_uri()], check=True, capture_output=True)
-        print(pdf)
+        render(f"BtB_{p}", "".join(page(r, i, len(cues), p, people, cues, stamp, wears) for i, r in enumerate(cues)), CSS, tmp)
+    render("BtB_SetList", setlist(pieces, stamp), SETLIST_CSS, tmp)
 
 main()
