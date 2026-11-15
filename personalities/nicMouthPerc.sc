@@ -60,6 +60,7 @@ SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, st
 	attack = 0.002, sustain = 0.1, release = 0.0003|
 	var env = EnvGen.kr(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction: 2);////~~!!!!
 	var sig = PlayBuf.ar(2, bufnum, rate * BufRateScale.kr(bufnum), startPos: start * BufFrames.kr(bufnum));
+	sig = HPF.ar(sig, 90);
 	Out.ar(out, Balance2.ar(sig[0], sig[1], pan, amp * vel * env));
 }).add;
 
@@ -131,20 +132,22 @@ SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, st
 
 				\type, \customVisualEvent,
 				\shape, \splotch,
-				\fill, true,
+				\fill, false,
 				\look, Pfunc({ |e| e[\smp][\look] }),
 				\sx, Pfunc({ |e| ((e[\step] + 0.5) / 16 * 1.8) - 0.9 + 0.03.rand2 }),
 				\ex, Pkey(\sx),
 				\sy, Pfunc({ laneY[lane] + 0.08.rand2 }),
 				\ey, Pkey(\sy),
-				\startSize, Pfunc({ |e| e[\vel].value * 30 * e[\look][\scale] }),
+				\startSize, Pfunc({ |e| e[\vel].value * 40 * e[\look][\scale] }),
 				\endSize, Pfunc({ |e| e[\startSize] * e[\look][\spread] }),
 				\startWidth, 1,
 				\endWidth, 1,
-				\startColor, Pfunc({ |e| var k = e[\look]; Color.hsv(k[\hue], k[\sat], k[\val], k[\alpha]) }),
-				\endColor, Pfunc({ |e| var k = e[\look]; Color.hsv(k[\hue], k[\sat], k[\val] * 0.7, 0.0) }),
+				// \startColor, Pfunc({ |e| var k = e[\look]; Color.hsv(k[\hue], k[\sat], k[\val], k[\alpha]) }),
+				// \endColor, Pfunc({ |e| var k = e[\look]; Color.hsv(k[\hue], k[\sat], k[\val] * 0.7, 0.0) }),
+				\startColor, Color.black,
+				\endColor, Color.black.alpha_(0),
 				\modulation, Pfunc({ |e| var k = e[\look]; (amp: 0, bleed: k[\bleed], lumps: Array.fill(3, { |i| [i + 2, rrand(0.0, k[\lump]), 2pi.rand] }), drops: Array.fill(rrand(0, k[\drops]), { [2pi.rand, rrand(1.2, 2.2), rrand(0.08, 0.25)] })) }),
-				\duration, beat * 6,
+				\duration, beat * 12,
 
 				\args, #[],
 			)

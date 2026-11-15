@@ -1,10 +1,14 @@
 var m = ~model;
 var group;
 var samplesLib;
+var phase = 0;
 
 var beat = 0.5;
-var divs = [1,2,4,8];
-var pool = [0, 2, 7, 12, 14, 11, 7, 4] + 12;
+// var divs = [1,2,4,8];
+var divs = [3,5,6];
+// var pool = [0, 2, 7, 12, 14, 11, 7, 4] + 12;
+// var pool = [0,1,4,5,8,11,13,16] + 12;
+var pool = [0,1,4,5,8,11,13,16] + 12;
 
 var eventTypeName = (\customEvent_ ++ m.ptn).asSymbol;
 
@@ -61,14 +65,16 @@ SynthDef(\multiBeat5, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, pan=0, 
 		var lane = mod[\lane] ? 15;
 		var shift = mod[\shift] ? 0;
 		var ghost = mod[\ghost] ? 0.3;
-		var mid = c[\pos];
+		var orbit = mod[\orbit] ? 0;
+		var tilt = mod[\tilt] ? 0;
+		var mid = c[\pos] + (orbit @ 0);
 		var halfLen = c[\size];
 		var halfDep = c[\width];
 		var slab = { |dy|
-			[ (mid.x - halfLen) @ (mid.y + dy - halfDep),
-			  (mid.x + halfLen) @ (mid.y + dy - halfDep),
-			  (mid.x + halfLen) @ (mid.y + dy + halfDep),
-			  (mid.x - halfLen) @ (mid.y + dy + halfDep) ]
+			[ ((dy - halfDep) @ halfLen.neg),
+			  ((dy - halfDep) @ halfLen),
+			  ((dy + halfDep) @ halfLen),
+			  ((dy + halfDep) @ halfLen.neg) ].collect({ |p| mid + p.rotate(tilt) })
 		};
 		c[\render].(slab.(shift * lane), 1, ghost, true);
 		c[\render].(slab.(0), 1, 1, true);
@@ -115,7 +121,7 @@ SynthDef(\multiBeat5, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, pan=0, 
 
 			\div,  Pswitch(divs.collect({ |n| Pn(n, n) }),              Pkey(\divIdx)),
 			\step, Pswitch(divs.collect({ |n| Pseries(0, 1, n) }),      Pkey(\divIdx)),
-			\note, Pswitch(divs.collect({ |n| Pseq(pool.keep(n), 1) }), Pkey(\divIdx)),
+			\note, Pseq(pool, inf),//Pswitch(divs.collect({ |n| Pseq(pool.keep(n), 1) }), Pkey(\divIdx)),
 			\dur,  Pkey(\div).reciprocal * beat,
 			// \out, Pwhite(0, 3).asInteger,
 			// \octave, Pseq([3,4,5].stutter(4), inf),
@@ -131,16 +137,15 @@ SynthDef(\multiBeat5, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, pan=0, 
 			// \sx, (Pkey(\step) / Pkey(\div) * 1.5) - 0.75,
 			\sx,0,
 			\ex, Pkey(\sx),
-			\sy, Pfunc({ |e|
-				(e[\note] + (e[\root] ? 0) + (12 * (e[\octave] ? 5)))
-					.linlin(45, 92, 0.7, -0.7)
-			}),
+			\sy, 0,
 			\ey, Pkey(\sy),
-			\rotation, Pfunc({ |e| (e[\ptch] ? 1).log2 * 2 }),
-			\startSize, Pkey(\dur) * 800 * Pkey(\amp),
-			\endSize, Pkey(\dur) * 280,
-			\startWidth, (Pkey(\amp) * 202) + 3,
-			\endWidth, 30,
+			\spin, 1 / 64,
+			\cyc, Pfunc({ |e| phase = (phase + e[\spin]) % 1; phase }),
+			\rotation, Pfunc({ |e| (e[\cyc] * 2pi) - 0.5pi }),
+			\startSize, Pkey(\dur) * 100 * Pkey(\amp),
+			\endSize, Pkey(\dur) * 100,
+			\startWidth, (Pkey(\amp) * 100) + 3,
+			\endWidth, Pkey(\startWidth),
 			// \startColor, Pfunc({ |e|
 			// 	Color.hsv(((e[\octave] ? 5) - 4).linlin(0, 2, 0.055, 0.15), 0.85, 1.0, 0.9)
 			// }),
@@ -148,10 +153,10 @@ SynthDef(\multiBeat5, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, pan=0, 
 			// 	Color.hsv(((e[\octave] ? 5) - 4).linlin(0, 2, 0.055, 0.15), 1.0, 0.35, 0.0)
 			// }),
 			\startColor, Color.white,
-			\endColor, Color.white,
+			\endColor, Color.red.alpha_(0.1),
 
-			\duration, (Pkey(\dur) * 0.2) + 0.2,
-			\modulation, Pfunc({ |e| (lane: 15, ghost: 0.3, amp: 0) }),
+			\duration, (Pkey(\dur) * 2.2) + 0.2,
+			\modulation, Pfunc({ |e| (lane: 15, ghost: 0.3, amp: 0, tilt: (e[\ptch] ? 1).log2 * 2, orbit: (e[\note] + (e[\root] ? 0) + (12 * (e[\octave] ? 5))).linlin(45, 92, 10, 400)) }),
 		);
 	);
 
@@ -194,7 +199,7 @@ SynthDef(\multiBeat5, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, pan=0, 
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var e = m.accelMassFiltered;
-	var idx = e.lincurve(0, 2.5 * sens, 0, divs.size - 1, 4).round.asInteger.clip(0, divs.size - 1);
+	var idx = e.lincurve(0, 3.0 * sens, 0, divs.size - 1, 4).round.asInteger.clip(0, divs.size - 1);
 	var amp = e.lincurve(0, 2.0 * sens, -25, -1, -1);
 	var oct = (d.sensors.gyroEvent.y / pi.half).lincurve(-1, 1, 2, 7, 1).asInteger;
 	var ptch = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.94, 1.06);

@@ -8,12 +8,12 @@ var bandPos = durs.collect { |r| r.mean };
 var phases = 0 ! nvoices;
 var lastNow = 0 ! nvoices;
 
-m.accelMassFilteredAttack = 0.95;
-m.accelMassFilteredDecay = 0.7;
+m.accelMassFilteredAttack = 0.1;
+m.accelMassFilteredDecay = 0.1;
 m.rrateMassFilteredAttack = 0.9;
 m.rrateMassFilteredDecay = 0.6;
-m.gyroFilteredAttack = 0.8;
-m.gyroFilteredDecay = 0.8;
+m.gyroFilteredAttack = 0.3;
+m.gyroFilteredDecay = 0.3;
 
 //------------------------------------------------------------
 
@@ -22,12 +22,15 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 	adparam = 0.001, ddparam = 1, ampscale = 0, durscale = 0.2,
 	atk = 2.0, rel = 6.0, glide = 0.6,
 	cutoff = 6000, roomsize = 1, revtime = 0.1, revmix = 0.35,
-	shelfFreq = 90, shelfDb = 10|
+	shelfFreq = 90, shelfDb = 10, harmIndex = 0, bwHz = 50|
 
 	var env = EnvGen.kr(Env.asr(atk, 1, rel), gate, doneAction: Done.freeSelf);
 	var f   = freq.lag(glide);
 	var det = detune.lag(glide);
-	var sub = SinOsc.ar(f/2,0,1);
+	var sub = SinOsc.ar(f*0.5,0,1);
+	// var harmonics = [4, 6, 8, 11.2, 13, 14]; 
+	var harmonics = [0,4,5,7,8,11].midiratio * 4; 
+	var harmonic = IndexL.kr(LocalBuf.newFrom(harmonics), harmIndex.clip(0, harmonics.size - 1).lag(glide * 6));
 	var dry = Splay.arFill(nvoices, {|i|
 		Gendy1.ar(ampdist, durdist, adparam, ddparam,
 			f, f + (f * det), ampscale, durscale, mul: 1)
@@ -38,6 +41,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 
 	sig = LPF.ar(sig, cutoff.clip(120, 18000).lag(glide));
 	sig = BLowShelf.ar(sig, shelfFreq, db: shelfDb);
+	sig = Resonz.ar(sig, f * harmonic, (bwHz.lag(glide) / (f * harmonic)).clip(0.01, 1), 12, sig) * 0.5;
 
 	Out.ar(out, (sig * env * amp.lag(glide)).softclip);
 }).add;
@@ -100,18 +104,18 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 			ex: 0, ey: 0,
 			startSize: 300,
 			endSize: 300,
-			startWidth: 40,
-			endWidth: 40,
+			startWidth: 6,
+			endWidth: 3,
 			startColor: Color.black,
 			endColor: Color.black,
 			duration: inf,
 			modulation: (
 				voices: group[0],
-				cycles: 2,
-				spin: 0.002,
-				spike: 0.6,
-				fan: 1.4,
-				dullest: 0.3,
+				cycles: 3,
+				spin: 0.0003,
+				spike: 0.1,
+				fan: 0.4,
+				dullest: 0.7,
 				amp: 0
 			)
 		).play;
@@ -138,6 +142,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 	var cutoff = m.accelMassFiltered.linexp(0.0, 2.0 * sens, 700, 9000);
 	
 	var durscale = m.accelMassFiltered.lincurve(0.0, 2.0 * sens, 0.1, 1, -9);
+	var harmIndex = m.gyroYFiltered.linlin(-1.0, 1.0, 0, 5);
 	
 	synth !? { |x|
 		x.set(\amp, amp.dbamp * vol);
@@ -145,6 +150,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 		// x.set(\freq, freq * 0.midiratio);
 		x.set(\detune, detune);
 		x.set(\cutoff, cutoff);
+		x.set(\harmIndex, harmIndex);
 	};
 };
 

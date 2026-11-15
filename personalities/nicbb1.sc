@@ -2,7 +2,8 @@ var m = ~model;
 var group;
 var buffer;
 
-var samplePath = "~/Downloads/nicSamples/bb/nic_18.wav";
+// var samplePath = "~/Downloads/nicSamples/bb/nic_18.wav";
+var samplePath = "~/Downloads/nicSamples/twoNote/nic_46_f4g4.wav";
 
 var beat = 2.0;
 
@@ -50,6 +51,8 @@ SynthDef(\nicbb, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, pan = 0,
 //------------------------------------------------------------
 ~init = ~init <> { |d|
 	var mkLayer;
+
+m.com.bgColor = Color.grey(0.5);
 
 	group = Group.new;
 
@@ -101,26 +104,27 @@ SynthDef(\nicbb, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, pan = 0,
 
 			\shape, \punch,
 			\fill, Pkey(\acc),
-			\sx, Pfunc({ |e| (e[\step] / e[\div] * 1.7) - 0.85 }),
+			\sx, 0.0,//Pfunc({ |e| (e[\step] / e[\div] * 0.6) - 0.35 }),
 			\ex, Pkey(\sx),
-			\sy, Pfunc({ |e| (e[\note] ? 0).linlin(-26, 36, 0.84, -0.84) }),
+			\sy, Pfunc({ |e| (e[\note] ? 0).linlin(-26, 36, 0.4, -0.4) }),
 			\ey, Pkey(\sy),
 			\startSize, Pfunc({ |e|
-				(e[\amp] ? 0.1).linlin(0, 0.6, o[\thick] * 0.25, o[\thick])
+				(e[\amp] ? 0.1).linlin(0, 0.6, o[\thick] * 0.25, o[\thick]) * 10
 			}),
 			\endSize, Pkey(\startSize),
 			\startWidth, 1.5,
 			\endWidth, 1.5,
-			\startColor, Pfunc({ |e| Color.new(1, 1, 1, if(e[\acc], { 1.0 }, { 0.6 })) }),
-			\endColor, Color.new(1, 1, 1, 0),
-			\colorEnv, Pfunc({ Env([0, 0.08, 1], [0.72, 0.28]) }),
-			\duration, beat,
+			\rotation, Pkey(\note),
+			\startColor, Pfunc({ |e| Color.new(0, 0, 0, if(e[\acc], { 0.9 }, { 0.6 })) }),
+			\endColor, Color.new(0, 0, 0, 0),
+			\colorEnv, Pfunc({ Env([0, 0.08, 1], [0.12, 0.88]) }),
+			\duration, beat * 1,
 			\modulation, Pfunc({ |e| (
 				amp: 0,
 				len: (e[\dur].value / beat) * 300,
 				ring: ((e[\release] - e[\dur].value).max(0) / beat) * 300,
-				shoulder: 0.28,
-				slip: 1.6,
+				shoulder: 0.18,
+				slip: 0.6,
 				seed: e[\step] + (e[\div] * 31) + o[\trans]
 			) })
 		)

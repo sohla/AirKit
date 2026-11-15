@@ -2,9 +2,17 @@
 	[
 		"silence",
 
+
+		"celeste1",
+		"multiBeat5",
+		"nicbb1",
+		"bells",
+		"metal1",
+
+
 		"pluck1",
 		"nicMouthPerc",
-		"nicPrrr1",
+		"nicPrrr2",
 		"gendy3",
 		"nicMouth1",
 
