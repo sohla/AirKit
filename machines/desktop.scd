@@ -20,12 +20,12 @@
 
 	list: [
 		"list_BtB_Nic.sc",
-		"list_BtB_Mel.sc",
+		"list_BtB_Nic.sc",
+		"list_BtB_Nic.sc",
 		"list_BtB_Nic.sc",
 		"list_BtB_Mel.sc",
 		"list_BtB_Mel.sc",
-		"list_BtB_Nic.sc",
-		"list_BtB_Nic.sc",
+		"list_BtB_Mel.sc",
 		"list_BtB_Mel.sc",
 		"list_BtB_Nic.sc",
 		"list_BtB_Mel.sc",

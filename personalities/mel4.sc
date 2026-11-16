@@ -25,7 +25,7 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 			Warp1.ar(2, bufnum, start, rate * (i+1), 0.3, -1, 8, windowRandRatio:0.3)
 	},1,1,0);
 
-	sig = BLowShelf.ar(sig, 90, 0.97,8);
+	sig = BLowShelf.ar(sig, 90, 0.97,11);
   	sig = Compander.ar(sig, sig,
         thresh: 0.1,
         slopeBelow: 1,

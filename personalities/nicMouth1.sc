@@ -16,13 +16,35 @@ m.gyroFilteredAttack = 0.7;
 m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
+
+SynthDef(\bufGrainN, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=440,
+    attack=0.01, decay=0.1, sustain=0.8, release=5.2, gate=1,cutoff=20000, rq=1, rezf=200|
+
+	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
+	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction:2);
+	var sig = Splay.arFill(2,{|i|
+			Warp1.ar(2, bufnum, start, rate / (1 + (i * 0.1)), 0.3, -1, 8, windowRandRatio:0.3)
+	},1,1,0);
+
+	sig = BLowShelf.ar(sig, 4090, 0.67,-10);
+  	sig = Compander.ar(sig, sig,
+        thresh: 0.1,
+        slopeBelow: 1,
+        slopeAbove: 0.1,
+        clampTime:  0.01,
+        relaxTime:  0.01
+    );
+	sig = sig[0] * env * amp.lagud(1.3,1.3);
+    Out.ar(out, sig);
+}).add;
+
 SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=440,
     attack=0.01, decay=0.1, sustain=0.8, release=5.2, gate=1,cutoff=20000, rq=1, rezf=200|
 
 	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction:2);
-	var sig = Splay.arFill(5,{|i|
-			Warp1.ar(2, bufnum, start, rate / (i+1) , 0.1, -1, 3, windowRandRatio:0.3) * (0.2 + (i * 0.4))
+	var sig = Splay.arFill(4,{|i|
+			Warp1.ar(2, bufnum, start, rate / (1 + (i * 0.007)) , 0.19, -1, 6, windowRandRatio:0.0) * (0.2 + (i * 0.4))
 	},1,1,0);
   	sig = Compander.ar(sig, sig,
         thresh: 0.4,
@@ -37,11 +59,12 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 
 //------------------------------------------------------------
 ~init = ~init <> { |d|
-	var path = PathName("~/Downloads/nicSamples/nic_disgusting.wav");
+	var path = PathName("~/Downloads/nicSamples/nic_disgusting_comp.wav");
+	// var path = PathName("~/Downloads/nicSamples/twoNote/nic_47_d#4f4.wav");
 	postf("loading sample : % \n", path.fileName);
 	buffer = Buffer.read(s, path.fullPath, action:{ |buf|
 		postf("buffer alloc [%] \n", buf);
-		if(dead.not, { synth = Synth(\nicMouthGrain,[\out, 0, \bufnum,buf, \rate, 1, \gate, 1 ]) });
+		if(dead.not, { synth = Synth(\bufGrainN,[\out, 0, \bufnum,buf, \rate, 1, \gate, 1 ]) });
 	});
 
 	~vdef.(\mouth, { |ev, c|
@@ -119,14 +142,14 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 ~next = {|d|
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
-	var amp = m.accelMassFiltered.linlin(0,2.3 * sens,0.00001,1);
-	var rate =  m.gyroYFiltered.lincurve(-1.0,1.0,0.9,2.0,0);
+	var amp = m.accelMassFiltered.lincurve(0,2.5 * sens,0.001,1,-2);
+	var rate =  m.gyroYFiltered.lincurve(-1.0,1.0,0.5,1.4,0);
 	var start = m.gyroZFiltered.lincurve(-1.0,1.0,0.0,1.0,0);
 
-	if(amp < 0.01, {amp = 0});
+	if(amp < 0.03, {amp = 0});
 
 	synth.set(\start, start);
-	synth.set(\rate, rate);
+	synth.set(\rate, 2);
 	synth.set(\amp, amp * 4 * vol);
 
 };
