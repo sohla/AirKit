@@ -153,6 +153,7 @@ SynthDef(\simpleHit, {|out=0, amp=0.0, freq=120, attack=0.001, decay=0.03, susta
 			).play;
 		};
 	}, '/akHit', s.addr);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

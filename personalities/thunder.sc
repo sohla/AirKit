@@ -55,6 +55,7 @@ SynthDef(\thunderSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 		});
 	});
 
+	m.com.bgColor = Color.black;
 };
 
 ~deinit = ~deinit <> {

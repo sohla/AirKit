@@ -160,6 +160,7 @@ SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, st
 	Pdef(m.ptn).set(\level, 0);
 	Pdef(m.ptn).set(\amp, 0);
 	Pdef(m.ptn).play(quant: beat);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

@@ -149,6 +149,7 @@ SynthDef(\dulcimerVerb, {|in=0, out=0, mix=0.1, room=1.12, damp=0.2, amp=1,
 	Pdef(m.ptn).play(quant: 1);
 	Pdef(m.ptn).set(\divIdx, 0);
 	Pdef(m.ptn).set(\amp, 0);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

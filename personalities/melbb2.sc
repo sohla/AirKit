@@ -109,6 +109,7 @@ SynthDef(\drumkit3, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	Pdef(m.ptn).play(quant:dur);
 	Pdef(m.ptn).set(\bufnum, ~buffers[0]);
 
+	m.com.bgColor = Color.black;
 };
 
 ~deinit = ~deinit <> {

@@ -153,6 +153,7 @@ SynthDef(\insectLeaf2, {
 
 	postf("[insects2] opening on species 0 of % : freq % temp % pan % \n",
 		species.size, sp[\freq], sp[\temp], sp[\pan]);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

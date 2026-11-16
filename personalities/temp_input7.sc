@@ -179,6 +179,7 @@ SynthDef(\warmPadVoice, {
 			).play;
 		};
 	}, '/akHit', s.addr);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

@@ -130,6 +130,7 @@ SynthDef(\whipbirdVerb, {
 
 	Pdef(m.ptn).set(\amp, 0);
 	Pdef(m.ptn).play(clock);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

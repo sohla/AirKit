@@ -96,6 +96,7 @@ SynthDef(\bellVoice, { |out = 0, amp = 0.3, freq = 523, vel = 1.0,
 			// });
 		};
 	}, '/akHit', s.addr);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

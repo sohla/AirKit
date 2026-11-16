@@ -107,6 +107,7 @@ SynthDef(\nicPrrr2Loop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1|
 		if(synth.isNil, { noteOn.() });
 		postf("samples loaded : % \n", buffers.size);
 	};
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

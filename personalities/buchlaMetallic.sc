@@ -187,6 +187,7 @@ SynthDef(\buchlaInspired, {
 	Pdef(m.ptn).set(\pan, 0);
 
 	Pdef(m.ptn).play(quant: beat);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

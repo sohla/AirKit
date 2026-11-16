@@ -293,6 +293,7 @@ SynthDef(\strike13, { |out = 0, freq = 440, amp = 0.3, vel = 1.0,
 			});
 		};
 	}.fork(SystemClock);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

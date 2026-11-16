@@ -27,7 +27,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 	var env = EnvGen.kr(Env.asr(atk, 1, rel), gate, doneAction: Done.freeSelf);
 	var f   = freq.lag(glide);
 	var det = detune.lag(glide);
-	var sub = SinOsc.ar(f*0.5,0,1);
+	var sub = SinOsc.ar(f*0.5,0,0.7);
 	// var harmonics = [4, 6, 8, 11.2, 13, 14]; 
 	var harmonics = [0,4,5,7,8,11].midiratio * 4; 
 	var harmonic = IndexL.kr(LocalBuf.newFrom(harmonics), harmIndex.clip(0, harmonics.size - 1).lag(glide * 6));
@@ -41,7 +41,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 
 	sig = LPF.ar(sig, cutoff.clip(120, 18000).lag(glide));
 	sig = BLowShelf.ar(sig, shelfFreq, db: shelfDb);
-	sig = Resonz.ar(sig, f * harmonic, (bwHz.lag(glide) / (f * harmonic)).clip(0.01, 1), 12, sig) * 0.5;
+	sig = Resonz.ar(sig, f * harmonic, (bwHz.lag(glide) / (f * harmonic)).clip(0.01, 1), 12, sig) ;
 
 	Out.ar(out, (sig * env * amp.lag(glide)).softclip);
 }).add;
@@ -111,17 +111,18 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 			duration: inf,
 			modulation: (
 				voices: group[0],
-				cycles: 3,
+				cycles: 9,
 				spin: 0.0003,
-				spike: 0.1,
-				fan: 0.4,
+				spike: 0.3,
+				fan: 0.8,
 				dullest: 0.7,
 				amp: 0
 			)
 		).play;
 	};
 
-	synth = Synth(\gendyDrone, [\gate, 1, \amp, 0, \freq, 34.midicps]);
+	synth = Synth(\gendyDrone, [\gate, 1, \amp, 0, \freq, 31.midicps]);
+	m.com.bgColor = Color.white;
 };
 
 //------------------------------------------------------------

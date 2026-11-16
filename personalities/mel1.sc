@@ -77,6 +77,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
 			Pdef(m.ptn).play(quant:0.125);
 		});
 	});
+	m.com.bgColor = Color.black;
 };
 ~deinit = ~deinit <> {
 	var dyingBuffer = buffer;

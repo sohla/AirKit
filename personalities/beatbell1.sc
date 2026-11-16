@@ -125,6 +125,7 @@ SynthDef(\beatBell, { |out = 0, freq = 440, amp = 0.2, pan = 0,
 
 	Pdef(m.ptn).play(quant: 1);
 	Pdef(m.ptn).pause;
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

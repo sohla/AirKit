@@ -138,6 +138,7 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 		endColor: Color(1.0, 0.95, 0.35, 0.9),
 		modulation: (idle: 0.2, amp: 0)
 	).play;
+	m.com.bgColor = Color.black;
 };
 
 ~deinit = ~deinit <> {

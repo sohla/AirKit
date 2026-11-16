@@ -106,6 +106,7 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 0.25,
 		duration: inf,
 		modulation: (amp: 0, pxPerSemi: 22, ripples: 15, slow: 0.06, glide: 0.06, restAlpha: 0.12, dashes: 4, beadPx: 16)
 	).play;
+	m.com.bgColor = Color.black;
 };
 //------------------------------------------------------------
 ~deinit = ~deinit <> {

@@ -99,6 +99,7 @@ SynthDef(\grainCloud15, { |out = 0, buf = 0, amp = 0.3, vel = 1,
 				startColor: Color.white.alpha_(0.8), endColor: Color.white.alpha_(0), duration: vel.linexp(0, 1, 0.1, 1.0)).play;
 		};
 	}, '/akHit', s.addr);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

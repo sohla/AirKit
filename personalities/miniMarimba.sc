@@ -191,6 +191,7 @@ SynthDef(\miniMarimbaPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 	Pdef(m.ptn).set(\root, 0);
 
 	Pdef(m.ptn).play(quant: beat);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

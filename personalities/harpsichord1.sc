@@ -137,6 +137,7 @@ SynthDef(\harpsiVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 	Pdef(m.ptn).set(\endWidth, 0.3);
 	Pdef(m.ptn).set(\startColor, Color.hsv(0, 1, 1, 0.8));
 	Pdef(m.ptn).set(\endColor, Color.hsv(0, 1, 0.4, 0.0));
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

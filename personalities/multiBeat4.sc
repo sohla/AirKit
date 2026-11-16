@@ -152,6 +152,7 @@ SynthDef(\multiBeat4Plate, { |in = 0, out = 0, mix = 0.5, predelay = 0.01, room 
 	Pdef(m.ptn).set(\cutoff, 60);
 
 	Pdef(m.ptn).play(quant: 1);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

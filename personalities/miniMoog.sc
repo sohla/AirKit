@@ -101,6 +101,7 @@ SynthDef(\miniMoog, {
 	);
 	Pdef(m.ptn).play(quant:0.8);
 	// Pdef(m.ptn).pause;
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

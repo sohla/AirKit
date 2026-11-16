@@ -143,6 +143,7 @@ SynthDef(\pullstretchMonoQN, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1, d
 
 
 
+	m.com.bgColor = Color.black;
 };
 
 ~deinit = ~deinit <> {

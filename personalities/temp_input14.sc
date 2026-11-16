@@ -85,6 +85,7 @@ SynthDef(\evolver14, { |out = 0, gate = 1, amp = 0.3, t_hit = 0, vel = 1,
 				startColor: Color.white.alpha_(0.8), endColor: Color.white.alpha_(0), duration: 1.5).play;
 		};
 	}, '/akHit', s.addr);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

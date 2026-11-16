@@ -62,6 +62,7 @@ SynthDef(\multiBeatVoice, {|out=0, freq=440, amp=0.2, pan=0,
 	Pdef(m.ptn).set(\ffreq, 2000);
 
 	Pdef(m.ptn).play(quant: 0.25);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

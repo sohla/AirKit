@@ -204,6 +204,7 @@ SynthDef(\trigTone, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 	Pdef(m.ptn).play(quant: 0);
 	// Pdef(m.ptn).pause;
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

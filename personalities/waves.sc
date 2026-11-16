@@ -27,6 +27,7 @@ SynthDef(\waves22, { |out=0, gate=1, amp = 0.0, lag=1,ff=200|
 ~init = ~init <> {
   synth = Synth(\waves22);
     
+	m.com.bgColor = Color.black;
 };
 //------------------------------------------------------------
 ~deinit = ~deinit <> {

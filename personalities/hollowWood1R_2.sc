@@ -256,6 +256,7 @@ SynthDef(\hollowWoodChordR2, { |out = 0, amp = 0, drive = 0, atk = 0.4, rel = 3,
 
 		};
 	}, '/akHit', s.addr);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

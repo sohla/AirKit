@@ -93,12 +93,13 @@ SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fre
 		sx: -1, ex: 1, sy: -0.0, ey: -0.0,
 		startSize: 420, endSize: 420,
 		startWidth: 4, endWidth: 2,
-		startColor: Color.new(1.0, 0.22, 0.98, 0.9),
-		endColor: Color.new(1.0, 0.42, 0.68, 0.9),
+		startColor: Color.new(1.0, 0.12, 0.18, 0.9),
+		endColor: Color.new(1.0, 0.12, 0.18, 0.9),
 		numPoints: 8, fill: false, closed: true,
 		duration: inf,
 		modulation: (amp: 0, peakWidth: 0.18, lipPx: 14, ripples: 3, chewHz: 1.5, restAlpha: 0.15)
 	).play;
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

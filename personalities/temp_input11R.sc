@@ -254,6 +254,7 @@ SynthDef(\padDelay11R, { |in = 0, out = 0, time = 0.375, decay = 3, mix = 0.4, g
 			}.fork(SystemClock);
 		};
 	}, '/akHit', s.addr);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

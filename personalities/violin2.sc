@@ -171,6 +171,7 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, 
 			buf.free;
 		});
 	});
+	m.com.bgColor = Color.black;
 };
 
 ~deinit = ~deinit <> {

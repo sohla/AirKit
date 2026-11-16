@@ -325,6 +325,7 @@ sense = { |d|
 	);
 	Pdef(whipPtn).set(\amp, 0);
 	Pdef(whipPtn).play(clock);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

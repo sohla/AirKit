@@ -104,6 +104,7 @@ SynthDef(\movingBeast, { |out = 0, freq = 45, amp = 0.2, gate = 1,
 
 	Pdef(m.ptn).play(quant: 0.5);
 	Pdef(m.ptn).pause;
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

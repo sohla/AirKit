@@ -146,6 +146,7 @@ SynthDef(\nicSynth2Verb, {
 	Pdef(m.ptn).set(\amp, 0.1);
 
 	Pdef(m.ptn).play(quant: 0.1);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

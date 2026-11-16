@@ -68,6 +68,7 @@ SynthDef(\melSynth3Bass, {|out=0, freq=65, amp=0, cutoff=300, drive=1, glide=0.1
 		)
 	);
 	Pdef(m.ptn).play(quant:0.125);
+	m.com.bgColor = Color.black;
 };
 
 ~deinit = ~deinit <> {

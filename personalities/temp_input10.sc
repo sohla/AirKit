@@ -197,6 +197,7 @@ SynthDef(\miniMoogVoice, {
 			).play;
 		};
 	}, '/akHit', s.addr);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

@@ -241,6 +241,7 @@ SynthDef(\hollowWoodR, { |out = 0, freq = 220, amp = 0.3, vel = 1.0,
 
 		};
 	}, '/akHit', s.addr);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

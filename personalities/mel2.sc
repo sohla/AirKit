@@ -112,6 +112,7 @@ SynthDef(\pullstretchMonoQm2, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0
 			)
 		).play;
 	};
+	m.com.bgColor = Color.black;
 };
 
 ~deinit = ~deinit <> {

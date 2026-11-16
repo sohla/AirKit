@@ -128,6 +128,7 @@ SynthDef(\multiBeatDrone, {|out=0, freq=110, amp=0.05, pan=0,
 	Pdef(m.ptn).set(\ffreq, 2000);
 
 	Pdef(m.ptn).play(quant: 1);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

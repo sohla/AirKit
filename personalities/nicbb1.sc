@@ -52,7 +52,7 @@ SynthDef(\nicbb, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, pan = 0,
 ~init = ~init <> { |d|
 	var mkLayer;
 
-m.com.bgColor = Color.grey(0.5);
+m.com.bgColor = Color.black;
 
 	group = Group.new;
 

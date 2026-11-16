@@ -101,6 +101,7 @@ SynthDef(\melVoice2Verb, {|in=0, out=0, gate=1, release=2|
 			Pdef(m.ptn).play(quant:0.125);
 		});
 	});
+	m.com.bgColor = Color.black;
 };
 ~deinit = ~deinit <> {
 	var dyingBuffer = buffer;

@@ -17,6 +17,7 @@
 		"multiBeat5",
 		"bells",
 		"metal1",
+		"celeste1",
 
 		// feet feet
 		"waves",
@@ -35,13 +36,13 @@
 		
 		// stillness
 		"dulcimer3",
+		"thunder",
 	
 		// Sonata No. 1
 		"temp_input11R",
 		"temp_input6R_3",
 		"hollowWood1R_2",
 
-		"thunder",
 
 		"silence",
 	]

@@ -245,6 +245,7 @@ SynthDef(\hollowWood4LHold, { |out = 0, freq = 220, amp = 0, glide = 0.2, ring =
 
 		};
 	}, '/akHit', s.addr);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

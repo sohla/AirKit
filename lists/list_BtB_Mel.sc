@@ -2,6 +2,7 @@
 	[
 		"silence",
 
+		"speakerTest1",
 		// shhh
 		"mel4",
 		"melbb2",
@@ -12,6 +13,7 @@
 
 		// shadows
 		"gendy1",
+		"gendy3",
 		"multiBeat5",
 		"bells",
 		"metal1",
@@ -32,13 +34,13 @@
 
 		// stillness
 		"piano4",
+		"rain1",
 
 		// Sonata No. 1
 		"temp_input11",
 		"temp_input6L_3",
 		"hollowWood1L_2",
 
-		"rain1",
 
 		"silence",
 	]

@@ -211,6 +211,7 @@ sense = { |sens|
 		\dur,  Pfunc { step.() }
 	));
 	Pdef(m.ptn).play(clock);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

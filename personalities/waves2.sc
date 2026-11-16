@@ -97,6 +97,7 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 		if(dead.not, { bgWaveSynth2 = Synth(\looper, [\bufnum, buf, \amp, 0], group) });
 	});
 
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

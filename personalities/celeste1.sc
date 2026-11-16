@@ -139,6 +139,7 @@ SynthDef(\celesteVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 
 	Pdef(m.ptn).set(\amp, 0);
 	Pdef(m.ptn).set(\release, 1.6);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------
@@ -173,7 +174,7 @@ SynthDef(\celesteVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var amp = m.accelMassFiltered.lincurve(0, 2.4 * sens, -40, -10, -1);
+	var amp = m.accelMassFiltered.lincurve(0, 2.4 * sens, -40, -7 -1);
 	var release = m.accelMassFiltered.lincurve(0, 2.4 * sens, 2.6, 0.5, 1);
 	var oct = ((d.sensors.gyroEvent.y / pi).fold(-0.5,0.5) * 2.0).linlin(-1, 1, 4, 7).round.asInteger;
 

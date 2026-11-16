@@ -98,6 +98,7 @@ SynthDef(\treeWind, { |out, frq=111, gate=0, amp = 0, pchx=0|
 			)
 		).play;
 	};
+	m.com.bgColor = Color.black;
 };
 
 ~deinit = ~deinit <> {

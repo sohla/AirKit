@@ -104,6 +104,7 @@ SynthDef(\growl, {|out=0, amp=0.0, freq=66, attack=0.001, decay=0.03, sustain=0.
 	};
 
 	synth = Synth(\growl);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

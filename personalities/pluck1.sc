@@ -131,6 +131,7 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 	).play;
 
 	synth = Synth(\pluck1, [\frq, 140.rrand(80), \gate, 1]);
+	m.com.bgColor = Color.white;
 };
 
 //------------------------------------------------------------

@@ -86,6 +86,7 @@ SynthDef(\miniMoogVoice6, {
 				startColor: Color.white.alpha_(0.8), endColor: Color.white.alpha_(0), duration: 0.4).play;
 		};
 	}, '/akHit', s.addr);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

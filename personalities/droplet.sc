@@ -163,6 +163,7 @@ SynthDef(\dropletVerb, {
     )
   );
   Pdef(m.ptn).play(quant:0.2);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

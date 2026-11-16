@@ -213,6 +213,7 @@ SynthDef(\piano4Verb, {
 
 	Pdef(m.ptn).play(quant: 1);	
 	Pdef(m.ptn).set(\amp, 0.2);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

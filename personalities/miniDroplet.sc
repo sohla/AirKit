@@ -157,6 +157,7 @@ SynthDef(\dropletVerb, {
 	Pdef(m.ptn).play(quant: beat);
 
 	// m.com.root = 0;
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

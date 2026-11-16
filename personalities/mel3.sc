@@ -188,6 +188,7 @@ SynthDef(\bufGrain, {|bufnum=0, out=0, amp=0.0, rate=1, start=0, pan=0, freq=440
 		startColor: Color(1.0, 0.45, 0.75, 0.9),
 		endColor: Color(1.0, 0.45, 0.75, 0.9)
 	).play;
+	m.com.bgColor = Color.black;
 };
 
 ~deinit = ~deinit <> {

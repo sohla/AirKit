@@ -255,6 +255,7 @@ SynthDef(\mellowPad, { |out = 0, freq = 130, amp = 0, gate = 1,
 			}.fork(SystemClock);
 		};
 	}, '/akHit', s.addr);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

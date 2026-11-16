@@ -85,6 +85,7 @@ SynthDef(\bufGrainN, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 		duration: inf,
 		modulation: (amp: 0, beamPx: 70, shimmer: 3, shallow: 0.2)
 	).play;
+	m.com.bgColor = Color.black;
 };
 
 ~deinit = ~deinit <> {

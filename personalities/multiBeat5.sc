@@ -123,7 +123,7 @@ SynthDef(\multiBeat5, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, pan=0, 
 			\step, Pswitch(divs.collect({ |n| Pseries(0, 1, n) }),      Pkey(\divIdx)),
 			\note, Pseq(pool, inf),//Pswitch(divs.collect({ |n| Pseq(pool.keep(n), 1) }), Pkey(\divIdx)),
 			\dur,  Pkey(\div).reciprocal * beat,
-			// \out, Pwhite(0, 3).asInteger,
+			\out, Pwhite(0, 3).asInteger,
 			// \octave, Pseq([3,4,5].stutter(4), inf),
 			\legato, 0.8,
 			// \attack, 0.004,
@@ -142,9 +142,9 @@ SynthDef(\multiBeat5, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, pan=0, 
 			\spin, 1 / 64,
 			\cyc, Pfunc({ |e| phase = (phase + e[\spin]) % 1; phase }),
 			\rotation, Pfunc({ |e| (e[\cyc] * 2pi) - 0.5pi }),
-			\startSize, Pkey(\dur) * 100 * Pkey(\amp),
-			\endSize, Pkey(\dur) * 100,
-			\startWidth, (Pkey(\amp) * 100) + 3,
+			\startSize, Pkey(\dur) * 500 * Pkey(\amp),
+			\endSize, Pkey(\dur) * 500,
+			\startWidth, (Pkey(\amp) * 300) + 3,
 			\endWidth, Pkey(\startWidth),
 			// \startColor, Pfunc({ |e|
 			// 	Color.hsv(((e[\octave] ? 5) - 4).linlin(0, 2, 0.055, 0.15), 0.85, 1.0, 0.9)
@@ -152,8 +152,8 @@ SynthDef(\multiBeat5, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, pan=0, 
 			// \endColor, Pfunc({ |e|
 			// 	Color.hsv(((e[\octave] ? 5) - 4).linlin(0, 2, 0.055, 0.15), 1.0, 0.35, 0.0)
 			// }),
-			\startColor, Color.white,
-			\endColor, Color.red.alpha_(0.1),
+			\startColor, Color.black,
+			\endColor, Color.black.alpha_(0.1),
 
 			\duration, (Pkey(\dur) * 2.2) + 0.2,
 			\modulation, Pfunc({ |e| (lane: 15, ghost: 0.3, amp: 0, tilt: (e[\ptch] ? 1).log2 * 2, orbit: (e[\note] + (e[\root] ? 0) + (12 * (e[\octave] ? 5))).linlin(45, 92, 10, 400)) }),
@@ -168,6 +168,7 @@ SynthDef(\multiBeat5, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, pan=0, 
 	Pdef(m.ptn).set(\panBias, 0);
 
 	Pdef(m.ptn).play(quant: 1);
+	m.com.bgColor = Color.white;
 };
 
 //------------------------------------------------------------

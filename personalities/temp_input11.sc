@@ -264,6 +264,7 @@ SynthDef(\mellowPad11, { |out = 0, spread = 1, numChans = 2, freq = 130, amp = 0
 			}.fork(SystemClock);
 		};
 	}, '/akHit', s.addr);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

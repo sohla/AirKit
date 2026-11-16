@@ -98,6 +98,7 @@ SynthDef(\holdVoice6L, { |out = 0, freq = 55, amp = 0, drive = 0, atk = 0.4, rel
 				startColor: Color.white.alpha_(0.8), endColor: Color.white.alpha_(0), duration: 2.4).play;
 		};
 	}, '/akHit', s.addr);
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------
