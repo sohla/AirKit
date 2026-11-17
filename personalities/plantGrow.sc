@@ -86,7 +86,7 @@ SynthDef(\plantGrow, { |out = 0, buf = 0, amp = 0, gate = 1,
 
 	var amp = energy.lincurve(0, 2.0 * sens, -40, -1, -2);
 	var cutoff = energy.lincurve(0, 2.5 * sens, 250, 7000, 3);
-	var rate = energy.lincurve(0, 2.5 * sens, 0.3, 0.34, 0);
+	var rate = energy.lincurve(0, 2.5 * sens, 0.8, 1.34, 0);
 
 	var width = tilt.linlin(-1, 1, 0.05, 0.4);
 	var lo, hi;

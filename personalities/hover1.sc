@@ -155,9 +155,9 @@ SynthDef(\hover1, { |out = 0, bufnum = 0, amp = 0, rate = 1, t_trig = 0, gate = 
 	var rate = drive.linlin(0, 0.6, 1, 1.22);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 
-	synth !? { synth.set(\amp, amp * vol, \rate, rate) };
+	synth !? { synth.set(\amp, amp * vol * 2, \rate, rate) };
 
-	if(armed and: { m.accelMass > 0.55 }, {
+	if(armed and: { m.accelMass > 0.35 }, {
 		armed = false;
 		bi = (bi + 1) % buffers.size;
 		synth !? { synth.set(\bufnum, buffers[bi], \t_trig, 1) };

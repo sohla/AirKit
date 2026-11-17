@@ -81,7 +81,7 @@ SynthDef(\beatBell, { |out = 0, freq = 440, amp = 0.2, pan = 0,
 			\div,  Pswitch(divs.collect({ |n| Pn(n, n) }),              Pkey(\divIdx)),
 			\step, Pswitch(divs.collect({ |n| Pseries(0, 1, n) }),      Pkey(\divIdx)),
 			\note, Pswitch(divs.collect({ |n| Pseq(pool.keep(n), 1) }), Pkey(\divIdx)),
-			\octave, Pwhite(5, 7),
+			\octave, 4,//Pwhite(5, 7),
 			\root, Pseq([0,5,-2,-5].stutter(32), inf),
 			\dur, Pkey(\div).reciprocal * beat,
 			\pan, Pwhite(-0.35, 0.35),
@@ -155,7 +155,7 @@ SynthDef(\beatBell, { |out = 0, freq = 440, amp = 0.2, pan = 0,
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var idx = m.accelMassFiltered.lincurve(0, 2.8 * sens, 0, divs.size - 1, -1).round.asInteger.clip(0, divs.size - 1);
-	var amp = m.accelMassFiltered.lincurve(0, 1.4 * sens, -26, -14, 1);
+	var amp = m.accelMassFiltered.lincurve(0, 1.4 * sens, -36, -16, 1);
 	var ring = m.accelMassFiltered.lincurve(0, 1.5 * sens, 5.5, 0.9, 2);
 	var hard = m.rrateMassFiltered.lincurve(0, 1.8 * sens, 0.05, 1.0, -1);
 	var inharm = (d.sensors.gyroEvent.y / pi.half).linlin(-1, 1, 0.0, 1.0);
@@ -168,7 +168,7 @@ SynthDef(\beatBell, { |out = 0, freq = 440, amp = 0.2, pan = 0,
 	Pdef(m.ptn).set(\inharm, inharm);
 	Pdef(m.ptn).set(\root, m.com.root ? 0);
 
-	if(amp > 24.neg, {
+	if(amp > 34.neg, {
 		if(Pdef(m.ptn).isPlaying.not, { Pdef(m.ptn).resume(quant: 0.25) });
 	}, {
 		if(Pdef(m.ptn).isPlaying, { Pdef(m.ptn).pause });

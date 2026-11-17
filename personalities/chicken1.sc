@@ -71,8 +71,9 @@ SynthDef(\miniMoogModel, { |freq = 440, amp = 0.5, gate = 1, pan = 0,
 				if(bi >= (~buffers.size-1),{bi=0});
 				~buffers[bi];
 			},
-			\octave, Pseq([3,4].stutter(24), inf),
-			\rate, Pseq([0,-3,-5,4,7,9,12,0].midiratio, inf),
+			\octave, 5,//Pseq([3,4].stutter(24), inf),
+			\dur, Pseq([0.25,0.25+0.125,0.125,0.25,0.25, 0.125,0.125], inf),
+			// \rate, 0.5,//Pseq([0,-3,-5,4,7,9,12,0].midiratio, inf),
 			\amp, Pseq([1, 2, 2, 0.9,0.7,0.6 ,0.5 ,1] * 1, inf),
 			\subFreq,Pseq([45,55,440,80,45,70], inf),
 			\start, 0,
@@ -119,14 +120,17 @@ SynthDef(\miniMoogModel, { |freq = 440, amp = 0.5, gate = 1, pan = 0,
 ~next = {|d|
 
 
-	var sub = 2.pow(m.rrateMassFiltered.lincurve(0,0.2,0,2,-2).floor).reciprocal;
-	Pdef(m.ptn).set(\dur, 0.25 * sub);
+	var sub = 2.pow(m.rrateMassFiltered.lincurve(0,0.2,0,4,-2).floor).reciprocal;
+	var rate = ((d.sensors.gyroEvent.y / pi).fold(-0.5,0.5) * 2.0).linlin(-1, 1, 0.25,6);
+
+	// Pdef(m.ptn).set(\dur, 0.25);
+	Pdef(m.ptn).set(\rate, rate);
 
   // if(d.sensors.digiInEvent[0] == 1, {
 	if(m.rrateMassFiltered > 0.022,{
 
 		if( Pdef(m.ptn).isPlaying.not,{
-			Pdef(m.ptn).resume(quant:0);
+			Pdef(m.ptn).resume(quant:0.25);
 		});
 	},{
 		if( Pdef(m.ptn).isPlaying,{

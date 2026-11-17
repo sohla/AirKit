@@ -3,35 +3,51 @@
 
 		"silence",
 
-		"hover1",
-		"hattieFlower",
-		"plantGrow",
-		"spaceship",
 		
 		"timSwing1",
 
+		"thunder",
+
+		"spaceship",
+		"spaceship2",
+
+		"chicken1",
+		"frog1",
+		
+		"timWind1",
+		"timSwing1",
+		"timSwing2",
+		"timSwingWind",
+		"timSwingWind2",
+
+		"daveBell1",
+		"hover1",
+		"hoverSong",
+		"hoverSong2",
+		
+		
+		"hattieFlower",
+		"plantGrow",
 
 
 		"ticktockbeat2",
-		"multiBeat5",
+		"marimClock",
 		"shaker1",
 		"beatbell1",
 
-		"daveBell1",
-		"hoverSong",
 
 
 
 		"bee",
 		"hover1",
 		"leaves",
-		"wingChimes2",
-		"crows",
+
+		"multiBeatSynth1",
+		"multiBeatSynth2",
 
 		"westminsterChimes1",
 
 
-		"fourButtonSamples",
 
 		"silence",
 

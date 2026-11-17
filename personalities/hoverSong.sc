@@ -26,7 +26,7 @@ SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=
     Out.ar(out, sig * env * amp);
 }).add;
 
-SynthDef(\hoverSampler, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=0, freq=440,
+SynthDef(\hoverSampler2, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=0, freq=440,
 	attack=0.01, decay=0.1, sustain=0.3, release=3.2, gate=1,cutoff=20000, rq=0.9|
 	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
 	// var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, timeScale: 2,doneAction: 2);
@@ -88,7 +88,7 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 ~next = {|d|
   var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
   var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-  var amp = m.accelMassFiltered.lincurve(0, 4 * sens,0.3,2, 2);
+  var amp = m.accelMassFiltered.lincurve(0, 4 * sens, -40.dbamp, -10.dbamp, 2);
 
 	var time = TempoClock.beats;
 	var xPos = [-0.8,-0.6,-0.3,0.0,0.2,0.5,0.7,1.0].choose; // Random x position
@@ -150,9 +150,9 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 		if(m.accelMass>0.05,{
 	    ev.play;
 
-			synth = Synth(\hoverSampler, [\bufnum, bi, \amp, amp * 0.6 * vol, \rate, 1.11 * [0.5,1,2,4].choose], group);
+			synth = Synth(\hoverSampler2, [\bufnum, bi, \amp, amp * 0.6 * vol, \rate, (1.11 * [0.5,1,2,4].choose) * (0).midiratio], group);
 			bi = bi + 1;
-			if(bi >= (buffers.size-1),{bi=0});
+			if(bi >= 4,{bi=0});
 			{synth.set(\gate,0)}.defer(0.2);
 		},{
 		});

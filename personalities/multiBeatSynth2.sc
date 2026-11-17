@@ -18,18 +18,22 @@ m.gyroFilteredDecay = 0.7;
 SynthDef(\multiBeatSynth2Voice, {|out=0, freq=440, amp=0.2, pan=0,
     attack=0.005, release=0.4, ffreq=3000|
 	var env = EnvGen.kr(Env.perc(attack, release), doneAction: 2);
-	var sig = Pulse.ar(freq *[1,2], 0.3, 0.5) + SinOsc.ar(freq / 2, 0, 0.9);
+	var sig = Pulse.ar(freq *[1,2], 0.3, 0.05) + SinOsc.ar(freq / 2, 0, 0.9);
 	sig = RLPF.ar(sig, ffreq.clip(80, 12000), 0.4);
 	Out.ar(out, Pan2.ar(sig, pan, amp * env));
 }).add;
 
 SynthDef(\multiBeatSynth2Drone, {|out=0, freq=110, amp=0.05, pan=0,
-    attack=1.0, release=0.8, ffreq=1200, gate=1, lag=0.1|
+    attack=1.0, release=0.8, ffreq=1200, gate=1, lag=0.1, dlyTime=0.3, dlyDecay=4, dlyMix=0.4|
 	var env = EnvGen.kr(Env.asr(attack, 1, release, \sin), gate, doneAction: 2);
 	var f = freq.lag(lag);
-	var sig = Pulse.ar(f, 0.3, 0.5) + SinOsc.ar(f / 4, 0, 1.6);
+	var dry, wet;
+	var sig = Pulse.ar(f, 0.3, 0.2) + SinOsc.ar(f / 4, 0, 1.6);
 	sig = RLPF.ar(sig, ffreq.lagud(0.1,0.3).clip(80, 12000), 0.4);
-	Out.ar(out, Pan2.ar(sig, pan, amp.lagud(0.08,0.9) * env));
+	// Out.ar(out, Pan2.ar(sig, pan, amp.lagud(0.48,2.9) * env));
+	dry = sig * amp.lagud(0.48,2.9) * env;
+	wet = Splay.ar([1, 1.47, 2.13].collect({ |r| CombL.ar(dry, 2, dlyTime * r, dlyDecay) }));
+	Out.ar(out, Pan2.ar(dry, pan) + (wet * dlyMix));
 }).add;
 
 //------------------------------------------------------------
@@ -37,7 +41,7 @@ SynthDef(\multiBeatSynth2Drone, {|out=0, freq=110, amp=0.05, pan=0,
 	group = Group.new;
 
 	drone = Synth(\multiBeatSynth2Drone, [
-		\amp, 0.025, \freq, droneNote.midicps, \ffreq, 500, \gate, 1
+		\amp, 0.025, \freq, droneNote.midicps, \ffreq, 500, \gate, 1, \lag, 0.4, \dlyTime, 0.3, \dlyDecay, 4, \dlyMix, 0.4
 	], group);
 
 	//--------------------------------------------------------
@@ -101,23 +105,26 @@ SynthDef(\multiBeatSynth2Drone, {|out=0, freq=110, amp=0.05, pan=0,
 
 			\div,  Pswitch(divs.collect({ |n| Pn(n, n) }),              Pkey(\divIdx)),
 			\step, Pswitch(divs.collect({ |n| Pseries(0, 1, n) }),      Pkey(\divIdx)),
+			// \seq, [
+			// 	0, 0, 0, 0, 2, 4, -3, -3, -3, -3, -5, -5, -5, -5,
+			// 	0, 0, 0, 0, 2, 4, -3, -3, -3, -3, -5, -5, -5, -5,	
+			// 	-7, 5, -7, 5, 2, 2, 2, 2, 7, 7
+			// ] - 3,
 			\seq, [
-				0, 0, 0, 0, 2, 4, -3, -3, -3, -3, -5, -5, -5, -5,
-				0, 0, 0, 0, 2, 4, -3, -3, -3, -3, -5, -5, -5, -5,	
-				-7, 5, -7, 5, 2, 2, 2, 2, 7, 7
-			] - 1 - 12,
+				0, -4, 4, 5, 2
+			].stutter(2) - 3 + 36,
 			\perNote, 8,
 			\note, Pfunc({ |e| e[\seq].wrapAt(seqIdx) }),
 			\count, Pfunc({ |e| if((e[\amp] ? 0) > -80.dbamp, { played = played + 1; if(played % e[\perNote] == 0, { seqIdx = seqIdx + 1 }) }); played }),
 			// \root, Pseq([0,3,-2,1].stutter(32), inf),
-			\octave, Prand([4,5,6], inf),
+			// \octave, 5,
 			\dur,  Pkey(\div).reciprocal * 0.5,
 			\pan, Pwhite(-0.2, 0.2),
 
 			\type, \customVisualEvent,
 			\shape, \line,
 			\fill, true,
-			\lane, Pfunc({ |e| (e[\note] + (e[\root] ? 0) + ((e[\octave] ? 5) * 12)).linlin(18, 66, -0.9, 0.9) }),
+			\lane, Pfunc({ |e| (e[\note] + (e[\root] ? 0) + ((e[\octave] ? 5) * 12)).linlin(16, 76, -0.9, 0.9) }),
 			\sx, Pkey(\lane) * 0.25,
 			\ex, Pkey(\lane) * 1.3,
 			\sy, 0.0,
@@ -168,7 +175,8 @@ SynthDef(\multiBeatSynth2Drone, {|out=0, freq=110, amp=0.05, pan=0,
 	m.com.root = e.root;
 	m.com.dur = e.dur;
 
-	droneNote = (e[\note] ? 0) + (e[\root] ? 0) + (12 * 2) + 36;
+	// droneNote = (e[\note] ? 0) + (e[\root] ? 0) + (12 * 2) + 36;
+	droneNote = (e[\note] ? 0) + (e[\root] ? 0) + (12 * ((e[\octave] ? 6) - 1)) + 12;
 	if (drone.notNil) { drone.set(\freq, droneNote.midicps) };
 };
 
@@ -176,30 +184,38 @@ SynthDef(\multiBeatSynth2Drone, {|out=0, freq=110, amp=0.05, pan=0,
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var idx = m.accelMassFiltered.lincurve(0, 1.5 * sens, 0, divs.size - 1, 1)
+	var idx = m.accelMassFiltered.lincurve(0, 3.5 * sens, 0, divs.size - 1, 1)
 		.round.asInteger.clip(0, divs.size - 1);
-	var amp = m.accelMassFiltered.lincurve(0, 1.0 * sens, -40, -18, -1);
+	var amp = m.accelMassFiltered.lincurve(0, 3.0 * sens, -20, -14, -1);
 	var ffreq = m.accelMassFiltered.lincurve(0, 1.0 * sens, 700, 12000, 2);
 	var rel = m.accelMassFiltered.lincurve(0, 1.0 * sens, 0.8, 0.2, 2);
 
-	var droneAmp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -50, -20, -1);
+	var droneAmp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -50, -16, -1);
 	var droneFfreq = m.accelMassFiltered.lincurve(0, 1.0 * sens, 500, 3000, 2);
+	var oct = ((d.sensors.gyroEvent.y / pi).fold(-0.5,0.5) * 2.0).linlin(-1, 1, 3, 7).round.asInteger;
+	var startAt = 0.1 * sens;
+	var stopAt = 0.05 * sens;
 
-	if(droneAmp < 42.neg, { droneAmp = 90.neg });
+	if(droneAmp < 22.neg, { droneAmp = 90.neg });
 	if(amp < 49.neg, { amp = 100.neg });
+
+	if(Pdef(m.ptn).isPlaying.not and: { m.accelMassFiltered > startAt } and: { Pdef(m.ptn).source.notNil }, { Pdef(m.ptn).play(quant: 1) });
+	if(Pdef(m.ptn).isPlaying and: { m.accelMassFiltered < stopAt }, { Pdef(m.ptn).pause });
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);
-	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
+	Pdef(m.ptn).set(\amp, amp.dbamp * vol * 0.1);
 	Pdef(m.ptn).set(\ffreq, ffreq);
 	Pdef(m.ptn).set(\attack, 0.0003);
 	Pdef(m.ptn).set(\release, rel);
+	// Pdef(m.ptn).set(\octave, 6);//?
+	Pdef(m.ptn).set(\octave, oct);
 	// Pdef(m.ptn).set(\root, m.com.root ? 0);
 
 	if (drone.notNil) {
 		drone.set(
-			\amp, droneAmp.dbamp * vol ,
-			\ffreq, droneFfreq
+			\amp, droneAmp.dbamp * vol * 0.04,
+			// \ffreq, droneFfreq 
 		);
 	};
 };
@@ -228,6 +244,7 @@ SynthDef(\multiBeatSynth2Drone, {|out=0, freq=110, amp=0.05, pan=0,
 	// [m.rrateMass, m.rrateMassFiltered].lincurve(0.0,1.0,0.0,1.0,0);
 
 	// COMPUTED values : this file's own ~next, recomputed
+	// [m.accelMassFiltered, 0.05, 0.025];//pattern start / stop thresholds at sensitivity 0.5
 	// [m.accelMassFiltered.lincurve(0, 1.5, 0, divs.size - 1, 1).round / (divs.size - 1)];//divIdx
 	// [m.accelMassFiltered.lincurve(0, 1.0, -40, -10, -1).dbamp];//amp
 	// [m.accelMassFiltered.lincurve(0, 1.0, 700, 6000, 2) / 6000];//ffreq

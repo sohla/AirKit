@@ -3,7 +3,7 @@ var group;
 var buffers;
 
 var beat = 1.0;
-var divs = [4, 8, 16];
+var divs = [4, 8, 16] * 0.5;
 
 var kitFolder = "~/Downloads/yourDNASamples/ticktock";
 var kit = [
@@ -23,10 +23,11 @@ m.gyroFilteredDecay       = 0.7;
 
 //------------------------------------------------------------
 SynthDef(\ticktockbeat2, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, pan = 0,
-	attack = 0.001, release = 0.3|
+	attack = 0.001, release = 0.1|
 	var lr = rate * BufRateScale.kr(bufnum);
 	var env = EnvGen.kr(Env([0, 1, 1, 0], [attack, release, 0.03]), doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum, rate: lr, startPos: start * BufFrames.kr(bufnum), loop: 0) * 5;
+	sig = LPF.ar(sig, 4000);
 	sig = Compander.ar(sig, sig,
 		thresh: -18.dbamp,
 		slopeBelow: 1,
@@ -71,7 +72,7 @@ SynthDef(\ticktockbeat2, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0,
 			\bufnum, Pfunc({ |e| buffers[e[\slot]] }),
 
 			\amp, Pkey(\energy) * Pfunc({ |e| if(e[\step] == 0, { 1.0 }, { 0.6 }) }),
-			\release, Pkey(\dur) * 1.4,
+			\release, Pkey(\dur) * 0.2,
 			\start, 0,
 			\pan, Pfunc({ |e| ((e[\step] / e[\div] * 2) - 1) * 0.5 }),
 
@@ -134,11 +135,11 @@ SynthDef(\ticktockbeat2, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0,
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var idx = m.accelMassFiltered.lincurve(0, 5.6 * sens, 0, divs.size - 1, -1).round.asInteger.clip(0, divs.size - 1);
-	var amp = m.accelMassFiltered.lincurve(0, 2.4 * sens, -46, -2, -1);
+	var amp = m.accelMassFiltered.lincurve(0, 2.4 * sens, -26, -2, -1);
 	var clock = (d.sensors.gyroEvent.y / pi.half).linlin(-1, 1, 1, 3.99).asInteger;
 	var rate = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.85, 1.2);
 
-	if(amp < 44.neg, { amp = 90.neg });
+	if(amp < 24.neg, { amp = 90.neg });
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);

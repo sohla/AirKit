@@ -46,19 +46,20 @@ SynthDef(\blobblob2, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 			\instrument, \blobblob2,
 			\bufnum, Pfunc{
 				bi = bi + 1;
-				if(bi >= (buffers.size-1),{bi=0});
+				if(bi >= 4,{bi=0});
+				// bi = 6;
 				buffers[bi];
 			},
-			\dur, Pseq([0.2,0.2,0.2,Rest(0.2),0.2,Rest(0.1),0.1,0.2] * 1.25, inf),
-			\octave, Pseq([1,1].stutter(48), inf),
-			\rate, Pseq([0,12,0].midiratio * 2, inf),
+			\dur, Pseq([0.2,0.2,0.2,Rest(0.2),0.2,Rest(0.1),0.1,0.2] * 1, inf),
+			\octave, 3,
+			\rate, Pseq([1,1,1.12,1.12,1.07,1.67,1.39], inf),//1,1,1.12,1.12,,1.07,1.67,1.39
 			\legato, 0.35,
 			\start, Pwhite(0, 0.1),
-			\note, Pseq([33,35,33,35,36,33,36,33,35,33,35,33,36,33,36,33,38,35,38,35].stutter(8), inf),
+			\note, Pseq([33].stutter(8), inf),
 			// \amp, 2,
 			\attack, 0.002,
 			\release,0.17,
-			\pan, 1,//Pseq([-1,1], inf),
+			\pan, Pwhite(-0.3,0.3),
 			\args, #[],
 		)
 	);

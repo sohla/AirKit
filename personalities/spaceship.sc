@@ -3,8 +3,8 @@ var dev = ~device;
 var group, synth, buffer;
 
 
-m.accelMassFilteredAttack = 0.9;
-m.accelMassFilteredDecay = 0.06;
+m.accelMassFilteredAttack = 0.99;
+m.accelMassFilteredDecay = 0.8;
 m.gyroFilteredAttack = 0.7;
 m.gyroFilteredDecay = 0.7;
 
@@ -27,12 +27,12 @@ SynthDef(\spaceship, { |out = 0, buf = 0, amp = 0, gate = 1,
 	var sig = (BufRd.ar(2, buf, mainPos, 0, 4) * x.cos) + (BufRd.ar(2, buf, fadePos.max(startFrame), 0, 4) * x.sin);
 	sig = BLowShelf.ar(sig, Lag.kr(shelfFreq, 0.4), shelfRs, Lag.kr(shelfDb, 0.4));
 
-	Out.ar(out, sig * env * Lag.kr(amp, 0.2) * 4);
+	Out.ar(out, sig * env * Lag.kr(amp, 0.02) * 4);
 }).add;
 
 //------------------------------------------------------------
 ~init = ~init <> {
-	var samplePath = "~/Downloads/yourDNASamples/planets/The Planets__10.wav";
+	var samplePath = "~/Downloads/yourDNASamples/planets/The Planets__14.wav";
 
 	group = Group.new;
 
@@ -78,18 +78,18 @@ SynthDef(\spaceship, { |out = 0, buf = 0, amp = 0, gate = 1,
 	var energy = m.accelMassFiltered;
 	var tilt = d.sensors.gyroEvent.y / pi.half;
 
-	var amp = energy.lincurve(0, 2.0 * sens, -20, -1, -2);
+	var amp = energy.lincurve(0, 2.0 * sens, -30, -12, -2);
 	var shelfDb = energy.lincurve(0, 2.5 * sens, 0, 4, -1);
 	var shelfFreq = energy.lincurve(0, 2.5 * sens, 160, 3420, 0);
 	var rate = (tilt.clip(-1, 1) * pitchRange).midiratio;
 
-	if(amp < -18, { amp = -110 });
+	if(amp < -28, { amp = -110 });
 
 	synth !? { synth.set(
 		\amp, amp.dbamp * vol,
 		\shelfDb, shelfDb,
 		\shelfFreq, shelfFreq,
-		\rate, 0.5
+		\rate, 0.8 *0.5
 	) };
 };
 

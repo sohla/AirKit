@@ -9,7 +9,9 @@ var baseNote = 68;
 var partialRatios = [1, 3.01, 5.98];
 var partialAmps = [1, 0.44, 0.12];
 
-var melody = [ 0, 7, 12, 19, 12, 7,  0, 16, 24, 16, 12, 4 ] + 4 - 12;
+// var melody = [ 0, 7, 12, 19, 12, 7,  0, 16, 24, 16, 12, 4 ] + 4 - 12;
+
+var melody = [ 0, 7, 12, ] + 4;
 // var melody = [ 0] + 4;
 var beats  = [ 2, 1,  1,  2,  1, 1, Rest(2), 1,  3,  1,  2, 2 ] * 0.25;
 
@@ -34,7 +36,7 @@ SynthDef(\daveBell1, { |out = 0, bufnum = 0, freq = 207, basefreq = 207, amp = 0
 }).add;
 
 SynthDef(\bellVerb, {
-    |in=0, out=0, mix=0.35, room=2.83, damp=0.2, amp=1, gate=1, release=0.5|
+    |in=0, out=0, mix=0.25, room=2.83, damp=0.2, amp=1, gate=1, release=0.5|
 	var sig = In.ar(in, 2);
 	var env = EnvGen.kr(Env.asr(0.01, 1, release), gate, doneAction: 2);
 	sig = FreeVerb2.ar(sig[0], sig[1], mix, room.clip(0, 0.95), damp);
@@ -101,7 +103,8 @@ SynthDef(\bellVerb, {
 					\beat, Pseq(beats, inf),
 					\dur, Pkey(\beat) * Pkey(\pulse),
 					\root, 0,
-					\midinote, Pkey(\tone) + baseNote + Pkey(\root),
+					\midinote, Pkey(\tone) + baseNote + Pkey(\root) + Pfunc({ |e| (e[\oct] ? 0) * 12 }),
+					\octave, 4,
 					\legato, 0.9,
 					\release, 1.4,
 					\rq, 0.8,
@@ -182,6 +185,7 @@ SynthDef(\bellVerb, {
 	var shift = (d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, -12, 12).round;
 	var pulse = (d.sensors.gyroEvent.y / pi.half).lincurve(-1, 1, 0.34, 0.10, 1);
 	var cutoff = m.accelMassFiltered.lincurve(0, 1.4, 1200, 16000, 2);
+	var oct = ((d.sensors.gyroEvent.y / pi).fold(-0.5, 0.5) * 2.0).linlin(-1, 1, -4, 5).round.asInteger;
 
 	if(amp < 44.neg, { amp = 90.neg });
 
@@ -190,6 +194,7 @@ SynthDef(\bellVerb, {
 	// Pdef(m.ptn).set(\ctranspose, shift);
 	Pdef(m.ptn).set(\pulse, pulse);
 	Pdef(m.ptn).set(\cutoff, cutoff);
+	Pdef(m.ptn).set(\oct, oct);
 };
 
 //------------------------------------------------------------
