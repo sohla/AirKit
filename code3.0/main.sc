@@ -44,12 +44,13 @@ var stack = {
 	var controlView = Require("controlView.scd");
 	var systemView = Require("systemView.scd");
 	var visualView = Require("visualView.scd");
+	var visualTab = visualView.();
 	var pages = [deviceView.()];
 
 	labels = ["device"];
 
-	visualHost = visualView.();
-	pages = pages.add(visualHost);
+	visualHost = visualTab[\host];
+	pages = pages.add(visualTab[\tab]);
 	labels = labels.add("visual");
 
 	pages = pages ++ [controlView.()];
@@ -112,10 +113,10 @@ var initGUI = {
 		shutdown.();
 	};
 
-	// Boot asks for HDMI and lets ensureHdmi decide - so startup and the
-	// button press are the same path, and there is only one place that
-	// knows how to build the second-screen window.
-	setVisualTarget.(\hdmi);
+	// Boot always puts the visuals on the Pi's own panel (the visual tab),
+	// even with HDMI attached. The HDMI button (/airkit/visualTarget hdmi)
+	// is what probes and moves them to the second screen.
+	setVisualTarget.(\tab);
 
 	CmdPeriod.doOnce({
 		w.close;
