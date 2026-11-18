@@ -123,7 +123,7 @@ SynthDef(\drumkit, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	bi = (d.sensors.gyroEvent.y / pi.half).linlin(-1.0,1.0,0,buffers.size-1);
 	bi = bi.asInteger;
 
-	Pdef(m.ptn).set(\startColor, Color.hsv(bi/buffers.size,1,1.0,0.5));
+	Pdef(m.ptn).set(\startColor, Color.hsv(bi/buffers.size,1,1.0,1.0));
 	Pdef(m.ptn).set(\endColor, Color.hsv(bi/buffers.size,1,1.0,0.1));
 	Pdef(m.ptn).set(\dur, dur);
 

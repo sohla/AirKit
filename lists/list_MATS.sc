@@ -8,35 +8,25 @@
 		"miniMoog2",
 		"miniDroplet",
 
-
 		"melVoice3",
 		"nicVoice3",
 
 		"rain1",
 		"thunder",
 
-		"silence",
+		"trainMove3",
+		"trainBass3",
+	    "trainMelody2",
+	    "trainChooka2",
 
 		"cymbals1",
 		"harp1",
 
-		"melSynth2",
-		"melSynth3",
-		"nicSynth2",
+		"bells",
+		"metal1",
 
-		"hollowWood1L_2",
-		"temp_input6L_3",
-
-
-		"temp_input11",
-
-		"multiBeat1",
-
-		"waves2",
-		"gendy1",
-		"mel4",
-		"violin1",
-
+		"pluck1",
+		"droplet",
 
 		"silence",
 	]

@@ -87,8 +87,8 @@ SynthDef(\dulcimer3Verb, {|in=0, out=0, mix=0.2, room=1.12, damp=0.2, amp=1,
 	var env = EnvGen.kr(Env.asr(0.01, 1, release), gate, doneAction: 2);
 	sig = FreeVerb2.ar(sig[0], sig[1], mix, room, damp);
 	sig = LeakDC.ar(sig);
-	// Out.ar(out, sig * env * amp);
-	Out.ar(2, sig * env * amp);
+	Out.ar(out, sig * env * amp);
+	// Out.ar(2, sig * env * amp);
 }).add;
 
 //------------------------------------------------------------

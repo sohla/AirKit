@@ -149,13 +149,13 @@ SynthDef(\piano4Verb, {
 	
 	// The zero line, held for the life of the personality, so the shift
 	// axis has something to be read against.
-	~vdef.(\zeroLine, { |ev, c|
-		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
-		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-		var amp = m.accelMassFiltered.lincurve(0, 0.2 * sens, -34, -6, -1);
-		if((amp >= -29) and: { vol > 0.001 }, { c[\draw].(\line, ()) });
-		nil
-	});
+	// ~vdef.(\zeroLine, { |ev, c|
+	// 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	// 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	// 	var amp = m.accelMassFiltered.lincurve(0, 0.2 * sens, -34, -6, -1);
+	// 	if((amp >= -29) and: { vol > 0.001 }, { c[\draw].(\line, ()) });
+	// 	nil
+	// });
 	(
 		type: \customVisualEvent,
 		amp: 0, dur: 0.01,
