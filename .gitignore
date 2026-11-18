@@ -15,3 +15,6 @@ out/
 data/
 *.png
 *.gif
+state/
+scores/
+analysis/
