@@ -287,7 +287,7 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 
 	Pdef(m.ptn).play(quant:0.1);
 	synth = Synth(\sheet2, [\frq, 10.midicps, \gate, 1]);
-	m.com.bgColor = Color.white;
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

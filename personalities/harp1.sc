@@ -168,6 +168,7 @@ SynthDef(\funBass, {
 	Pdef(m.ptn).play(quant:0.1);
 
 
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

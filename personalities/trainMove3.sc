@@ -340,6 +340,7 @@ SynthDef(\warmPadMove2, {
     \chorusDepth, 0.0001,
 		\detuneAmount, 0.0004
 	]);
+	m.com.bgColor = Color.black;
 };
 
 

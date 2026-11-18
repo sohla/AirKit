@@ -159,7 +159,7 @@ SynthDef(\miniMoog2Chord, { |out = 0, amp = 0, slide = 0.6, breath = 0.4, bright
 	var chordAmp = m.accelMassFiltered.lincurve(0, 2 * sens, -30, -20, -1);
 	var chordBreath = m.accelMassFiltered.linlin(0, 2.4 * sens, 1.0, 8.0);
 	var chordBright = m.rrateMassFiltered.linexp(0, 0.4 * sens, 100, 16000);
-	var octave = (d.sensors.gyroEvent.y / pi.half).lincurve(0	.0, 1.0, 3, 6, -1).asInteger;
+	var octave = (d.sensors.gyroEvent.y / pi.half).lincurve(0.0, 1.0, 3, 6, -1).asInteger;
 
 	if(amp < 19.neg, {amp = 110.neg});
 	if(chordAmp < 29.neg, { chordAmp = 110.neg });

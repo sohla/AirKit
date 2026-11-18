@@ -165,6 +165,7 @@ SynthDef(\chooka, {
 	);
 
 	Pdef(m.ptn).play(quant:dur);
+	m.com.bgColor = Color.black;
 };
 ~deinit = ~deinit <> {
 	Pdef(m.ptn).remove;

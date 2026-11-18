@@ -163,7 +163,7 @@ SynthDef(\bambooComplex, {
 			c[\render].([ swing.(pa), swing.(pb) ], 1, 1, false);
 		};
 	});
-	m.com.bgColor = Color.white;
+	m.com.bgColor = Color.black;
 };
 
 ~deinit = ~deinit <> {

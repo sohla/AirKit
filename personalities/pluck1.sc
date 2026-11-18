@@ -115,7 +115,7 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 		endSize: 10,
 		startWidth: 3,
 		endWidth: 1,
-		startColor: Color.red(0.4),
+		startColor: d.color,
 		endColor: d.color,
 		duration: inf,
 		modulation: (
@@ -131,7 +131,7 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 	).play;
 
 	synth = Synth(\pluck1, [\frq, 140.rrand(80), \gate, 1]);
-	m.com.bgColor = Color.white;
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------

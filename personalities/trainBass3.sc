@@ -228,6 +228,7 @@ SynthDef(\versatilePerc, {
 	Pdef(m.ptn).set(\rateIdx, 0);
 	// Pdef(m.ptn).play(quant: 0);
 
+	m.com.bgColor = Color.black;
 };
 
 //------------------------------------------------------------
