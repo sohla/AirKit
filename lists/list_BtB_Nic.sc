@@ -11,6 +11,8 @@
 		// circling
 		"multiBeat4",
 		"multiBeat4.1",
+		"multiBeat4.2",
+		"multiBeat4.3",
 
 		// shadows
 		"pluck1",

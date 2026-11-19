@@ -5,7 +5,7 @@ var patternBus, droneBus;
 var patternVerb, droneVerb;
 
 var droneNote = 60 - 12;   // multiBeatSynth1's pool note + its offsets, at root 0
-var divs = [1, 2, 3, 4];
+var divs = [1, 2, 3, 4, 8];
 var pool = [0, 4, 7, 11, 12, 11, 7, 2] - 12;
 
 var divPat  = Pswitch(divs.collect({ |n| Pn(n, n) }),              Pkey(\divIdx));
@@ -32,8 +32,8 @@ SynthDef(\multiBeatDrone, {|out=0, freq=110, amp=0.05, pan=0,
 	var env = EnvGen.kr(Env.asr(attack, 1, release, \sin), gate, doneAction: 2);
 	var f = freq.lag(lag);
 	var sig = Pulse.ar(f, SinOsc.ar(0.3,0,1,1), 0.3) + SinOsc.ar(f / 4, 0, 0.6);
-	sig = RLPF.ar(sig, ffreq.lagud(0.1,0.3).clip(80, 12000), 0.4);
-	Out.ar(out, Pan2.ar(sig, pan, amp.lagud(0.02,1.9) * env));
+	sig = RLPF.ar(sig, ffreq.lagud(1.9,1.3).clip(80, 12000), 0.4);
+	Out.ar(out, Pan2.ar(sig, pan, amp.lagud(0.7,1.9) * env));
 }).add;
 
 SynthDef(\multiBeatVerb, {|in=0, out=0, mix=0.3, room=0.8, damp=0.4, gate=1, release=1.4|
@@ -43,6 +43,13 @@ SynthDef(\multiBeatVerb, {|in=0, out=0, mix=0.3, room=0.8, damp=0.4, gate=1, rel
 	sig = LeakDC.ar(sig);
 	Out.ar(out, sig * env);
 }).add;
+
+//------------------------------------------------------------
+~vdef.(\orbitCircle, { |ev, c|
+	var orbit = (ev[\modulation] ? ())[\orbit] ? 0;
+	c[\draw].(\circle, (pos: c[\pos] + (orbit @ 0)));
+	nil
+});
 
 //------------------------------------------------------------
 ~init = ~init <> {
@@ -66,22 +73,24 @@ SynthDef(\multiBeatVerb, {|in=0, out=0, mix=0.3, room=0.8, damp=0.4, gate=1, rel
 			\div,  divPat,
 			\step, stepPat,
 			\note, notePat,
-			\root, Pseq([0,3,-2,1,0,3,-2,-4].stutter(32), inf),
+			\root, Pseq([0,0,0,0,3,3,3,-2,-2,1,0,0,0,3,3,-2,-4,-4].stutter(16), inf),
 			// \octave, Prand([4,5,6,7], inf), // z?
 			\dur,  Pkey(\div).reciprocal * 0.5,
 			\pan, Pwhite(-0.2, 0.2),
 
 			\type, \customVisualEvent,
-			\shape, \circle,
-			\sx, (Pkey(\step) / Pkey(\div) * 1.6) - 0.8,
-			\ex, Pkey(\sx),
-			\startSize, Pkey(\amp) * 400,
-			\endSize, Pkey(\amp) * 8,
+			\shape, \orbitCircle,
+			\fill, true,
+			\cyc, Plazy({ var ph = 0; Pfunc({ |e| ph = (ph + (e[\dur] * (e[\orbitSpeed] ? 0.25))).wrap(0, 1) }) }),
+			\rotation, Pfunc({ |e| (e[\cyc] * 2pi) - 0.5pi }),
+			\modulation, Pfunc({ |e| (orbit: (e[\orbitSize] ? 400) * 0.5, amp: 0) }),
+			\startSize, Pkey(\amp) * 300,
+			\endSize, Pkey(\amp) * 100,
 			\startColor, Color.new(0.6, 1.0, 0.8),
 			\endColor, Color.new(0.1, 0.4, 0.6).alpha_(0.0),
 			\startWidth, 3,
 			\endWidth, 0.4,
-			\duration, Pkey(\dur) * 8,
+			\duration, Pkey(\dur) * 4,
 			\func, Pfunc({|e| ~onEvent.(e)}),
 
 			\args, #[],
@@ -137,7 +146,7 @@ SynthDef(\multiBeatVerb, {|in=0, out=0, mix=0.3, room=0.8, damp=0.4, gate=1, rel
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var idx = m.accelMassFiltered.lincurve(0, 2.5 * sens, 0, divs.size - 1, 7).round.asInteger.clip(0, divs.size - 1);
+	var idx = m.accelMassFiltered.lincurve(0, 7.5 * sens, 0, divs.size - 1, -2).round.asInteger.clip(0, divs.size - 1);
 	var amp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -35, -5, -1);
 	var octave = ((d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5) * 2).lincurve(-1.0, 1.0, 6, 9, 1).asInteger;
 
@@ -145,6 +154,8 @@ SynthDef(\multiBeatVerb, {|in=0, out=0, mix=0.3, room=0.8, damp=0.4, gate=1, rel
 	var rel = m.accelMassFiltered.lincurve(0, 2.5 * sens, 3.1,0.1, 1);
 	var droneAmp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -32, -5, -1);
 	var droneFfreq = m.accelMassFiltered.lincurve(0, 1.0 * sens, 500, 3000, 2);
+	var orbitSize = 600;
+	var orbitSpeed = 0.15;
 
 	if(amp < 33.neg, { amp = 110.neg });
 	amp = amp - (idx * 3);
@@ -157,6 +168,8 @@ SynthDef(\multiBeatVerb, {|in=0, out=0, mix=0.3, room=0.8, damp=0.4, gate=1, rel
 	Pdef(m.ptn).set(\ffreq, ffreq);
 	Pdef(m.ptn).set(\attack, 0.0003);
 	Pdef(m.ptn).set(\release, rel * 0.5);
+	Pdef(m.ptn).set(\orbitSize, orbitSize);
+	Pdef(m.ptn).set(\orbitSpeed, orbitSpeed);
 
 	if (drone.notNil) {
 		drone.set(

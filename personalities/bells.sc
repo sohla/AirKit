@@ -163,7 +163,7 @@ SynthDef(\bambooComplex, {
 			c[\render].([ swing.(pa), swing.(pb) ], 1, 1, false);
 		};
 	});
-	m.com.bgColor = Color.black;
+	m.com.bgColor = Color.white;
 };
 
 ~deinit = ~deinit <> {
@@ -183,7 +183,7 @@ SynthDef(\bambooComplex, {
 	var att = m.accelMassFiltered.lincurve(0, 2 * sens,0.1,0.001,-8);
 	var amp = m.accelMassFiltered.linexp(0, 2 * sens,0.08,1);
 	var noteIndex = m.accelMassFiltered.linlin(0, 2 * sens,0.0001,notes.size).floor;
-	var space = m.accelMassFiltered.lincurve(0, 0.6 * sens,0.25,0.02,-1);
+	var space = m.accelMassFiltered.lincurve(0, 0.6 * sens,0.3,0.03,-1);
 	if(noteIndex>=notes.size,{noteIndex=notes.size-1});
 	if(move > 0.02, {
 		if(TempoClock.beats > (lastTime + space),{

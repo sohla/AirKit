@@ -10,8 +10,8 @@ var shakerPtn = (m.ptn ++ "_shaker").asSymbol;
 
 var kickNames = ["drum", "kick", "bd"];
 
-var beat = 0.5;
-var divs = [2,4,8,16];
+var beat = 1;
+var divs = [4,8,16,32];
 // var divs = [4];
 
 var rates = [1.5, 1.5, -2, 1.5, 2, 1.5, -2] * 1;
@@ -47,9 +47,9 @@ SynthDef(\multiBeatKit, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
 	Out.ar(out, sig * amp * env);
 }).add;
 
-SynthDef(\multiBeat4Shaker, {|bufnum=0, out=0, amp=0.2, rate=1, pan=0, attack=0.03, decay=0.25, cutoff=4000|
+SynthDef(\multiBeat4Shaker, {|bufnum=0, out=0, amp=0.2, rate=1, pan=0, start=0, attack=0.03, decay=0.25, cutoff=4000|
 	var env = EnvGen.kr(Env.perc(attack, decay, 1, -4), doneAction: 2);
-	var sig = PlayBuf.ar(2, bufnum, rate * BufRateScale.kr(bufnum), loop: 0);
+	var sig = PlayBuf.ar(2, bufnum, rate * BufRateScale.kr(bufnum), startPos: start * BufSampleRate.kr(bufnum), loop: 0);
 	sig = HPF.ar(sig, cutoff.clip(200, 16000));
 	sig = Balance2.ar(sig[0], sig[1], pan);
 	Out.ar(out, sig * amp * env);
@@ -171,6 +171,7 @@ SynthDef(\multiBeat4Plate, { |in = 0, out = 0, mix = 0.5, predelay = 0.01, room 
 			\group, group,
 			\out, fxBus.index,
 			\bufnum, shaker,
+			\start, 0.018,
 			\dur, Pseq([0.75, 0.75, 0.5,0.75, 0.75, 0.25, 0.25], inf) * beat,
 			\accent, Pseq([1.0, 0.45, 0.7,1.0, 0.45, 0.7,0.9], inf),
 			\amp, Pkey(\gentle) * Pkey(\accent),
@@ -225,20 +226,21 @@ SynthDef(\multiBeat4Plate, { |in = 0, out = 0, mix = 0.5, predelay = 0.01, room 
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var e = m.accelMassFiltered;
-	var idx = e.lincurve(0, 9.3 * sens, 0, divs.size - 1, 2).round.asInteger.clip(0, divs.size - 1);
-	var pal = 2;//e.lincurve(0, 2.2 * sens, 1, buffers.size, 1).round.asInteger.clip(1, buffers.size);
+	var idx = e.lincurve(0, 4.3 * sens, 0, divs.size - 1, 2).round.asInteger.clip(0, divs.size - 1);
+	var pal = e.lincurve(0, 2.2 * sens, 1, buffers.size, 1).round.asInteger.clip(1, buffers.size);
 	var amp = e.lincurve(0, 0.4 * sens, -10, -5, -1);
-	var roll = 1;//(d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.75, 1.25);
+	var roll = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.75, 1.25);
 	var cutoff = ((d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5) * 2).lincurve(-1.0, 1.0, 64, 128, 1);//tune to pitch!!
-	var shakerAmp = e.lincurve(0, 0.4 * sens, -35, -1, -2);
+	var shakerAmp = e.lincurve(0, 0.4 * sens, -20, -1, -2);
 	var shakerRate = (d.sensors.gyroEvent.y / pi.half).linlin(-1, 1, 2, 1);
 	var shakerCutoff = (d.sensors.gyroEvent.y / pi.half).linlin(-1, 1, 10000, 1000, -2);
 
+	// idx.postln;
 	if(amp < 8.neg, { amp = 90.neg });
 	// if(shakerAmp < 38.neg, { shakerAmp = 120.neg });
 
 	Pdef(m.ptn).set(\viewID, d.port);
-	Pdef(m.ptn).set(\divIdx, 3);
+	Pdef(m.ptn).set(\divIdx, idx);
 	Pdef(m.ptn).set(\pal, pal);
 	Pdef(m.ptn).set(\energy, amp.dbamp * vol);
 	Pdef(m.ptn).set(\roll, roll);

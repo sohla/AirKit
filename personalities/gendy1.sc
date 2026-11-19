@@ -39,7 +39,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 	sig = LPF.ar(sig, cutoff.clip(120, 18000).lag(glide));
 	sig = BLowShelf.ar(sig, shelfFreq, db: shelfDb);
 
-	Out.ar(out, (sig * env * amp.lag(glide)).softclip);
+	Out.ar(out, (sig * env * amp.lagud(glide,1.5)).softclip);
 }).add;
 
 //------------------------------------------------------------
@@ -55,6 +55,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 		var scroll = mod[\scroll] ? 0.02;
 		var lane = mod[\lane] ? 14;
 		var dullest = mod[\dullest] ? 0.12;
+		var minAlpha = mod[\minAlpha] ? 0.15;
 		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 		var loud = m.accelMassFiltered.lincurve(0.0, 1.0 * sens, -50, -5, -2).linlin(-50, -5, 0, 1) * vol;
@@ -66,13 +67,15 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 		var dt = (now - lastNow).clip(0, 0.25);
 		var a = c[\posStart];
 		var b = c[\posEnd];
-		var height = c[\size] * loud * 0.2;
+		var height = c[\size] * loud * 0.02;
 		var wave = { |v, x|
 			var ends = segEnds[v];
 			var j = ends.indexOfGreaterThan(x) ? 11;
 			var from = if(j == 0, { 0 }, { ends[j - 1] });
 			breakpoints[v][j].blend(breakpoints[v][(j + 1) % 12], (x - from) / (ends[j] - from))
 		};
+		
+		if(loud < 0.05, {loud = 0.0});//?
 
 		lastNow = now;
 		nvoices.do { |v|
@@ -80,19 +83,17 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 			phases[v] = (phases[v] + (dt * f * scroll)).wrap(0, 1);
 		};
 
-		if(loud > 0.01, {
-			nvoices.do { |v|
-				var f = freq * (1 + (detune * bandPos[v]));
-				var offset = ((v / (nvoices - 1)) * 2 - 1) * lane;
-				var y = wave.(v, phases[v]).softclip;
-				var pts = Array.fill(n, { |k|
-					var u = k / (n - 1);
-					y = y + (((wave.(v, (phases[v] + (u * timebase * f)).frac)).softclip - y) * smooth);
-					a.blend(b, u) + (0 @ (offset - (y * height)))
-				});
-				c[\render].(pts, 1, loud.sqrt, false);
-			};
-		});
+		nvoices.do { |v|
+			var f = freq * (1 + (detune * bandPos[v]));
+			var offset = ((v / (nvoices - 1)) * 2 - 1) * lane;
+			var y = wave.(v, phases[v]).softclip;
+			var pts = Array.fill(n, { |k|
+				var u = k / (n - 1);
+				y = y + (((wave.(v, (phases[v] + (u * timebase * f)).frac)).softclip - y) * smooth);
+				a.blend(b, u) + ((offset - (y * height)) @ 0)
+			});
+			c[\render].(pts, 1, loud.sqrt.max(minAlpha), false);
+		};
 		nil
 	});
 
@@ -102,15 +103,15 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 		dur: 0.01,
 		viewID: d.port,
 		shape: \scope,
-		numPoints: 16,
+		numPoints: 64,
 		closed: false,
 		fill: false,
-		sx: -1, sy: 0,
-		ex: 1, ey: 0,
+		sx: 0, sy: 1,
+		ex: 0, ey: -1,
 		startSize: 340,
 		endSize: 340,
-		startWidth: 4.6,
-		endWidth: 4.6,
+		startWidth: 0.5,
+		endWidth: 0.5,
 		startColor: Color.black,
 		endColor: Color.black,
 		duration: inf,
@@ -119,6 +120,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 			scroll: 0.02,
 			lane: 14,
 			dullest: 0.12,
+			minAlpha: 0.5,
 			amp: 0
 		)
 	).play;
@@ -138,14 +140,15 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
  
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
-	var amp    = m.accelMassFiltered.lincurve(0.0, 1.0 * sens, -50, -25, -2);
-	var freq   = (d.sensors.gyroEvent.y / pi.half).linexp(-1.0, 1.0, 10, 50);
+	var amp    = m.accelMassFiltered.lincurve(0.0, 1.0 * sens, -50, -13, -2);
+	var freq   = (d.sensors.gyroEvent.y / pi.half).linexp(-1.0, 1.0, 21.midicps, 25.midicps);
 	var detune = m.rrateMassFiltered.lincurve(0.0, 1.2, 0.10, 0.45, -1);
 	var cutoff = m.accelMassFiltered.linexp(0.0, 2.0, 700, 9000);
 
 	synth !? { |x|
 		x.set(\amp, amp.dbamp * vol);
-		x.set(\freq, 46.midicps);
+		// x.set(\freq, 21.midicps);
+		x.set(\freq, freq);
 		x.set(\detune, detune);
 		x.set(\cutoff, cutoff);
 	};

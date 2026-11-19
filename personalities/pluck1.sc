@@ -67,7 +67,7 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 		var gate = m.accelMassFiltered * 1.3;
 		var drift = mod[\drift] ? 0;
 		var driftHz = mod[\driftHz] ? 0.05;
-		var shift = 0 @ (drift * c[\bounds].height * 0.5 * sin(2pi * driftHz * c[\now]));
+		var shift = (drift * c[\bounds].width * 0.5 * sin(2pi * driftHz * c[\now])) @ 0;
 		var a = c[\posStart] + shift;
 		var b = c[\posEnd] - shift;
 		var normal = Polar(1, (b - a).theta + 0.5pi).asPoint;
@@ -109,14 +109,14 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 		numPoints: 44,
 		fill: false,
 		closed: false,
-		sx: -1.1, sy: 0,
-		ex: 1.1, ey: 0,
+		sx: 0, sy: 1.1,
+		ex: 0, ey: -1.1,
 		startSize: 160,
 		endSize: 10,
 		startWidth: 3,
 		endWidth: 1,
-		startColor: d.color,
-		endColor: d.color,
+		startColor: Color.black,
+		endColor: Color.black,
 		duration: inf,
 		modulation: (
 			decay: 10.3,
@@ -131,7 +131,7 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 	).play;
 
 	synth = Synth(\pluck1, [\frq, 140.rrand(80), \gate, 1]);
-	m.com.bgColor = Color.black;
+	m.com.bgColor = Color.white;
 };
 
 //------------------------------------------------------------
@@ -144,11 +144,11 @@ SynthDef(\pluck1, { |out=0, amp=0, pch=30, frq=30, gate=0 |
 
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
-	var amp = m.accelMassFiltered.linlin(0,2.5 * sens,0.07,1);
+	var amp = m.accelMassFiltered.linlin(0,2.5 * sens,0.07,2);
 
 	var pch = 40 + ((m.accelMass * 150) * sens.linlin(0.0,1.0,1,0.0));
 	// var frq= 110 + ((m.accelMassFiltered * 100) * sens.linlin(0.0,1.0,1,0.0));
-	var frq= 50 + m.accelMassFiltered.linlin(0,2.5 * sens,0.0,300,-2	);
+	var frq= 50 + m.accelMassFiltered.linlin(0,2.5 * sens,0.0,100,-2	);
 	synth.set(\pch,pch);
 	synth.set(\frq,frq);
 
