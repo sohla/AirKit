@@ -5,7 +5,8 @@ var drone;
 var droneNote = 12 * 2;
 
 var divs = [1, 2, 4];
-var pool = [0] - 4 - 12; // seq = [0,2,4,-3,-5]
+// var pool = [0] - 4 - 12; // seq = [0,2,4,-3,-5]
+var pool = [0] - 1 - 12; // seq = [0,2,4,-3,-5]
 
 //------------------------------------------------------------
 m.accelMassFilteredAttack = 0.99;
