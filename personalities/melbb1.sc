@@ -1,6 +1,6 @@
 var m = ~model;
 var bi = 0;
-var dur = 0.14 * 1;
+var dur = 0.07;
 var limit = 8;
 var step = 1;
 var lastTime=0;
@@ -70,7 +70,7 @@ SynthDef(\melbb2, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=440,
 			\note, Pseq([30], inf),
 			// \dur, dur,
 			\pan, Pwhite(-0.9,0.9),
-			\backfront, Pwhite(-0.9,0.9),
+			\backfront, -1,//Pwhite(-0.9,0.9),
 			\attack, 0.03,
 
 			\type, \customVisualEvent,
@@ -206,7 +206,7 @@ SynthDef(\melbb2, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=440,
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var rel = m.gyroYFiltered.clip(-0.5,0.5).lincurve(-0.5,0.5,0.3,0.01,3);
-	var amp = m.accelMassFiltered.lincurve(0, 2.5 * sens,-110,-5, -1);
+	var amp = m.accelMassFiltered.lincurve(0, 2.5 * sens,-50,-1, -1);
 	var roll = m.gyroXFiltered.lincurve(-0.2,0.4,0.5,2,-2);
 	var sa = m.rrateMassFiltered.lincurve(0, 2.6 * sens,0.0,0.2, -1);
 

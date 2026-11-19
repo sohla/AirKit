@@ -5,7 +5,7 @@ var lanes;
 
 var folder = PathName("~/Downloads/nicSamples/mwp");
 
-var beat = 0.14;
+var beat = 0.04;
 var pool = [0, 3, 5, 7, 10];
 
 var laneSplits = [55, 72];
@@ -150,7 +150,7 @@ SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, st
 				\startColor, Color.white,
 				\endColor, Color.black.alpha_(0),
 				\modulation, Pfunc({ |e| var k = e[\look]; (amp: 0, bleed: k[\bleed], lumps: Array.fill(3, { |i| [i + 2, rrand(0.0, k[\lump]), 2pi.rand] }), drops: Array.fill(rrand(0, k[\drops]), { [2pi.rand, rrand(1.2, 2.2), rrand(0.08, 0.25)] })) }),
-				\duration, beat * 12,
+				\duration, beat * 2,
 
 				\args, #[],
 			)

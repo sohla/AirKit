@@ -38,6 +38,22 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 }).add;
 
 //------------------------------------------------------------
+
+
+SynthDef(\melsub, { |out = 0, gate = 1, freq = 40, amp = 0.4, pan = 0, attack = 0.08, decay = 0.4,
+	sustain = 0.8, release = 1.2, pd = 0.3, drive = 1.5, move = 0.5, moveRate = 0.15|
+	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
+	var lfo = SinOsc.kr(moveRate, Rand(0, 2pi) + [0, 0.5pi]);
+	var bend = (pd * (1 + (lfo[0] * move))).clip(0, 2);
+	var f = freq * (1 + (lfo[1] * move * 0.006 * [1, -1]));   // L up while R goes down
+	var sig = SinOsc.ar(f, SinOsc.ar(f * 2) * bend);
+	sig = (sig * drive).tanh / drive.tanh;
+	sig = LeakDC.ar(sig) * env * amp;
+	Out.ar(out, Balance2.ar(sig[0], sig[1], pan));
+
+}).add;
+
+//------------------------------------------------------------
 ~init = ~init <> {|d|
 	var path = PathName("~/Downloads/melSamples/mel_mouth2.wav");
 	postf("loading sample : % \n", path.fileName);
@@ -53,10 +69,11 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 		var halfWidth = mod[\halfWidth] ? 16;
 		var twin = mod[\twin] ? 0.25;
 		var ampLag = mod[\ampLag] ? 0.1;
-		var floor = mod[\floor] ? 0.05;
+		var threshold = mod[\threshold] ? 0.13;
+		var gain = mod[\gain] ? 1;
 		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-		var amp = m.accelMassFiltered.linlin(0, 0.6 * sens, 0, 1);
+		var amp = m.accelMassFiltered.linlin(0, 2.5 * sens, 0.00001, 1);
 		var rate = m.gyroYFiltered.lincurve(-1.0, 1.0, 0.1, 2.0, 0);
 		var start = m.gyroZFiltered.lincurve(-1.0, 1.0, 0.0, 1.0, 0);
 		var frames = buffer !? { buffer.numFrames };
@@ -69,13 +86,13 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 		var dt = (c[\now] - lastNow).clip(0, 0.25);
 		var level, bar;
 
-		if(amp < floor, { amp = 0 });
+		if(amp < threshold, { amp = 0 }, { amp = amp.linlin(threshold, 1, 0, 1) });
 		if(dt > 0, {
 			lastNow = c[\now];
 			ampSmooth = ampSmooth + (((amp * vol) - ampSmooth) * (1 - exp(dt.neg / ampLag)));
 		});
 		if(amp == 0, { ampSmooth = 0 });
-		level = ampSmooth.clip(0, 1);
+		level = (ampSmooth * gain).clip(0, 1);
 
 		bar = { |voice, edge, reach, alpha|
 			var travel = phase * window * rate * (voice + 1) / bufDur;
@@ -121,7 +138,8 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 				halfWidth: 10,
 				twin: 0.85,
 				ampLag: 0.1,
-				floor: 0.05,
+				threshold: 0.13,
+				gain: 1,
 				amp: 0
 			)
 		).play;
@@ -151,7 +169,7 @@ SynthDef(\bufGrainM, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=44
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var amp = m.accelMassFiltered.linlin(0, 2.5 * sens,0.00001,1);
-	var rate =  m.gyroYFiltered.lincurve(-1.0,1.0,0.1,2.0,0);
+	var rate =  m.gyroYFiltered.lincurve(-1.0,1.0,0.1,1.0,0);
 	var start = m.gyroZFiltered.lincurve(-1.0,1.0,0.0,1.0,0);
 	var sp = m.gyroZFiltered.lincurve(-1.0,1.0,0,3,0);
 

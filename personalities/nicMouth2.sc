@@ -1,0 +1,194 @@
+var m = ~model;
+var synth;
+var sub;
+var buffer;
+var dead = false;
+var mouthVoices = 3;
+var squeezeAt = 0.4;
+var squeezeSlope = 0.1;
+var chew = 0;
+var lastNow;
+
+m.accelMassFilteredAttack = 0.99;
+m.accelMassFilteredDecay = 0.8;
+m.rrateMassFilteredAttack = 0.7;
+m.rrateMassFilteredDecay = 0.2;
+m.gyroFilteredAttack = 0.7;
+m.gyroFilteredDecay = 0.7;
+
+//------------------------------------------------------------
+
+SynthDef(\bufGrainN, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=440,
+    attack=0.01, decay=0.1, sustain=0.8, release=5.2, gate=1,cutoff=20000, rq=1, rezf=200|
+
+	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
+	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction:2);
+	var sig = Splay.arFill(2,{|i|
+			Warp1.ar(2, bufnum, start, rate / (1 + (i * 0.1)), 0.3, -1, 8, windowRandRatio:0.3)
+	},1,1,0);
+
+	sig = BLowShelf.ar(sig, 4090, 0.67,-10);
+  	sig = Compander.ar(sig, sig,
+        thresh: 0.1,
+        slopeBelow: 1,
+        slopeAbove: 0.1,
+        clampTime:  0.01,
+        relaxTime:  0.01
+    );
+	sig = sig[0] * env * amp.lagud(1.3,1.3);
+    Out.ar(out, sig);
+}).add;
+
+SynthDef(\nicMouthGrain, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=440,
+    attack=0.01, decay=0.1, sustain=0.8, release=5.2, gate=1,cutoff=20000, rq=1, rezf=200|
+
+	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
+	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction:2);
+	var sig = Splay.arFill(4,{|i|
+			Warp1.ar(2, bufnum, start, rate / (1 + (i * 0.007)) , 0.19, -1, 6, windowRandRatio:0.0) * (0.2 + (i * 0.4))
+	},1,1,0);
+  	sig = Compander.ar(sig, sig,
+        thresh: 0.4,
+        slopeBelow: 1,
+        slopeAbove: 0.1,
+        clampTime:  0.01,
+        relaxTime:  0.01
+    );
+	sig = sig[0] * env * amp;
+    Out.ar(out, sig);
+}).add;
+
+SynthDef(\subN, { |out = 0, gate = 1, freq = 111, amp = 0.4, pan = 0, attack = 0.08, decay = 0.4,
+	sustain = 0.8, release = 1.2, pd = 0.3, drive = 1.5, move = 0.5, moveRate = 0.15|
+	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
+	var lfo = SinOsc.kr(moveRate, Rand(0, 2pi) + [0, 0.5pi]);
+	var bend = (pd * (1 + (lfo[0] * move))).clip(0, 2);
+	var f = freq * (1 + (lfo[1] * move * 0.006 * [1, -1]));   // L up while R goes down
+	var sig = SinOsc.ar(f, SinOsc.ar(f * 2) * bend);
+	sig = (sig * drive).tanh / drive.tanh;
+	sig = LeakDC.ar(sig) * env * amp.lagud(0.3,0.8);
+	Out.ar(out, Balance2.ar(sig[0], sig[1], pan));
+
+}).add;
+
+//------------------------------------------------------------
+~init = ~init <> { |d|
+	var path = PathName("~/Downloads/nicSamples/nic_disgusting_comp.wav");
+	// var path = PathName("~/Downloads/nicSamples/twoNote/nic_47_d#4f4.wav");
+	postf("loading sample : % \n", path.fileName);
+	buffer = Buffer.read(s, path.fullPath, action:{ |buf|
+		postf("buffer alloc [%] \n", buf);
+		if(dead.not, { synth = Synth(\bufGrainN,[\out, 0, \bufnum,buf, \rate, 1, \gate, 1 ]) });
+	});
+	sub = Synth(\subN, [\out, 0, \amp, 0, \gate, 1]);
+
+	~vdef.(\mouth, { |ev, c|
+		var mod = ev[\modulation] ? ();
+		var n = ev[\numPoints] ? 40;
+		var peakWidth = mod[\peakWidth] ? 0.18;
+		var lipPx = mod[\lipPx] ? 14;
+		var ripples = mod[\ripples] ? 3;
+		var chewHz = mod[\chewHz] ? 1.5;
+		var rest = mod[\restAlpha] ? 0.05;
+		var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+		var amp = m.accelMassFiltered.linlin(0,4.3 * sens,0.00001,1);
+		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+		var sounding = (m.accelMassFiltered.linlin(0, 2.3 * sens, 0.00001, 1) >= 0.01) and: { vol > 0.001 };
+		var rate = m.gyroYFiltered.lincurve(-1.0,1.0,0.1,2.0,0);
+		var start = m.gyroZFiltered.lincurve(-1.0,1.0,0.0,1.0,0);
+		var a = c[\posStart];
+		var b = c[\posEnd];
+		var now = c[\now];
+		var dt = (now - (lastNow ? now)).clip(0, 0.25);
+		var open;
+
+		lastNow = now;
+		chew = chew + (dt * rate * chewHz);
+		if(amp < 0.01, { amp = 0 });
+		open = if(amp > squeezeAt, { squeezeAt + ((amp - squeezeAt) * squeezeSlope) }, { amp });
+		open = open / (squeezeAt + ((1 - squeezeAt) * squeezeSlope));
+
+		if(sounding, { mouthVoices.do { |i|
+			var gain = 0.2 + (i * 0.4);
+			var gap = open * gain * c[\size];
+			var lip = { |t, side|
+				var shape = sin(pi * t).pow(0.7) * (0.35 + (0.65 * exp(((t - start) / peakWidth).squared.neg)));
+				var wob = sin(2pi * ((t * ripples) - (chew / (i + 1)))) * lipPx * (0.2 + open) * sin(pi * t);
+				a.blend(b, t) + (0 @ ((gap * shape * side) + wob))
+			};
+			c[\render].(
+				Array.fill(n, { |j| lip.(j / (n - 1), -1) })
+				++ Array.fill(n, { |j| lip.(1 - (j / (n - 1)), 1) }),
+				0.5 + gain, rest + ((1 - rest) * gain * open.sqrt), true
+			);
+		}; });
+		nil
+	});
+
+	(
+		type: \customVisualEvent, amp: 0, dur: 0.01, viewID: d.port,
+		shape: \mouth,
+		sx: -1, ex: 1, sy: -0.0, ey: -0.0,
+		startSize: 420, endSize: 420,
+		startWidth: 4, endWidth: 2,
+		startColor: Color.new(1.0, 0.12, 0.18, 0.9),
+		endColor: Color.new(1.0, 0.12, 0.18, 0.9),
+		numPoints: 8, fill: false, closed: true,
+		duration: inf,
+		modulation: (amp: 0, peakWidth: 0.18, lipPx: 14, ripples: 3, chewHz: 1.5, restAlpha: 0.15)
+	).play;
+	m.com.bgColor = Color.black;
+};
+
+//------------------------------------------------------------
+~deinit = ~deinit <> {
+	var dying = synth;
+	var dyingBuffer = buffer;
+	var freeBuffer = { dyingBuffer !? { postf("buffer dealloc [%] \n", dyingBuffer); dyingBuffer.free } };
+	dead = true;
+	sub !? { sub.set(\gate, 0) };
+	sub = nil;
+	synth = nil;
+	buffer = nil;
+	if(dying.notNil, {
+		dying.onFree(freeBuffer);
+		dying.set(\gate, 0);
+	}, freeBuffer);
+};
+//------------------------------------------------------------
+~next = {|d|
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	var amp = m.accelMassFiltered.lincurve(0,2.5 * sens,0.001,1,-2);
+	var rate =  m.gyroYFiltered.lincurve(-1.0,1.0,0.5,1.4,0);
+	var start = m.gyroZFiltered.lincurve(-1.0,1.0,0.0,1.0,0);
+	var subAmp = m.accelMassFiltered.linlin(0, 2.5 * sens, 0.00001, 1);
+	var subRate = m.gyroYFiltered.lincurve(-1.0, 1.0, 0.01, 7.0, 0);
+	var subDepth = m.accelMassFiltered.lincurve(0, 2.5 * sens, 0.3, 10,-3);
+	var subFreq =  m.gyroYFiltered.lincurve(-1.0,1.0, 28.midicps, 32.midicps,0);
+
+	if(amp < 0.03, {amp = 0});
+	if(subAmp < 0.01, {subAmp = 0});
+
+	synth.set(\start, start);
+	synth.set(\rate, 2);
+	synth.set(\amp, amp * 4 * vol);
+
+	sub.set(\amp, 0.4 * vol * subAmp);
+	sub.set(\freq, subFreq);
+	sub.set(\moveRate, subRate);
+	sub.set(\move, subDepth);
+
+};
+//------------------------------------------------------------
+~plotMin = -1;
+~plotMax = 1;
+~plot = { |d,p|
+	// [m.rrateMass * 0.1, m.rrateMassFiltered * 0.1];
+	// [m.accelMass * 0.3, m.accelMassFiltered * 0.5];
+	// [m.rrateMassFiltered, m.rrateMassThreshold];
+	// [m.rrateMassFiltered, m.rrateMassThreshold, m.accelMassAmp];
+	[d.sensors.gyroEvent.x/pi];
+	// [d.sensors.rrateEvent.x, d.sensors.rrateEvent.y, d.sensors.rrateEvent.z];
+	// [d.sensors.accelEvent.x, d.sensors.accelEvent.y, d.sensors.accelEvent.z];
+};

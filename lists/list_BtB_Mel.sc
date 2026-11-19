@@ -2,14 +2,15 @@
 	[
 		"silence",
 
-		"speakerTest1",
 		// shhh
 		"mel4",
+		"mel6",
 		"melbb2",
 		"melbb1",
 
 		// circling
 		"multiBeat1",
+		"multiBeat1.2",
 
 		// shadows
 		"gendy1",

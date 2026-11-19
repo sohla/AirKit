@@ -17,12 +17,22 @@ m.rrateMassFilteredAttack = 0.8;
 m.rrateMassFilteredDecay = 0.3;
 
 //------------------------------------------------------------
-SynthDef(\nicPrrr2Loop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1|
+SynthDef(\nicPrrr2Loop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1,
+	thresh = 0.3, slopeAbove = 0.1|
 	var env = EnvGen.kr(Env.asr(0.3, 1, 0.6), gate, doneAction: Done.freeSelf);
 	var sig = PlayBuf.ar(2, bufnum,
-		rate.lag(0.25) * BufRateScale.kr(bufnum),
+		rate.lag(1.3) * BufRateScale.kr(bufnum) * [1,1.008],
 		1, 0, loop: 1);
 	sig = LeakDC.ar(sig);
+	sig = BLowShelf.ar(sig, 70, 0.97,11);
+
+	sig = Compander.ar(sig, sig,
+		thresh: thresh,
+		slopeBelow: 1,
+		slopeAbove: slopeAbove,
+		clampTime: 0.01,
+		relaxTime: 0.1
+	);
 	Out.ar(0, sig * env * amp.lag(0.12));
 }).add;
 
@@ -36,12 +46,13 @@ SynthDef(\nicPrrr2Loop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1|
 		Buffer.read(s, p.fullPath)
 	});
 
-	~vdef.(\purrRing, { |ev, c|
+	~vdef.(\purrHair, { |ev, c|
 		var mod = ev[\modulation] ? ();
 		var modes = mod[\modes] ? 4;
 		var depth = mod[\depth] ? 0.12;
 		var vibHz = mod[\vibHz] ? 3;
 		var restAlpha = mod[\restAlpha] ? 0.15;
+		var spread = mod[\spread] ? 0.5;
 
 		var drive = m.accelMassFiltered;
 		var amp = drive.lincurve(0, 1.6, 0, 1, 2);
@@ -49,30 +60,39 @@ SynthDef(\nicPrrr2Loop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1|
 		var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 		var sound = drive.lincurve(0, 0.6 * d.params.sensitivity.linexp(0, 1, 4, 0.25), 0, 1, 2) * vol;
 
-		var mid = c[\pos];
-		var ring = c[\size];
+		var a = c[\posStart];
+		var b = c[\posEnd];
 		var now = c[\now];
-		var n = ev[\numPoints] ? 96;
+		var n = ev[\numPoints] ? 24;
+		var alpha = amp.linlin(0, 1, restAlpha, 1);
 
 		var buf = buffers !? { buffers[bi] };
 		var loop = if(buf.notNil and: { buf.numFrames.notNil }, { buf.duration }, { 1 });
 		var dt = (now - lastNow).clip(0, 0.25);
-		var points;
 
 		lastNow = now;
 		phase = (phase + (rate * dt / loop.max(0.1))).wrap(0, 1);
 
-		points = Array.fill(n, { |i|
-			var a = i / n * 2pi;
-			var y = 0;
-			modes.do { |k|
-				var kk = k + 2;
-				y = y + (sin((kk * a) + (phase * 2pi * (k + 1))) * cos(2pi * vibHz * rate * (1 + (k * 0.3)) * now) / kk);
+		if(sound > -80.dbamp, {
+			Pen.width = c[\width];
+			(mod[\hairs] ? []).do { |h|
+				var root = a.x.blend(b.x, h[0]) @ a.y;
+				var len = (a.y - b.y) * (1 + (spread * (h[1] * 2 - 1))) * amp;
+				var col = ev[\startColor].blend(ev[\endColor], h[2]);
+				Pen.strokeColor = col.alpha_(col.alpha * alpha);
+				Pen.moveTo(root);
+				(1..(n - 1)).do { |i|
+					var t = i / (n - 1);
+					var x = 0;
+					modes.do { |k|
+						var kk = k + 2;
+						x = x + (sin((kk * t * pi) + ((phase + h[0]) * 2pi * (k + 1))) * cos(2pi * vibHz * rate * (1 + (k * 0.3)) * (now + h[0])) / kk);
+					};
+					Pen.lineTo(root + ((len * depth * amp * x * t) @ (len * t).neg));
+				};
+				Pen.stroke;
 			};
-			mid + Polar(ring * (1 + (depth * amp * y)), a).asPoint
 		});
-
-		if(sound > -80.dbamp, { c[\render].(points, 1, amp.linlin(0, 1, restAlpha, 1), true) });
 		nil
 	});
 
@@ -81,21 +101,19 @@ SynthDef(\nicPrrr2Loop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1|
 		amp: 0,
 		dur: 0.01,
 		viewID: d.port,
-		shape: \purrRing,
-		numPoints: 96,
-		fill: false,
-		closed: true,
-		sx: 0, sy: 0, ex: 0, ey: 0,
-		startSize: 60,
-		endSize: 60,
-		startWidth: 3,
-		endWidth: 3,
-		startColor: Color.black,
-		endColor: Color.new(0.286, 1.0, 1, 1.0),
+		shape: \purrHair,
+		numPoints: 24,
+		sx: -1, ex: 1,
+		sy: 1, ey: 0.7,
+		startWidth: 2,
+		startColor: Color.white,
+		endColor: Color.red,
 		duration: inf,
 		modulation: (
-			modes: 24,
-			depth: 1.22,
+			hairs: Array.fill(40, { [1.0.rand, 1.0.rand, 1.0.rand] }),
+			spread: 0.5,
+			modes: 6,
+			depth: 0.15,
 			vibHz: 7,
 			restAlpha: 0.5,
 			amp: 0
@@ -128,14 +146,14 @@ SynthDef(\nicPrrr2Loop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1|
 	var sens = d.params.sensitivity.linexp(0, 1, 4, 0.25);
 	var drive = m.accelMassFiltered;
 	var amp = drive.lincurve(0, 0.6 * sens, 0, 1, 2);
-	var rate = drive.linlin(0, 0.6 * sens, 1, 1.22);
+	var rate = ((d.sensors.gyroEvent.y / pi).fold(-0.5,0.5) * 2.0).linlin(-1, 1, 0.5, 1.23);
 
 	synth !? { synth.set(\amp, amp * vol, \rate, rate) };
 
-	if(armed and: { buffers.notNil } and: { m.accelMass > (0.55 * sens) }, {
+	if(armed and: { buffers.notNil } and: { m.accelMass > (0.25 * sens) }, {
 		armed = false;
 		bi = (bi + 1) % buffers.size;
-		noteOn.(amp * vol * 2, 1);
+		noteOn.(amp * vol, 1);
 
 		// (
 		// 	type: \customVisualEvent,
@@ -163,7 +181,7 @@ SynthDef(\nicPrrr2Loop, { |out = 0, bufnum = 0, amp = 0, rate = 1, gate = 1|
 		// ).play;
 	});
 
-	if(m.accelMass < (0.25 * sens), { armed = true });
+	if(m.accelMass < (0.15 * sens), { armed = true });
 };
 
 //------------------------------------------------------------

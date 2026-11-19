@@ -334,6 +334,10 @@ var unLoadPersonality = { |port, index|
             // s.sync;
         }.play;
     }});
+    if(~visuals.notNil, {
+        ~visuals.clearVdefs(d.port);
+        ~visuals.clearEvents(d.port);
+    });
     d
 };
 

@@ -100,6 +100,54 @@ var meterView = View()
 	.minWidth_(150)
 	.maxWidth_(150);
 
+// speaker check : outputs 0-3 are FL FR BL BR; PanAz walks them clockwise as FL FR BR BL
+var testSignals = ["off", "pink noise", "brown noise", "drone 111", "blip"];
+var testSpeakers = ["front left", "front right", "back left", "back right", "slow clockwise", "fast anticlockwise"];
+var testLevels = [-50, -25, -15, -10, -5, 0];
+var testSettings = (sig: 0, spk: 0, amp: testLevels[0].dbamp);
+var testSynth;
+var signalMenu;
+
+var testSignal = { |sig = 1, spk = 0, amp = 0|
+	var src = Select.ar(sig - 1, [
+		PinkNoise.ar,
+		BrownNoise.ar(0.3),
+		Mix(SinOsc.ar(111 * [0.996, 1, 1.004], 0, 0.15)) + SinOsc.ar(222.4, 0, 0.05),
+		SinOsc.ar(880) * Decay2.ar(Impulse.ar(2), 0.002, 0.1)
+	]) * amp.lag(0.1);
+	var ring = PanAz.ar(4, src, LFSaw.kr(Select.kr(spk > 4, [1/8, -2/3])), orientation: 0);
+	var rotating = [ring[0], ring[1], ring[3], ring[2]];
+	(0..3).collect { |c| Select.ar(spk >= 4, [src * BinaryOpUGen('==', spk, c), rotating[c]]) }
+};
+
+var testUpdate = {
+	if(testSettings.sig == 0, {
+		testSynth !? { testSynth.free };
+		testSynth = nil;
+	},{
+		if(testSynth.isNil, {
+			var synth = testSignal.play(s, 0, addAction: \addToTail, args: testSettings.asPairs);
+			testSynth = synth;
+			synth.onFree({
+				if(testSynth === synth, { testSynth = nil; { signalMenu.value = 0 }.defer });
+			});
+		},{
+			testSynth.set(*testSettings.asPairs);
+		});
+	});
+};
+
+var testMenu = { |items, action|
+	PopUpMenu().font_(Font(size: 14)).items_(items).action_(action)
+};
+
+var speakerCheck = View().maxWidth_(150).layout_(VLayout(
+	StaticText().string_("Speaker check").font_(Font(size: 12, bold: true)),
+	signalMenu = testMenu.(testSignals, { |m| testSettings.sig = m.value; testUpdate.() }),
+	testMenu.(testSpeakers, { |m| testSettings.spk = m.value; testUpdate.() }),
+	testMenu.(testLevels.collect({ |db| "% dB".format(db) }), { |m| testSettings.amp = testLevels[m.value].dbamp; testUpdate.() })
+).margins_(0).spacing_(4));
+
 var nodeTree = View()
 	.background_(Color.black(0.25))
 	.minWidth_(700)
@@ -227,7 +275,7 @@ var systemView = {
 	View().layout_(VLayout(
 		HLayout(View().maxWidth_(140), cpuView),
 		HLayout(View().maxWidth_(140), serverView),
-		HLayout(meterView, nodeTree),
+		HLayout(VLayout(meterView, speakerCheck), nodeTree),
 		HLayout(
 			versionView,
 			sceneButton,

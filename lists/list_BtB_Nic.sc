@@ -4,11 +4,13 @@
 
 		// shhhh
 		"nicMouth1",
+		"nicMouth2",
 		"nicMouthPerc",
 		"nicPrrr2",
 
 		// circling
 		"multiBeat4",
+		"multiBeat4.1",
 
 		// shadows
 		"pluck1",

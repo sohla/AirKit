@@ -29,7 +29,7 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 SynthDef(\multiBeatKit, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0,
-    attack=0.005, decay=0.1, sustain=0.8, release=0.02, gate=1, cutoff=50, rq=0.001|
+    attack=0.005, decay=0.1, sustain=0.8, release=0.02, gate=1, cutoff=50, rq=0.0001|
 	var lr = rate * BufRateScale.kr(bufnum);
 	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
 	var sig = PlayBuf.ar(1, bufnum, rate: [lr, lr * 1.1],
@@ -112,10 +112,12 @@ SynthDef(\multiBeat4Plate, { |in = 0, out = 0, mix = 0.5, predelay = 0.01, room 
 			\amp, Pkey(\energy) * Pfunc({ |e| if(e[\step] == 0, { 1.0 }, { 0.55 }) }),
 			// \rate, 0.53 * 2,//Pfunc({ |e| rates.choose * (e[\roll] ? 1) }),
 			\rate, Pfunc({ |e| rates.choose * (e[\roll] ? 1) }),
-			\start, Pfunc({ |e|
-				if(e[\rate] < 0, { 0.98 }, { [0, 0.12].wchoose([0.88, 0.12]) })
-			}),
-			\release, 0.01,//Pkey(\dur) * 1.2,
+			// \start, Pfunc({ |e|
+			// 	if(e[\rate] < 0, { 0.98 }, { [0, 0.12].wchoose([0.88, 0.12]) })
+			// }),
+			\start,0,
+			\decay, 0.02,
+			\release, Pkey(\dur) * 1.25,
 			\legato, 0.9,
 			\pan, Pwhite(-0.4, 0.4),
 
@@ -190,18 +192,18 @@ SynthDef(\multiBeat4Plate, { |in = 0, out = 0, mix = 0.5, predelay = 0.01, room 
 	var e = m.accelMassFiltered;
 	var idx = e.lincurve(0, 4.3 * sens, 0, divs.size - 1, 1).round.asInteger.clip(0, divs.size - 1);
 	var pal = e.lincurve(0, 1.2 * sens, 1, buffers.size, 1).round.asInteger.clip(1, buffers.size);
-	var amp = e.lincurve(0, 0.5 * sens, -10, -5, -1);
+	var amp = e.lincurve(0, 0.4 * sens, -10, -1, -1);
 	var roll = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0.75, 1.25);
-	var cutoff = ((d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5) * 2).lincurve(-1.0, 1.0, 64, 128, 1);//tune to pitch!!
+	var cutoff = ((d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5) * 2).lincurve(-1.0, 1.0, 32, 64, 1);//tune to pitch!!
 
-	if(amp< 9.neg, { amp = 90.neg });
+	if(amp < 8.neg, { amp = 90.neg });
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\divIdx, idx);
 	Pdef(m.ptn).set(\pal, pal);
 	Pdef(m.ptn).set(\energy, amp.dbamp * vol);
 	Pdef(m.ptn).set(\roll, roll);
-	Pdef(m.ptn).set(\cutoff, cutoff / 2);
+	Pdef(m.ptn).set(\cutoff, cutoff);
 };
 
 //------------------------------------------------------------
