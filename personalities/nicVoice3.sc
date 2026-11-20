@@ -252,7 +252,7 @@ SynthDef(\nicVoice3Sampler, {|bufnum=0, out=0, amp=1, rate=1, start=0, pan=0, fr
 	var rel = m.accelMassFiltered.lincurve(0, 3 * sens, 3.1, 0.4, -2);
 
 	var start = m.accelMassFiltered.lincurve(0, 2 * sens, 0.0, 0.1,0);
-	var dur = m.accelMassFiltered.lincurve(0, 3 * sens, 0.6, 0.1,-2);
+	var dur = m.accelMassFiltered.lincurve(0, 3 * sens, 0.5, 0.2,-2);
 
 	if(amp < -58, { amp = -90; });
 

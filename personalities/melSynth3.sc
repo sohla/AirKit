@@ -39,7 +39,7 @@ SynthDef(\melSynth3Bass, {|out=0, freq=65, amp=0, cutoff=300, drive=1, glide=0.1
 		m.accelMassFiltered.lincurve(0, 2 * sens, 0, 1, -4) * vol
 	};
 
-	m.com.scaleIdx = 1;
+	m.com.scaleIdx = 4;
 
 	group = Group.new;
 	bass = Synth.head(group, \melSynth3Bass);

@@ -5,19 +5,17 @@
 		// shhh
 		"mel4",
 		"mel6",
-		"melbb2",
-		"melbb1",
+		// "melbb2",
+		// "melbb1",
 
 		// circling
-		"multiBeat1",
 		"multiBeat1.2",
 
 		// shadows
 		"gendy1",
 		"gendy3",
-		"multiBeat5",
 		"bells",
-		"metal1",
+		"bells2",
 
 		// feet feet
 		"waves2",
@@ -29,7 +27,6 @@
 		"miniMoog2",
 
 		// song
-		"melSynth2",
 		"melSynth3",
 		"melVoice3",
 

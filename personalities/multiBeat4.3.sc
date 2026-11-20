@@ -135,7 +135,7 @@ SynthDef(\multiBeat4Plate, { |in = 0, out = 0, mix = 0.5, predelay = 0.01, room 
 			\pan, Pwhite(-0.1, 0.1),
 
 			\type, Pfunc({ |e| if(e[\step] < 0, { \rest }, { \customVisualEvent }) }),
-			\shape, \square,
+			\shape, \circle,
 			\fill, true,
 			// \sx, (Pkey(\step) / Pkey(\div) * 1.5) - 0.75,
 			// \ex, Pkey(\sx),
@@ -144,18 +144,18 @@ SynthDef(\multiBeat4Plate, { |in = 0, out = 0, mix = 0.5, predelay = 0.01, room 
 			\sx, 0,
 			\ex, Pkey(\sx),
 			\sy, 0,
-			\ey, 1,
+			\ey, 0.3,
 			\rotation, Pfunc({ |e| e[\rate].abs.log2 * 0.25 }),
-			\startSize, Pkey(\dur) / beat * 200,
-			\endSize, 0,
-			// \startColor, Pfunc({ |e|
-			// 	Color.hsv(e[\pick] / (buffers.size.max(1)), 1, 1, 0.85)
-			// }),
-			// \endColor, Pfunc({ |e|
-			// 	Color.hsv(e[\pick] / (buffers.size.max(1)), 1, 0.4, 0.0)
-			// }),
-			\startColor, Color.white,
-			\endColor, Color.white,
+			\startSize, Pkey(\dur) / beat * 100,
+			\endSize, 50,
+			\startColor, Pfunc({ |e|
+				Color.hsv(e[\pick] / (buffers.size.max(1)), 1, 1, 0.85)
+			}),
+			\endColor, Pfunc({ |e|
+				Color.hsv(e[\pick] / (buffers.size.max(1)), 1, 0.4, 0.0)
+			}),
+			// \startColor, Color.white,
+			\endColor, Color.white.alpha_(0),
 			// \startWidth, (Pkey(\amp) * 18) + 1,
 			// \endWidth, 0.3,
 			\duration, Pkey(\dur) * 3,
@@ -188,7 +188,7 @@ SynthDef(\multiBeat4Plate, { |in = 0, out = 0, mix = 0.5, predelay = 0.01, room 
 			\pan, Pwhite(-0.3, 0.3),
 
 			\type, \customVisualEvent,
-			\shape, \square,
+			\shape, \circle,
 			\numPoints, 64,
 			\startSize, Pkey(\accent) * 60,
 			\endSize, Pkey(\accent) * 10,

@@ -1,8 +1,10 @@
 var m = ~model;
 var synth;
 var lastTime=0;
-var notes = 10 + [0,8,3,9,5,6,14,2,8,4,9,11,3,6,2] * 3;
-var roots = [0,0,9,8,8].dupEach(24);
+// var notes = 10 + [0,8,3,9,5,6,14,2,8,4,9,11,3,6,2] * 3;
+var notes = [0,2,9,5,7] + 82 - 24;
+// var roots = [0,0,9,8,8].dupEach(24);
+var roots = [0];
 // var notes = [0,1,4,5,7,8,11,12,14] + 24;
 // var roots = [0].dupEach(18);
 var currentNote = notes[0];
@@ -28,6 +30,8 @@ SynthDef(\bambooComplex, {
     var exciter, klank, env, noiseSig, bodyResonance;
     var freqs, amps, times;
     var output, numResonators=5;
+
+	var tone = SinOsc.ar(freq * [2,2.005],0,0.3);
 
     // Initial strike - gentler, more wooden
     noiseSig = Mix([
@@ -119,6 +123,7 @@ SynthDef(\bambooComplex, {
     ]);
 
     // Final shaping
+	output = output + tone;
     output = LPF.ar(output, 12000); // Remove any harsh highs
     output = output * env * amp;
     output = LeakDC.ar(output);

@@ -47,7 +47,7 @@ SynthDef(\multiBeatVerb, {|in=0, out=0, mix=0.3, room=0.8, damp=0.4, gate=1, rel
 //------------------------------------------------------------
 ~vdef.(\orbitCircle, { |ev, c|
 	var orbit = (ev[\modulation] ? ())[\orbit] ? 0;
-	c[\draw].(\circle, (pos: c[\pos] + (orbit @ 0)));
+	c[\draw].(\square, (pos: c[\pos] + (orbit @ 0)));
 	nil
 });
 
@@ -81,11 +81,13 @@ SynthDef(\multiBeatVerb, {|in=0, out=0, mix=0.3, room=0.8, damp=0.4, gate=1, rel
 			\type, \customVisualEvent,
 			\shape, \orbitCircle,
 			\fill, true,
+			\sy, 0.1,
+			\ey, Pkey(\sy),
 			\cyc, Plazy({ var ph = 0; Pfunc({ |e| ph = (ph + (e[\dur] * (e[\orbitSpeed] ? 0.25))).wrap(0, 1) }) }),
 			\rotation, Pfunc({ |e| (e[\cyc] * 2pi) - 0.5pi }),
 			\modulation, Pfunc({ |e| (orbit: (e[\orbitSize] ? 400) * 0.5, amp: 0) }),
-			\startSize, Pkey(\amp) * 300,
-			\endSize, Pkey(\amp) * 100,
+			\startSize, Pkey(\amp) * 200,
+			\endSize, Pkey(\amp) * 400,
 			\startColor, Color.new(0.6, 1.0, 0.8),
 			\endColor, Color.new(0.1, 0.4, 0.6).alpha_(0.0),
 			\startWidth, 3,
@@ -154,8 +156,8 @@ SynthDef(\multiBeatVerb, {|in=0, out=0, mix=0.3, room=0.8, damp=0.4, gate=1, rel
 	var rel = m.accelMassFiltered.lincurve(0, 2.5 * sens, 3.1,0.1, 1);
 	var droneAmp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -32, -5, -1);
 	var droneFfreq = m.accelMassFiltered.lincurve(0, 1.0 * sens, 500, 3000, 2);
-	var orbitSize = 600;
-	var orbitSpeed = 0.15;
+	var orbitSize = 800;
+	var orbitSpeed = 0.1;
 
 	if(amp < 33.neg, { amp = 110.neg });
 	amp = amp - (idx * 3);

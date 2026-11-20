@@ -165,7 +165,7 @@ SynthDef(\subN, { |out = 0, gate = 1, freq = 111, amp = 0.4, pan = 0, attack = 0
 	var subAmp = m.accelMassFiltered.linlin(0, 2.5 * sens, 0.00001, 1);
 	var subRate = m.gyroYFiltered.lincurve(-1.0, 1.0, 0.01, 7.0, 0);
 	var subDepth = m.accelMassFiltered.lincurve(0, 2.5 * sens, 0.3, 10,-3);
-	var subFreq =  m.gyroYFiltered.lincurve(-1.0,1.0, 28.midicps, 32.midicps,0);
+	var subFreq =  m.gyroYFiltered.lincurve(-1.0,1.0, 40.midicps, 44.midicps,0);
 
 	if(amp < 0.03, {amp = 0});
 	if(subAmp < 0.01, {subAmp = 0});

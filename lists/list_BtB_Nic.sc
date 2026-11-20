@@ -5,26 +5,25 @@
 		// shhhh
 		"nicMouth1",
 		"nicMouth2",
-		"nicMouthPerc",
 		"nicPrrr2",
 
 		// circling
-		"multiBeat4",
-		"multiBeat4.1",
-		"multiBeat4.2",
 		"multiBeat4.3",
 
 		// shadows
 		"pluck1",
-		"gendy3",
 
 		"multiBeat5",
 		"bells",
-		"metal1",
+		"metal3",
+		"metal4",
 		"celeste1",
 
 		// feet feet
 		"waves",
+		"nicMouth1",
+		"nicMouthPerc",
+
 		"violin2",
 		"multiBeatSynth1",
 		"multiBeatSynth2",
@@ -36,6 +35,8 @@
 
 		// song
 		"nicSynth2",
+		"nicSynth3",
+		"melSynth3",
 		"nicVoice3",
 		
 		// stillness
