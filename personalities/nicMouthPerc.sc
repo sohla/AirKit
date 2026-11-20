@@ -5,7 +5,7 @@ var lanes;
 
 var folder = PathName("~/Downloads/nicSamples/mwp");
 
-var beat = 0.04;
+var beat = 0.085;
 var pool = [0, 3, 5, 7, 10];
 
 var laneSplits = [55, 72];
@@ -189,7 +189,7 @@ SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, st
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var level = m.accelMassFiltered.lincurve(0, 2.5 * sens, 0, 3, 7).round.asInteger.clip(0, 3);
-	var amp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -25, -6, -1);
+	var amp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -25, 3, -1);
 
 	if(amp < 23.neg, { amp = 110.neg });
 

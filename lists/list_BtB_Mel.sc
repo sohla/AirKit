@@ -20,7 +20,8 @@
 		// feet feet
 		"waves2",
 		"violin1",
-		"celeste1",
+		"melbb1",
+		"melbb2",
 
 
 		// conversation
