@@ -121,7 +121,7 @@ SynthDef(\gendyDrone, { |out = 0, amp = 0.0, gate = 1,
 		).play;
 	};
 
-	synth = Synth(\gendyDrone, [\gate, 1, \amp, 0, \freq, 31.midicps]);
+	synth = Synth(\gendyDrone, [\gate, 1, \amp, 0, \freq, 37.midicps]);
 	m.com.bgColor = Color.white;
 };
 

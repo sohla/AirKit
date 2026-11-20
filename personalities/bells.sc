@@ -188,7 +188,7 @@ SynthDef(\bambooComplex, {
 	var att = m.accelMassFiltered.lincurve(0, 2 * sens,0.1,0.001,-8);
 	var amp = m.accelMassFiltered.linexp(0, 2 * sens,0.08,1);
 	var noteIndex = m.accelMassFiltered.linlin(0, 2 * sens,0.0001,notes.size).floor;
-	var space = m.accelMassFiltered.lincurve(0, 0.6 * sens,0.3,0.03,-1);
+	var space = m.accelMassFiltered.lincurve(0, 0.6 * sens,0.3,0.05,-1);
 	if(noteIndex>=notes.size,{noteIndex=notes.size-1});
 	if(move > 0.02, {
 		if(TempoClock.beats > (lastTime + space),{
@@ -224,15 +224,15 @@ SynthDef(\bambooComplex, {
 				shape: \shards,
 				startSize: 200 + (50 * amp),
 				endSize: 10 + (50 * amp),
-				startWidth: 3.3,
-				endWidth: 30.3,
+				startWidth: 1.3,
+				endWidth: 10.3,
 				sx: rrand(-0.02, 0.02),
 				sy: 0+ rrand(-0.01,0.01),
 				ex: rrand(-0.1, 0.1),
 				ey: rrand(-0.1, 0.1),
 				yEnv: Env([0, 1], [1], \sin),
-				startColor: Color.hsv(noteIndex / notes.size, 0.45, 1.0, 1),
-				endColor: Color.hsv(noteIndex / notes.size, 0.9, 0.6, 0.0),
+				startColor: Color.black,//Color.hsv(noteIndex / notes.size, 0.45, 1.0, 1),
+				endColor: Color.black,//Color.hsv(noteIndex / notes.size, 0.9, 0.6, 0.0),
 				rotation: 2pi.rand,
 				duration: m.accelMassFiltered.lincurve(0, 5 * sens,1.0,3,-1),
 				modulation: (

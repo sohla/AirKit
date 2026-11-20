@@ -13,7 +13,7 @@
 		// shadows
 		"pluck1",
 
-		"multiBeat5",
+		// "multiBeat5",
 		"bells",
 		"metal3",
 		"metal4",
@@ -34,10 +34,9 @@
 		"miniDroplet",
 
 		// song
-		"nicSynth2",
 		"nicSynth3",
-		"melSynth3",
 		"nicVoice3",
+		"melSynth3",
 		
 		// stillness
 		"dulcimer3",
