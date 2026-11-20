@@ -6,6 +6,7 @@
 	user: "Mel",
 
 	apAddr: "192.168.200.1",
+	ssid: "AirKit2_Network",
 	macs: ["d8:3a:dd:ca:e3:3e","d8:3a:dd:ca:e3:3f"],
 	platform: \linux,
 

@@ -4,7 +4,10 @@ var lastTime=0;
 // var notes = 10 + [0,8,3,9,5,6,14,2,8,4,9,11,3,6,2] * 3;
 var notes = [0,2,9,5,7] + 82 - 24;
 // var roots = [0,0,9,8,8].dupEach(24);
-var roots = [0,0,9,8,8];
+var roots = [0,7,2,-2];
+// var roots = [7];
+// var roots = [0];
+
 // var notes = [0,1,4,5,7,8,11,12,14] + 24;
 // var roots = [0].dupEach(18);
 var currentNote = notes[0];
@@ -191,7 +194,7 @@ SynthDef(\bambooComplex, {
 	var att = m.accelMassFiltered.lincurve(0, 2 * sens,0.1,0.001,-8);
 	var amp = m.accelMassFiltered.linexp(0, 2 * sens,0.08,1);
 	var noteIndex = m.accelMassFiltered.linlin(0, 2 * sens,0.0001,notes.size).floor;
-	var space = m.accelMassFiltered.lincurve(0, 0.6 * sens,0.3,0.03,-1);
+	var space = m.accelMassFiltered.lincurve(0, 0.9 * sens,0.7,0.08,-1);
 	var quietThresh = 0.02;
 	var quietSecs = 0.75;
 	var now = Main.elapsedTime;

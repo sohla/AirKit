@@ -12,21 +12,13 @@
 
 		// shadows
 		"pluck1",
-
-		// "multiBeat5",
 		"bells",
-		"metal3",
-		"metal4",
-		"celeste1",
+		"bells2",
 
 		// feet feet
 		"waves",
-		"nicMouth1",
 		"nicMouthPerc",
-
 		"violin2",
-		"multiBeatSynth1",
-		"multiBeatSynth2",
 
 
 		// conversation

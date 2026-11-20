@@ -191,11 +191,11 @@ SynthDef(\nicSynth3Verb, {
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var move = m.accelMassFiltered.lincurve(0, 1.5 * sens, 1, noteSets.wrapAt(m.com.scaleIdx ? 0).size, 1);
-	var amp = m.accelMassFiltered.lincurve(0, 1.5 * sens, -60, -6, -1);
+	var amp = m.accelMassFiltered.lincurve(0, 1.5 * sens, -60, -16, -1);
 	var step = m.gyroXFiltered.fold(-0.5,0.5).linlin(-0.5, 0.5, 0, octaves.size-1).floor;
 	var rel = m.accelMassFiltered.lincurve(0, 3 * sens, 3.1, 0.4, -2);
 
-	var start = m.accelMassFiltered.lincurve(0, 2 * sens, 0.0, 0.1,0);
+	var start = m.accelMassFiltered.lincurve(0, 0.5 * sens, 0.0, 0.03,0);
 	var dur = m.accelMassFiltered.lincurve(0, 3 * sens, 0.6, 0.1,-2);
 
 	if(amp < -58, { amp = -90; });

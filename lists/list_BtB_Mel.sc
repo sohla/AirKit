@@ -3,8 +3,8 @@
 		"silence",
 
 		// circus
-		"piano2",
-		"miniMoog",
+		// "piano2",
+		// "miniMoog",
 
 
 		// shhh
@@ -18,9 +18,8 @@
 
 		// shadows
 		"gendy1",
-		"gendy3",
-		"bells",
-		"bells2",
+		"gendy3.1",
+		"metal4",
 
 		// feet feet
 		"waves2",

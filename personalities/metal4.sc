@@ -253,10 +253,10 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 			// \amp, 0.1,
 			\pan, Pwhite(-0.6, 0.6),
 			\model, 1,//Prand([0, 1, 2,3,4,5,6], inf),
-			\strikePos, Pwhite(0.1, 0.9),
-			\resonance, Pwhite(0.1, 0.9),
-			\bambooMoisture, Pwhite(0.1,0.9),
-			\rel, 1.9,
+			\strikePos, 0.1,//Pwhite(0.1, 0.9),
+			\resonance,0.9,//Pwhite(0.1, 0.9),
+			\bambooMoisture, 0.9,//Pwhite(0.1,0.9),
+			\rel, 1.2,
 	        \func, Pfunc({|e| ~onEvent.(e)}),
 			\args, #[],
 
@@ -288,7 +288,7 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 	);
 
 	Pdef(m.ptn).play(quant:0.1);
-	synth = Synth(\sheet2, [\frq, 10.midicps, \gate, 1]);
+	synth = Synth(\sheet2, [\frq, 12.midicps, \gate, 1]);
 	m.com.bgColor = Color.white;
 };
 
@@ -302,8 +302,8 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 //------------------------------------------------------------
 ~onEvent = {|e|
 	m.com.dur = e.dur;
-
-  synth.set(\pchx,4 + m.com.root + 14 - 24);
+	// other notes than m.com.root ??
+  	synth.set(\pchx,4 + 14 - 24 + 2);
 };
 
 //------------------------------------------------------------
@@ -313,7 +313,7 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var move = m.accelMassFiltered.linlin(0, 0.8 * sens,0,1);
 	var oct = m.accelMassFiltered.linlin(0, 6 * sens,2,5).floor;
-	var dur = m.accelMassFiltered.lincurve(0, 2 * sens,0.3,0.05,-3);
+	var dur = m.accelMassFiltered.lincurve(0, 2 * sens,0.3,0.08,-3);
 	
   	var a = m.accelMass * 0.5;
 	var f = 50 + (m.accelMassFiltered * 100);

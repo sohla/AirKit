@@ -50,3 +50,27 @@ airkit1 and airkit2 pairs above.
 **Audio interface:** `start_airkit.sh` runs `amixer -c 2 set Speaker 90%`, so
 each kit expects a sound card at index 2 with a `Speaker` control. Which device
 is it, and is it the same on every kit?
+
+## Open: airkit2 (Mel) — Mac locked out of the AP (2026-11-20)
+
+The sticks join `AirKit2_Network`, but a Mac cannot. Entering `AirKit2_Network`,
+the passphrase `utils/network/README.md` records, just brings the "requires a WPA2
+password" prompt back. The Mac had no saved entry for the network, so it was not
+a stale Keychain password. The likely cause is that the passphrase on the Pi is not
+the SSID. This table does not record passphrases, and nothing else in the repo
+records airkit2's.
+
+The same day, on the lab cable, eth0 had only a link-local address
+(`169.254.223.120`, `pi.local`, MAC `…e3:3e`). It got no DHCP from the
+`192.168.50.x` router, so the Mac could not reach it there either.
+
+The AP's settings in the README (WPA2-PSK, CCMP, PMF off, b/g, channel 11) are all
+ones a Mac accepts. `machines/airkit2.scd` now carries `ssid: "AirKit2_Network"`.
+Before that, provisioning would have created `AirKit2Network`.
+
+**Next:** get onto the Pi over eth0. Either give the Mac a link-local alias
+(`sudo ifconfig en10 alias 169.254.1.1 netmask 255.255.0.0`), or replug it on a
+network with DHCP. Then read the real passphrase:
+`sudo nmcli -s -g 802-11-wireless-security.psk connection show AirKit2_Network`.
+Watch a Mac join attempt with `utils/network/tools/akwifi.sh timeline`. Record
+the passphrase in `ansible/vault.yml` and correct the README.

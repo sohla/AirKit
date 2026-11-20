@@ -154,7 +154,7 @@ SynthDef(\multiBeatVerb, {|in=0, out=0, mix=0.3, room=0.8, damp=0.4, gate=1, rel
 
 	var ffreq = m.accelMassFiltered.lincurve(0, 2.0 * sens, 200, 1200, -2);
 	var rel = m.accelMassFiltered.lincurve(0, 2.5 * sens, 3.1,0.1, 1);
-	var droneAmp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -32, -5, -1);
+	var droneAmp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -32, -10, -1);
 	var droneFfreq = m.accelMassFiltered.lincurve(0, 1.0 * sens, 500, 3000, 2);
 	var orbitSize = 800;
 	var orbitSpeed = 0.1;
@@ -169,7 +169,7 @@ SynthDef(\multiBeatVerb, {|in=0, out=0, mix=0.3, room=0.8, damp=0.4, gate=1, rel
 	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	Pdef(m.ptn).set(\ffreq, ffreq);
 	Pdef(m.ptn).set(\attack, 0.0003);
-	Pdef(m.ptn).set(\release, rel * 0.5);
+	Pdef(m.ptn).set(\release, rel);
 	Pdef(m.ptn).set(\orbitSize, orbitSize);
 	Pdef(m.ptn).set(\orbitSpeed, orbitSpeed);
 

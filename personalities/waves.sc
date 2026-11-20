@@ -74,39 +74,39 @@ SynthDef(\waves22, { |out=0, gate=1, amp = 0.0, lag=1,ff=200|
 		Color(0.2, 0.5, 0.6), // teal blue
 	].choose;
 
-	var ev = (
-		type: \customVisualEvent,
-		amp: 0,
-		dur: 0.01,
-		viewID: d.port,
-		shape: \line,
-		fill: true,
-		rotate: 0,
-		startSize: squareSize * 1,
-		endSize: squareSize * 1,
-		duration: duration,
-		startColor: Color.hsv(0.5 + (sin(time * 0.2) * 0.5),1,0),
-		endColor: oceanColor.lighten(0.2).alpha_(1.0),
-		startWidth: 3 * amp,
-		endWidth: 0,
-		sx: 0,//xPos * 0.1,
-		sy: (baseY * 0.5),//baseY * 0.1, // Start at base y position
-		ex: 0,//xPos, // Stay in same x position
-		ey: 1,//baseY.neg, // Stay in same y, oscillation via envelope
-		yEnv: yEnv, // Vertical oscillation
-		rotation: sin(time) * 0.003,
-      modulation: (
-        type: \normal,
-        freq: rrand(0.04, 0.2) * 10,
-        amp: 8,
-        harmonics: rrand(1, 10)
-    ),
-	);
+// 	var ev = (
+// 		type: \customVisualEvent,
+// 		amp: 0,
+// 		dur: 0.01,
+// 		viewID: d.port,
+// 		shape: \line,
+// 		fill: true,
+// 		rotate: 0,
+// 		startSize: squareSize * 1,
+// 		endSize: squareSize * 1,
+// 		duration: duration,
+// 		startColor: Color.hsv(0.5 + (sin(time * 0.2) * 0.5),1,0),
+// 		endColor: oceanColor.lighten(0.2).alpha_(1.0),
+// 		startWidth: 3 * amp,
+// 		endWidth: 0,
+// 		sx: 0,//xPos * 0.1,
+// 		sy: (baseY * 0.5),//baseY * 0.1, // Start at base y position
+// 		ex: 0,//xPos, // Stay in same x position
+// 		ey: 1,//baseY.neg, // Stay in same y, oscillation via envelope
+// 		yEnv: yEnv, // Vertical oscillation
+// 		rotation: sin(time) * 0.003,
+//       modulation: (
+//         type: \normal,
+//         freq: rrand(0.04, 0.2) * 10,
+//         amp: 8,
+//         harmonics: rrand(1, 10)
+//     ),
+// 	);
 
-  if((TempoClock.beats > (lastTime + 0.05)) and: { (amp * vol) > -80.dbamp },{
-    lastTime = TempoClock.beats;
-    ev.play;
-  });
+//   if((TempoClock.beats > (lastTime + 0.05)) and: { (amp * vol) > -80.dbamp },{
+//     lastTime = TempoClock.beats;
+//     ev.play;
+//   });
 
 
   synth.set(\amp, amp * vol);
