@@ -2,6 +2,11 @@
 	[
 		"silence",
 
+		// circus
+		"piano2",
+		"miniMoog",
+
+
 		// shhh
 		"mel4",
 		"mel6",
