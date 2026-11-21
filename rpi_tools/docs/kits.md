@@ -51,26 +51,57 @@ airkit1 and airkit2 pairs above.
 each kit expects a sound card at index 2 with a `Speaker` control. Which device
 is it, and is it the same on every kit?
 
-## Open: airkit2 (Mel) — Mac locked out of the AP (2026-11-20)
+## eth0 must be `auto`, never `link-local` (airkit2, fixed 2026-11-21)
 
-The sticks join `AirKit2_Network`, but a Mac cannot. Entering `AirKit2_Network`,
-the passphrase `utils/network/README.md` records, just brings the "requires a WPA2
-password" prompt back. The Mac had no saved entry for the network, so it was not
-a stale Keychain password. The likely cause is that the passphrase on the Pi is not
-the SSID. This table does not record passphrases, and nothing else in the repo
-records airkit2's.
+**Rule:** on the lab desk (Mac – switch – router/AP – Pi), a kit's eth0 profile
+(`Wired connection 1`) must have `ipv4.method auto`. With `link-local` it never
+asks the router for an address. It sits on `169.254.x` (`pi.local`), and the Mac
+cannot reach it on `192.168.50.x`.
 
-The same day, on the lab cable, eth0 had only a link-local address
-(`169.254.223.120`, `pi.local`, MAC `…e3:3e`). It got no DHCP from the
-`192.168.50.x` router, so the Mac could not reach it there either.
+`link-local` is only a workaround for a Pi cabled **straight to the Mac**, where
+nothing hands out addresses and `auto` makes eth0 flap. If you turn it on for
+that, turn it off again before the kit goes back on the desk.
 
-The AP's settings in the README (WPA2-PSK, CCMP, PMF off, b/g, channel 11) are all
-ones a Mac accepts. `machines/airkit2.scd` now carries `ssid: "AirKit2_Network"`.
-Before that, provisioning would have created `AirKit2Network`.
+**What happened.** On 2026-11-13, while debugging airkit2's new USB Wi-Fi dongle
+on a direct cable, eth0 was set to `link-local` to stop the flapping. It was
+never reverted. On 20–21 Nov, on the lab desk, eth0 got no DHCP and SSH could
+not reach it. That looked like a router or Mac problem, but it was the profile.
 
-**Next:** get onto the Pi over eth0. Either give the Mac a link-local alias
-(`sudo ifconfig en10 alias 169.254.1.1 netmask 255.255.0.0`), or replug it on a
-network with DHCP. Then read the real passphrase:
-`sudo nmcli -s -g 802-11-wireless-security.psk connection show AirKit2_Network`.
-Watch a Mac join attempt with `utils/network/tools/akwifi.sh timeline`. Record
-the passphrase in `ansible/vault.yml` and correct the README.
+**Check. On the Pi:**
+`nmcli -g ipv4.method connection show "Wired connection 1"` should print `auto`.
+
+**Fix. On the Pi** (the SSH session drops; the kit comes back on `192.168.50.x`):
+`sudo nmcli connection modify "Wired connection 1" ipv4.method auto && sudo nmcli connection up "Wired connection 1"`
+
+**Reaching a kit stuck on `169.254.x`.** On the Mac:
+`sudo ifconfig en10 alias 169.254.1.1 netmask 255.255.0.0`, then
+`ssh -b 169.254.1.1 pi@169.254.223.120`. The `-b` matters: without it the Mac
+sends from `192.168.50.53`, which the Pi cannot reply to, so ping and SSH just
+time out. Remove the alias afterwards. On the Mac:
+`sudo ifconfig en10 -alias 169.254.1.1`.
+
+## airkit2 (Mel) — Mac locked out of the AP (2026-11-20, did not recur)
+
+On 2026-11-20 a Mac could not join `AirKit2_Network` with the passphrase
+`utils/network/README.md` records, while the sticks could. On 2026-11-21 the same
+passphrase worked from a Mac. The cause is unknown, and the passphrase on the Pi
+was not wrong. If it recurs, watch a join attempt with
+`utils/network/tools/akwifi.sh timeline`.
+
+On 2026-11-21 it still failed from Steph's Mac (two tries, the prompt came back),
+while another Mac joined. So the fault is this Mac's join, not the AP:
+
+- Steph's Mac: macOS 27.0 (`26A428`), Broadcom Wi-Fi 6E card (`0x14E4, 0x4388`),
+  private Wi-Fi address on.
+- The AP: 2.4 GHz b/g only, WPA2-PSK, PMF off, channel 11 (crowded), on the
+  RTL88x2BU dongle with an out-of-tree driver.
+- Theory, unconfirmed: macOS 27 refuses the handshake with this AP, and shows a
+  failed handshake as "requires a password".
+
+To test another day:
+1. Find the other Mac's macOS version. Older than 27 points at the new OS, and
+   the same version points at this Mac's hardware or settings.
+2. On the Mac: turn *Private Wi-Fi Address* off and try again.
+3. To see the actual reason: reach the Pi over eth0 (on the Mac:
+   `sudo ifconfig en10 alias 169.254.1.1 netmask 255.255.0.0`). Then, on the Pi,
+   run `utils/network/tools/akwifi.sh timeline` while the Mac tries to join.
