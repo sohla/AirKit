@@ -6,7 +6,7 @@ var patternVerb, droneVerb;
 
 var droneNote = 60 - 12;   // multiBeatSynth1's pool note + its offsets, at root 0
 var divs = [1, 2, 3, 4, 8];
-var pool = [0, 4, 7, 11, 12, 11, 7, 2] - 12;
+var pool = [0, 4, 7, 11, 12, 11, 7, 2] - 12 - 12;
 
 var divPat  = Pswitch(divs.collect({ |n| Pn(n, n) }),              Pkey(\divIdx));
 var stepPat = Pswitch(divs.collect({ |n| Pseries(0, 1, n) }),      Pkey(\divIdx));

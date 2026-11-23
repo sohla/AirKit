@@ -36,11 +36,11 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 SynthDef(\drumkit3, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
-    attack=0.01, decay=0.1, sustain=0.8, release=0.3, gate=1,cutoff=40, rq=0.1, octave = 0|
+    attack=0.01, decay=0.1, sustain=0.8, release=0.3, gate=1,cutoff=40, rq=0.1, poff=5|
 	var lr = rate * BufRateScale.kr(bufnum);
 	var cd = BufDur.kr(bufnum);
   var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
-	var sig = PlayBuf.ar(2, bufnum, rate: [lr, lr * 1] * (octave * 12).midiratio, startPos: start * BufFrames.kr(bufnum), loop: 0) * 10;
+	var sig = PlayBuf.ar(2, bufnum, rate: [lr, poff.midiratio], startPos: start * BufFrames.kr(bufnum), loop: 0) * 10;
     sig = RHPF.ar(sig, cutoff, rq);
 		sig = Compander.ar(sig, sig,
         thresh: -15.dbamp,
@@ -50,7 +50,7 @@ SynthDef(\drumkit3, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
         relaxTime:  0.1
 	);
 	sig = Mix.ar([sig]);
-    sig = Balance2.ar(sig[0],sig[1], pan);
+    // sig = Balance2.ar(sig[0],sig[1], pan);
     Out.ar(out, ((0)!0 ++ sig) * amp * env);
 }).add;
 //--------------------------------------
@@ -88,13 +88,14 @@ SynthDef(\drumkit3, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 				if(bi >= (~buffers.size-1),{bi=0});
 				~buffers[bi];
 			},
-			\octave, Pseq([0,0.16].stutter(8), inf),
-			\start, 0,
+			\start, 0.01,
 			\note, Pseq([0].stutter(4), inf),
+			
+			\poff, Pseq([0,7,5,4,2].stutter(8), inf),
 			\dur, dur,
 			\pan, Pwhite(-0.4,0.4),
 			\attack, 0.02,
-      		\release, 1.3,
+      		\release, 0.1,
       		\cnt, Pseries(0,1, inf),
       		\func, Pfunc({|e| ~onEvent.(e)}),
 			// \vis, Pfunc({|e| 
@@ -139,13 +140,14 @@ SynthDef(\drumkit3, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var ud = m.gyroYFiltered.clip(-0.5,0.5).lincurve(-0.5,0.5,1,4,1).round;
-	var rate = m.gyroYFiltered.clip(-0.5,0.5).lincurve(-0.5,0.5,-1,1,-1).floor;
+	// var ud = m.gyroYFiltered.clip(-0.5,0.5).lincurve(-0.5,0.5,1,4,1).round;
+	var ud = m.accelMassFiltered.lincurve(0, 3.5 * sens,0,3,1).round;
+	var rate = m.gyroYFiltered.clip(-0.5,0.5).lincurve(-0.5,0.5,1,-1,-1).floor;
 	var time = TempoClock.beats;
 
 	Pdef(m.ptn).set(\subdiv,2.pow(ud));
-	Pdef(m.ptn).set(\amp,0.4 * vol);
-	Pdef(m.ptn).set(\rate,2.pow(rate));
+	Pdef(m.ptn).set(\amp, 0.4 * vol);
+	Pdef(m.ptn).set(\rate, 2.pow(rate));
 
 	if(m.accelMassFiltered > (0.1 * sens),{
 		if( Pdef(m.ptn).isPlaying.not,{

@@ -40,21 +40,18 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, 
 	var mas;
 	var len = BufDur.kr(buffer) / div;
 	var lfo = LFSaw.kr( (1.0/len) * speed ,1,0.5,0.5);
-	// my = MouseY.kr(0.01,1,1.0);//splay
-
 
 	sp = Splay.arFill(4,
-		{ |i| Warp1.ar(1, buffer, lfo.linlin(0,1,0.05,0.95), rate,splay, envbuf, 8, 0.3, 4)  },
+		{ |i| Warp1.ar(1, buffer, lfo.linlin(0,1,0.05,0.2), rate * (2.pow(i-2)) * 1.007,splay, envbuf, 8, 0.9, 4)  },
 			1,
 			1,
 			0
 	) ;
 
-	mas = HPF.ar(sp,245);
+	mas = HPF.ar(sp,45);
+	mas = MidEQ.ar(mas, 3000, 0.8);
 
-  mas = FreeVerb.ar(mas,0.5);
-
-	Out.ar(out,Pan2.ar(mas[0],pan.lag(1))* amp.lag(1));
+	Out.ar(out,Pan2.ar(Mix.ar(mas),pan.lag(1))* amp.lagud(0.7,0.9));
 }).add;
 //------------------------------------------------------------
 ~init = ~init <> {|d|
@@ -199,13 +196,13 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, 
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var amp = m.accelMass.linlin(0, 1 * sens,0.00001,1);
-	var speed= m.accelMassFiltered.lincurve(0.1, 1 * sens,0.001,0.1,-2);
+	var speed= m.accelMassFiltered.lincurve(0, 2 * sens,0.001,0.1,-2);
 	var rate = m.gyroYFiltered.linlin(-1,1,1,2).asInteger;
 	var pan = m.gyroZFiltered.linlin(-1,1,-1,1);
 
 	if(amp < 0.01, {amp = 0});
 
-	synth.set(\rate, (rate/2) + 0.158);
+	synth.set(\rate, (rate/4) + 0.158 + 0.34);
 	synth.set(\speed, speed);
 	synth.set(\amp, amp * 3 * vol);
 	synth.set(\pan, pan);

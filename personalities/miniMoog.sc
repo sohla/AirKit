@@ -55,7 +55,8 @@ SynthDef(\miniMoog, {
 	Pdef(m.ptn,
 		Pbind(
 			\instrument, \miniMoog,
-            \note, Pseq([0,5,2,9,4], inf),
+            // \note, Pseq([0,4,2,9,4], inf),
+			\note, Pseq([0,4,2,9,7], inf),
             \octave, Pseq([1,2,3].stutter(2) + 2, inf),
             \root, Pseq([0,4,-4,2,8].stutter(60), inf),
             // \amp, 0.3,

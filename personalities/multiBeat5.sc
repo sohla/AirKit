@@ -2,13 +2,14 @@ var m = ~model;
 var group;
 var samplesLib;
 var phase = 0;
+// var dur = 0.085;
 
-var beat = 0.5;
+var beat = 0.085 * 8;
 // var divs = [1,2,4,8];
-var divs = [3,5,6];
+var divs = [2];
 // var pool = [0, 2, 7, 12, 14, 11, 7, 4] + 12;
 // var pool = [0,1,4,5,8,11,13,16] + 12;
-var pool = [0,1,4,5,8,11,13,16] + 12;
+var pool = [0,1,4,5,8,11,13,16] - 12;
 
 var eventTypeName = (\customEvent_ ++ m.ptn).asSymbol;
 
@@ -124,6 +125,7 @@ SynthDef(\multiBeat5, {|bufnum=0, out=0, amp=1, rate=1, ptch=1, start=0, pan=0, 
 			\note, Pseq(pool, inf),//Pswitch(divs.collect({ |n| Pseq(pool.keep(n), 1) }), Pkey(\divIdx)),
 			\dur,  Pkey(\div).reciprocal * beat,
 			\out, Pwhite(0, 3).asInteger,
+			\latency,0.1,
 			// \octave, Pseq([3,4,5].stutter(4), inf),
 			\legato, 0.8,
 			// \attack, 0.004,

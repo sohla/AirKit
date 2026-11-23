@@ -18,7 +18,7 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
     var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, timeScale: 1,doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum, rate: [lr, lr * 1.013], startPos: start * BufFrames.kr(bufnum), loop: 0);
     sig = RLPF.ar(sig, cutoff, rq);
-	sig = HPF.ar(sig, 50, 0.98);
+	sig = HPF.ar(sig, 50 + (rate * 200), 0.98);
     Out.ar(out, Mix(sig.flat) * amp * env);
 }).add;
 
@@ -54,11 +54,11 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 					\bufnum, buf,
 					// \octave, Pxrand([3], inf),
 					// \note, Pxrand([33,35,37], inf),
-					\note, Pxrand([33,35,40,45].stutter(4) + 10, inf),
+					\note, 21,//Pxrand([33,35,40,45].stutter(4) + 10, inf),
 					\decay, 0.2,
 					\sustain,0.1,
-					\release,3.2,
-					\rate, 0.25,
+					\release,1.2,
+					// \rate, 0.994,
 					\out, Pwhite(0,3).asInteger,
 					// \dur, Pseq([0.25], inf),
 					\args, #[],
@@ -117,18 +117,20 @@ SynthDef(\stereoSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, fr
 
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var dur = m.accelMassFiltered.linlin(0, 2 * sens,0.5,0.03);
+	var dur = m.accelMassFiltered.linlin(0, 2 * sens,0.5,0.1);
 	var start = m.gyroXFiltered.lincurve(0.0,1.0,0.02,0.4,-2);
 	var amp = m.accelMassFiltered.lincurve(0, 2.0 * sens,0,1,-2);
 	var rate= m.accelMass.linlin(0, 2 * sens,0,2);
-	var oct = (d.sensors.gyroEvent.y / pi.half).lincurve(-1.0,1.0,3,6,3).floor;
+	var oct = m.gyroYFiltered.clip(-0.5,0.5).lincurve(-0.5,0.5,5,3,3).floor;
 
 	if(amp < 0.03, {amp = 0});
 
 	Pdef(m.ptn).set(\viewID, d.port);
-	Pdef(m.ptn).set(\octave, 0 + oct);
+	Pdef(m.ptn).set(\octave, oct);
 	Pdef(m.ptn).set(\dur, dur);
-	Pdef(m.ptn).set(\amp, amp * 12 * vol);
+	Pdef(m.ptn).set(\rate, 0.994 - 0.33);
+
+	Pdef(m.ptn).set(\amp, amp * 3 * vol);
  	Pdef(m.ptn).set(\start, start.linlin(0,1,0.02,0.09));
 
 };

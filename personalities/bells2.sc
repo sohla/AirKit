@@ -4,7 +4,8 @@ var lastTime=0;
 // var notes = 10 + [0,8,3,9,5,6,14,2,8,4,9,11,3,6,2] * 3;
 var notes = [0,2,9,5,7] + 82 - 24;
 // var roots = [0,0,9,8,8].dupEach(24);
-var roots = [0,7,2,-2];
+// var roots = [0,7,2,-2];
+var roots = [0,2,-2];
 // var roots = [7];
 // var roots = [0];
 

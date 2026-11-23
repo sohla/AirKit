@@ -15,7 +15,7 @@ SynthDef(\thunderSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 	var cd = BufDur.kr(bufnum);
     var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, timeScale: cd * 1, doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum, rate: lr, startPos: start * BufFrames.kr(bufnum), loop: 0);
-    sig = HPF.ar(sig, cutoff, rq);
+    sig = LPF.ar(sig, cutoff, rq);
     sig = Pan2.ar(sig, pan, amp * env);
     Out.ar(out, sig);
 }).add;
@@ -104,18 +104,18 @@ SynthDef(\thunderSampler, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0,
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var move = m.accelMassFiltered.linlin(0, 2.5 * sens,0,1);
 	var amp = m.accelMassFiltered.lincurve(0, 2.5 * sens,0.05,0.9,-2);
-	var cutoff = m.accelMassFiltered.lincurve(0, 2.5 * sens,200,50,-2);
+	var cutoff = m.accelMassFiltered.lincurve(0, 2.5 * sens, 50, 15000,-2);
 
 	if((move > 0.1) and: { buffers.notNil }, {
 		if(TempoClock.beats > (lastTime + 0.25),{
 			var x = rrand(-0.8, 0.8);
 			lastTime = TempoClock.beats;
 			synth = Synth(\thunderSampler, [
-				\rate, rrand(0.8, 1.3),
+				\rate, [0.7,0.8,0.9,1.0,1.1,1.2,1.3].choose,//rrand(0.8, 1.3),
 				\gate, 1,
 				\amp, amp * vol,
         		\bufnum, buffers[index],
-				\start, rrand(0.0, 0.1),
+				\start, rrand(0.0, 0.15),
 				\cutoff, cutoff
 			], group);
 			synth.server.sendBundle(0.3,[\n_set, synth.nodeID, \gate, 0]);

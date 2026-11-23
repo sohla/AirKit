@@ -1,12 +1,14 @@
 var m = ~model;
 var group;
+var fxBus;
+var plate;
 var samplesLib;
 var lanes;
 
 var folder = PathName("~/Downloads/nicSamples/mwp");
 
 var beat = 0.085;
-var pool = [0, 3, 5, 7, 10];
+var pool = [0];
 
 var laneSplits = [55, 72];
 var laneY = [0.5, 0, -0.5];
@@ -14,10 +16,10 @@ var lanePan = [0, -0.3, 0.3];
 
 var grids = [
 	[
-		[1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
 		[1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
-		[1,0,0,0.5, 0,0,1,0, 1,0,0,0, 0,0,0.5,0],
-		[1,0,0.5,1, 0,0,1,0, 1,0,0.5,0, 0,1,1,0]
+		[1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
+		[1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
+		[1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
 	],
 	[
 		[0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
@@ -27,9 +29,9 @@ var grids = [
 	],
 	[
 		[0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
-		[0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0],
-		[1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0.5],
-		[1,0.5,1,0.5, 1,0.5,1,0.5, 1,0.5,1,0.5, 1,0.5,1,1]
+		[0,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,0],
+		[0,0,1,0, 0,0,0,0, 0,0,1,0, 0,0,0,0],
+		[0,0.5,1,0, 0,0,0,0, 0,0,1,0, 0,0,0,0],
 	]
 ];
 
@@ -57,12 +59,26 @@ m.gyroFilteredDecay = 0.7;
 
 //------------------------------------------------------------
 SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, start = 0.03, pan = 0,
-	attack = 0.002, decay=0.02, sustain = 0.1, release = 0.0003, gate=1|
+	attack = 0.002, decay=0.02, sustain = 0.1, release = 0.0003, gate=1, fx = 0, send = 0|
 	// var env = EnvGen.kr(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction: 2);////~~!!!!
   	var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, doneAction: 2);
-	var sig = PlayBuf.ar(2, bufnum, rate * BufRateScale.kr(bufnum), startPos: start * BufFrames.kr(bufnum));
-	sig = HPF.ar(sig, 90);
-	Out.ar(out, Balance2.ar(sig[0], sig[1], pan, amp * vel * env));
+	var sig = PlayBuf.ar(2, bufnum, rate * BufRateScale.kr(bufnum) * [1,1.0], startPos: start * BufFrames.kr(bufnum));
+	sig = HPF.ar(sig, 30);
+
+	// sig = RHPF.ar(sig, 6400.clip(20, 8000), 0.02, 1) + sig	;
+
+	sig = sig * amp * vel * env;
+	Out.ar(out, sig);
+	Out.ar(fx, sig * send);
+}).add;
+
+SynthDef(\nicMouthPercPlate, { |in = 0, out = 0, predelay = 0.01, room = 0.7, damp = 0.3, lowcut = 30, hicut = 1000, amp = 1, gate = 1|
+	var env = EnvGen.kr(Env.asr(0.01, 1, 0.5), gate, doneAction: 2);
+	var wet = DelayN.ar(In.ar(in, 2), 0.2, predelay);
+	wet = 4.collect({ |i| AllpassN.ar(_, 0.05, [0.0047, 0.0053] * (i + 1) * 1.3, 0.08) }).inject(wet, { |sig, ap| ap.(sig) });
+	wet = FreeVerb2.ar(wet[0], wet[1], 1, room, damp);
+	wet = LPF.ar(HPF.ar(wet, lowcut), hicut);
+	Out.ar(out, wet * env * amp);
 }).add;
 
 //------------------------------------------------------------
@@ -101,6 +117,8 @@ SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, st
 	);
 
 	group = Group.new;
+	fxBus = Bus.audio(s, 2);
+	plate = Synth.tail(group, \nicMouthPercPlate, [\in, fxBus, \out, 0, \predelay, 0.003, \room, 0.1, \damp, 0.9]);
 
 	samplesLib = folder.entries.select({ |p| p.extension == "wav" and: { solo.isNil or: { p.fileNameWithoutExtension.asSymbol == solo } } }).collect({ |path|
 		var stem = path.fileNameWithoutExtension;
@@ -127,10 +145,13 @@ SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, st
 				\vel, Pfunc({ |e| var v = grids[lane][e[\level] ? 0][e[\step]]; if(v > 0, { v }, { Rest(0) }) }),
 				\smp, Pfunc({ laneSamples.choose }),
 				\bufnum, Pfunc({ |e| e[\smp].buffer }),
-				\rate, Pfunc({ |e| (snapToPool.(e[\smp].midiNote) - e[\smp].midiNote).midiratio }),
+				\rate, 1,//.(e[\smp].midiNote) - e[\smp].midiNote).midiratio }),
 				\pan, lanePan[lane],
-				\decay, 0.5,
+				// \fx, fxBus.index,
+				\send, 0.3,
+				\decay, 0.4,
 				\sustain, 0.1,
+				\release, 0.01,
 				\legato, 0.1,
 
 				\type, \customVisualEvent,
@@ -165,14 +186,23 @@ SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, st
 
 //------------------------------------------------------------
 ~deinit = ~deinit <> {
+	var verb = plate;
+	var bus = fxBus;
+	var g = group;
+	var tail = 2.0;
+	group = nil;
+	plate = nil;
+	fxBus = nil;
 	Pdef(m.ptn).remove;
 	fork {
-		if (group.notNil) {
-			s.bind { group.freeAll };
+		verb !? { verb.set(\gate, 0) };
+		tail.wait;
+		if (g.notNil) {
+			s.bind { g.freeAll };
 			s.sync;
-			group.free;
-			group = nil;
+			g.free;
 		};
+		bus !? { bus.free };
 		if (samplesLib.notNil) {
 			samplesLib.do({ |smp|
 				postf("buffer dealloc [%] \n", smp.buffer);
@@ -189,9 +219,9 @@ SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, st
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var level = m.accelMassFiltered.lincurve(0, 2.5 * sens, 0, 3, 7).round.asInteger.clip(0, 3);
-	var amp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -25, 3, -1);
+	var amp = m.accelMassFiltered.lincurve(0, 1.0 * sens, -35, -8, -1);
 
-	if(amp < 23.neg, { amp = 110.neg });
+	if(amp < 33.neg, { amp = 110.neg });
 
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\level, level);

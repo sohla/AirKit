@@ -30,8 +30,8 @@ var padBase = 84-12 + 4;
 // with wrapAt, so a pool of 3 played 4 long wraps back to the first note,
 // and a long pool played 3 long only ever sounds 3 of its notes per hit.
 var beat = 1;
-var subdiv = 8;
-var subdivLen = 8;
+var subdiv = 3;
+var subdivLen = 3;
 
 // Motion values owned by ~next. The OSCdef and the sequence routine read
 // them rather than computing anything themselves.
@@ -185,13 +185,14 @@ SynthDef(\padDelay11R, { |in = 0, out = 0, time = 0.375, decay = 3, mix = 0.4, g
 					var note, found, x, y;
 
 					if (group.notNil and: { samplesLib.size > 0 }, {
+						notes = notes.scramble;
 						note = baseNote + notes.wrapAt(idxAtHit + i);
 						found = findClosestSample.(note);
 
 						Synth(\marimbaVoice, [
 							\bufnum, found[\buffer],
 							\rate, found[\rate],
-							\amp, ampNow * vel * 0.7,
+							\amp, ampNow * vel * 0.6,
 							\attack, 0.02,
 							\sustain, 0.04,
 							\release, 1.2,
@@ -304,13 +305,13 @@ SynthDef(\padDelay11R, { |in = 0, out = 0, time = 0.375, decay = 3, mix = 0.4, g
 	var ud = m.gyroYFiltered.lincurve(-0.1, 0.1, 0, notes.size - 1, 0);
 	var amp = e.lincurve(0, 1 * sens, -15, -1, -1);
 
-	var padAmp = e.lincurve(0.0, 0.3 * sens, -40, -1, -4);
+	var padAmp = e.lincurve(0.0, 0.3 * sens, -40, -10, -4);
 	idxNow = ud.round.asInteger.clip(0, notes.size - 1);
 
 	// if (padAmp < 18.neg, { padAmp = 120.neg });
 
 	ampNow = amp.dbamp * vol * 1;
-	padAmpNow = padAmp.dbamp * vol * 8;
+	padAmpNow = padAmp.dbamp * vol * 2;
 	cutoffNow = m.rrateMassFiltered.linexp(0.0, 2.0 * sens, 250, 4500);
 	blendNow = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0, 1);
 

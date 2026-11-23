@@ -17,8 +17,9 @@
 
 		// feet feet
 		"waves",
-		"nicMouthPerc",
 		"violin2",
+		"nicMouthPerc",
+		"nicMouthPerc3",
 
 
 		// conversation
@@ -34,7 +35,7 @@
 		"dulcimer3",
 		"thunder",
 	
-		// Sonata No. 1
+		// Concerto No. 1
 		"temp_input11R",
 		"temp_input6R_3",
 		"hollowWood1R_2",

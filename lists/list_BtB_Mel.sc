@@ -3,8 +3,8 @@
 		"silence",
 
 		// circus
-		// "piano2",
-		// "miniMoog",
+		"piano2",
+		"miniMoog",
 
 
 		// shhh
@@ -24,9 +24,8 @@
 		// feet feet
 		"waves2",
 		"violin1",
-		"melbb1",
-		"melbb2",
-
+		"melbb3",
+		"melbb4",
 
 		// conversation
 		"miniMoog2",
@@ -39,7 +38,7 @@
 		"piano4",
 		"rain1",
 
-		// Sonata No. 1
+		// Concerto No. 1
 		"temp_input11",
 		"temp_input6L_3",
 		"hollowWood1L_2",

@@ -30,7 +30,7 @@ var padBase = 72 + 4;
 // and a long pool played 3 long only ever sounds 3 of its notes per hit.
 var beat = 1;
 var subdiv = 2;
-var subdivLen = 4;
+var subdivLen = 2;
 
 // Motion values owned by ~next. The OSCdef and the sequence routine read
 // them rather than computing anything themselves.
@@ -192,6 +192,7 @@ SynthDef(\mellowPad11, { |out = 0, spread = 1, numChans = 2, freq = 130, amp = 0
 					var note, found, x, y;
 
 					if (group.notNil and: { samplesLib.size > 0 }, {
+						notes = notes.scramble;
 						note = baseNote + notes.wrapAt(idxAtHit + i);
 						found = findClosestSample.(note);
 
@@ -201,7 +202,7 @@ SynthDef(\mellowPad11, { |out = 0, spread = 1, numChans = 2, freq = 130, amp = 0
 							\numChans, numChans,
 							\bufnum, found[\buffer],
 							\rate, found[\rate],
-							\amp, ampNow * vel * 8,
+							\amp, ampNow * vel * 10,
 							\attack, 0.02,
 							\sustain, 0.04,
 							\release, 1.2,
@@ -314,7 +315,7 @@ SynthDef(\mellowPad11, { |out = 0, spread = 1, numChans = 2, freq = 130, amp = 0
 	if (padAmp < 18.neg, { padAmp = 120.neg });
 
 	ampNow = amp.dbamp * vol * 0.02;
-	padAmpNow = padAmp.dbamp * vol * 11;
+	padAmpNow = padAmp.dbamp * vol * 4;
 	cutoffNow = m.rrateMassFiltered.linexp(0.0, 2.0 * sens, 250, 4500);
 	blendNow = (d.sensors.gyroEvent.x / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, 0, 1);
 

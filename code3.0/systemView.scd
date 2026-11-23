@@ -194,6 +194,19 @@ var oscThruButton = Button()
 			NetAddr.new("127.0.0.1", 57120).sendMsg("/airkit/oscThru", b.value.asBoolean);
 		});
 
+// s.record with no path writes a timestamped file into Platform.recordingsDir,
+// which on macOS is ~/Music/SuperCollider Recordings
+var recordButton = Button()
+	.font_(Font(size:18, bold:false))
+	.maxHeight_(bh)
+	.states_([
+		["Record",Color.black,Color.gray(0.5)],
+		["Recording",Color.white(),Color.red(0.6)]
+		])
+	.action_({|b|
+		if(b.value == 1, { s.record(numChannels: s.options.numOutputBusChannels) }, { s.stopRecording });
+	});
+
 var networkReset = Button()
 	.font_(Font(size:18, bold:false))
 	// .maxWidth_(140)
@@ -282,6 +295,7 @@ var systemView = {
 			displayButton,
 			Platform.case(\linux, {networkReset},{View()}),
 			oscThruButton,
+			recordButton,
 			freeAllBuffers,
 			freeAllNodes,
 			Platform.case(\linux, {quitButton},{View().maxHeight_(bh)}),

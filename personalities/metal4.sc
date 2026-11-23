@@ -123,14 +123,14 @@ SynthDef(\bambooComplex1, {
   Out.ar(out, output);
 }).add;
 
-SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
+SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0, ffreq=1111|
 	var env = EnvGen.ar(Env.asr(0.3,1.0,8.0), gate, doneAction:Done.freeSelf);
 	var follow = Amplitude.kr(amp.lag(3), 0.3, 0.5);
-	// var sig = Saw.ar(frq.lag(2),0.3 * env * amp.lag(1));
-	var trig = LPF.ar(PinkNoise.ar(0.01),600) * env * follow;
+	var sub = SinOsc.ar(((30 + pchx - 12).midicps),  SinOsc.ar(((30 + pchx - 12).midicps),0,1,1),0.5);
+	var trig = LPF.ar(PinkNoise.ar(0.01),ffreq.lagud(1,2)) * env * follow;
 	var sig =  DynKlank.ar(`[([30,42,54] + pchx.lag(3)).midicps, nil, [2, 1, 1, 1]], trig);
 	var dly = DelayC.ar(sig,0.03,[0.02,0.027]);
-	Out.ar(out, dly);
+	Out.ar(out, (sub + dly) * env * amp.lagud(0.7,2));
 }).add;
 
 //------------------------------------------------------------
@@ -245,18 +245,15 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 		Pbind(
 			\instrument, \bambooComplex1,
 			\octave, Pseq([7] - 2, inf),
-			// \dur, Pseq([0.4,Rest(0.2),0.2] * 0.5, inf),
-			// \degree, Pseq([0,2,-2], inf),
 			\note, Prand([0,2,5,4,9,7,11,12], inf) + 12,
-			// \root, Pseq([0,3,-2,0,-5,3,5,2].stutter(30), inf),
-			// \root, 0,
-			// \amp, 0.1,
 			\pan, Pwhite(-0.6, 0.6),
-			\model, 1,//Prand([0, 1, 2,3,4,5,6], inf),
-			\strikePos, 0.1,//Pwhite(0.1, 0.9),
+			\model, Prand([0, 1, 2,3,4,5,6], inf),
+
+			\strikePos, 0.9,//Pwhite(0.1, 0.9),
 			\resonance,0.9,//Pwhite(0.1, 0.9),
 			\bambooMoisture, 0.9,//Pwhite(0.1,0.9),
-			\rel, 1.2,
+			// \rel, 0.2,
+
 	        \func, Pfunc({|e| ~onEvent.(e)}),
 			\args, #[],
 
@@ -270,12 +267,12 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 			\ey, 0,
 			\startSize, Pkey(\root).linlin(0,127,50,100),
 			\endSize, 200,
-			\startWidth, 13.5,
+			\startWidth, 3.5,
 			\endWidth, 0.4,
 			\rotation, Pwhite(0, 0.02),
 			\startColor, Color.hsv(0.55, 0.85, 1.0, 0.9),
 			\endColor, Color.hsv(0.2, 0.9, 0.5, 0.0),
-			\duration, 0.8,
+			\duration, 0.8 * Pkey(\rel),
 			\modulation, Pfunc({ (
 				freq: rrand(4.0, 9.0) * 0.5,
 				wob: rrand(2.0, 4.0),
@@ -303,7 +300,8 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 ~onEvent = {|e|
 	m.com.dur = e.dur;
 	// other notes than m.com.root ??
-  	synth.set(\pchx,4 + 14 - 24 + 2);
+  	// synth.set(\pchx,4 + 14 - 24 + 2);
+  	synth.set(\pchx,(m.com.root - 4 + 12));
 };
 
 //------------------------------------------------------------
@@ -314,24 +312,29 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 	var move = m.accelMassFiltered.linlin(0, 0.8 * sens,0,1);
 	var oct = m.accelMassFiltered.linlin(0, 6 * sens,2,5).floor;
 	var dur = m.accelMassFiltered.lincurve(0, 2 * sens,0.3,0.08,-3);
-	
+	var amp = m.accelMassFiltered.lincurve(0, 2 * sens, -70.dbamp, -20.dbamp,-3);
+	// var ffreq = ((d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5) * 2).lincurve(-1.0, 1.0, 100, 19000, 1);
+	var ffreq = m.accelMassFiltered.lincurve(0, 2 * sens, 100, 19000, 1);
+	var rel = m.accelMassFiltered.lincurve(0, 2 * sens, 3, 0.2, 1);
+
   	var a = m.accelMass * 0.5;
 	var f = 50 + (m.accelMassFiltered * 100);
 	var pchs = [0,12,24,36,48];
 	var i = (d.sensors.gyroEvent.y.abs / pi) * (pchs.size);
-	// pchs[i.floor].postln;
+
 	if(a<0.02,{a=0.0});
 	if(a>0.9,{a=0.3});
 	synth.set(\amp, a * 1 * vol);
+	synth.set(\ffreq, ffreq);
 
 	// tells the visual router which device these shapes came from
 	Pdef(m.ptn).set(\viewID, d.port);
 	Pdef(m.ptn).set(\root, m.com.root ? 0);
-	Pdef(m.ptn).set(\amp, 0.1 * vol);
+	Pdef(m.ptn).set(\amp, amp * vol);
+	Pdef(m.ptn).set(\rel, rel);
 
  	Pdef(m.ptn).set(\dur, dur);
-	// Pdef(m.ptn).set(\octave, 4 + oct);
-	// Pdef(m.ptn).set(\amp, oct.linlin(2,5,0.1,0.9));
+
 	if(move > 0.05, {
 		if( Pdef(m.ptn).isPlaying.not,{
 			Pdef(m.ptn).resume(quant:0.4);
@@ -349,7 +352,8 @@ SynthDef(\sheet2, { |out, frq=111, gate=0, amp = 0, pchx=0|
 ~plotMax = 1;
 ~plot = { |d,p|
 	// [d.sensors.rrateEvent.x, m.rrateMass * 0.1, m.accelMassFiltered * 0.5];
-	[m.accelMass * 0.1, m.accelMassFiltered.linlin(0,5,0,1)];
+	// [m.accelMass * 0.1, m.accelMassFiltered.linlin(0,5,0,1)];
+	[((d.sensors.gyroEvent.y / pi).fold(-0.5, 0.5) * 2)];
 	// [m.rrateMassFiltered, m.rrateMassThreshold];
 	// [m.rrateMassFiltered, m.rrateMassThreshold, m.accelMassAmp];
 	// [d.sensors.gyroEvent.x, d.sensors.gyroEvent.y, d.sensors.gyroEvent.z];
