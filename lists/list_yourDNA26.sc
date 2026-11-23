@@ -5,50 +5,26 @@
 
 		
 		"timSwing1",
-
-		"thunder",
+		"timSwingWind2",
 
 		"spaceship",
 		"spaceship2",
 
-		"chicken1",
-		"frog1",
-		
-		"timWind1",
-		"timSwing1",
-		"timSwing2",
-		"timSwingWind",
-		"timSwingWind2",
+		"bleepBloop4",
+		"heyheyspaceline",
+
 
 		"daveBell1",
+		"daveBell2",
+		"timSwingWind2",
+
 		"hover1",
+
+		"hattieFlower",
+
 		"hoverSong",
 		"hoverSong2",
 		
-		
-		"hattieFlower",
-		"plantGrow",
-
-
-		"ticktockbeat2",
-		"marimClock",
-		"shaker1",
-		"beatbell1",
-
-
-
-
-		"bee",
-		"hover1",
-		"leaves",
-
-		"multiBeatSynth1",
-		"multiBeatSynth2",
-
-		"westminsterChimes1",
-
-
-
 		"silence",
 
 	]

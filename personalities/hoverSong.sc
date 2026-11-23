@@ -26,7 +26,7 @@ SynthDef(\simple, {|out=0, amp=0.0, freq=440, attack=0.001, decay=0.03, sustain=
     Out.ar(out, sig * env * amp);
 }).add;
 
-SynthDef(\hoverSampler2, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=0, freq=440,
+SynthDef(\hoverSampler1, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=0, freq=440,
 	attack=0.01, decay=0.1, sustain=0.3, release=3.2, gate=1,cutoff=20000, rq=0.9|
 	var lr = rate * BufRateScale.kr(bufnum) * (freq/440.0);
 	// var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, timeScale: 2,doneAction: 2);
@@ -147,10 +147,10 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 
 	if(TempoClock.beats > (lastTime + 0.1),{
 		lastTime = TempoClock.beats;
-		if(m.accelMass>0.05,{
+		if(m.accelMass>0.05 and: { buffers.notNil },{
 	    ev.play;
 
-			synth = Synth(\hoverSampler2, [\bufnum, bi, \amp, amp * 0.6 * vol, \rate, (1.11 * [0.5,1,2,4].choose) * (0).midiratio], group);
+			synth = Synth(\hoverSampler1, [\bufnum, buffers[bi], \amp, amp * 0.6 * vol, \rate, (1.11 * [0.5,1,2,4].choose) * (0).midiratio], group);
 			bi = bi + 1;
 			if(bi >= 4,{bi=0});
 			{synth.set(\gate,0)}.defer(0.2);

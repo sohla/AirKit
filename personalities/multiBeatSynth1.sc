@@ -2,11 +2,10 @@ var m = ~model;
 var group;
 var drone;
 
-var droneNote = 12 * 2;
+var droneNote = 24;
 
-var divs = [1, 2, 4];
-// var pool = [0] - 4 - 12; // seq = [0,2,4,-3,-5]
-var pool = [0] - 1 - 12; // seq = [0,2,4,-3,-5]
+var divs = [1,2,4] * 2;
+var pool = [0] - 1 - 12; 
 
 //------------------------------------------------------------
 m.accelMassFilteredAttack = 0.99;
@@ -27,9 +26,9 @@ SynthDef(\multiBeatDrone, {|out=0, freq=110, amp=0.05, pan=0,
     attack=1.0, release=0.8, ffreq=1200, gate=1, lag=0.1|
 	var env = EnvGen.kr(Env.asr(attack, 1, release, \sin), gate, doneAction: 2);
 	var f = freq.lag(lag);
-	var sig = Pulse.ar(f, 0.3, 0.5) + SinOsc.ar(f / 2, 0, 0.6);
-	sig = RLPF.ar(sig, ffreq.lagud(0.1,0.3).clip(80, 12000), 0.4);
-	Out.ar(out, Pan2.ar(sig, pan, amp.lagud(0.08,0.9) * env));
+	var sig = Pulse.ar(f, 0.3, 0.2) + SinOsc.ar(f/2, SinOsc.ar(f,0,1), 0.6);
+	sig = RLPF.ar(sig, ffreq.lagud(0.3,1.3).clip(80, 12000), 0.4);
+	Out.ar(out, Pan2.ar(sig, pan, amp.lagud(0.3,1.9) * env));
 }).add;
 
 //------------------------------------------------------------
@@ -104,7 +103,7 @@ SynthDef(\multiBeatDrone, {|out=0, freq=110, amp=0.05, pan=0,
 			\note, Pswitch(divs.collect({ |n| Pseq(pool.keep(n), 1) }), Pkey(\divIdx)),
 			// \root, Pseq([0,3,-2,1].stutter(32), inf),
 			\octave, Prand([4,5,6], inf),
-			\dur,  Pkey(\div).reciprocal * 0.5,
+			\dur,  Pkey(\div).reciprocal * 0.8,
 			\pan, Pwhite(-0.2, 0.2),
 
 			\type, \customVisualEvent,
@@ -162,7 +161,7 @@ SynthDef(\multiBeatDrone, {|out=0, freq=110, amp=0.05, pan=0,
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var idx = m.accelMassFiltered.lincurve(0, 1.5 * sens, 0, divs.size - 1, 1)
+	var idx = m.accelMassFiltered.lincurve(0,3.5 * sens, 0, divs.size - 1, 6)
 		.round.asInteger.clip(0, divs.size - 1);
 	var amp = m.accelMassFiltered.lincurve(0, 1.0 * sens, -40, -18, -1);
 	var ffreq = m.accelMassFiltered.lincurve(0, 1.0 * sens, 700, 12000, 2);
@@ -171,7 +170,7 @@ SynthDef(\multiBeatDrone, {|out=0, freq=110, amp=0.05, pan=0,
 	var droneAmp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -32, -20, -1);
 	var droneFfreq = m.accelMassFiltered.lincurve(0, 1.0 * sens, 500, 3000, 2);
 
-	if(droneAmp < 41.neg, { droneAmp = 90.neg });
+	if(droneAmp < 30.neg, { droneAmp = 90.neg });
 	if(amp < 49.neg, { amp = 100.neg });
 
 	Pdef(m.ptn).set(\viewID, d.port);

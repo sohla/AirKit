@@ -11,7 +11,7 @@ var partialAmps = [1, 0.44, 0.12];
 
 // var melody = [ 0, 7, 12, 19, 12, 7,  0, 16, 24, 16, 12, 4 ] + 4 - 12;
 
-var melody = [ 0, 7, 12, ] + 4;
+var melody = [ 0,4, 7, 11,12, ] + 4;
 // var melody = [ 0] + 4;
 var beats  = [ 2, 1,  1,  2,  1, 1, Rest(2), 1,  3,  1,  2, 2 ] * 0.25;
 
@@ -181,16 +181,18 @@ SynthDef(\bellVerb, {
 
 //------------------------------------------------------------
 ~next = { |d|
-	var amp = m.accelMassFiltered.lincurve(0, 1.4, -50, -6, -1);
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var amp = m.accelMassFiltered.lincurve(0, 2.8 * sens, -50, -6, -1);
 	var shift = (d.sensors.gyroEvent.z / pi).fold(-0.5, 0.5).linlin(-0.5, 0.5, -12, 12).round;
 	var pulse = (d.sensors.gyroEvent.y / pi.half).lincurve(-1, 1, 0.34, 0.10, 1);
-	var cutoff = m.accelMassFiltered.lincurve(0, 1.4, 1200, 16000, 2);
-	var oct = ((d.sensors.gyroEvent.y / pi).fold(-0.5, 0.5) * 2.0).linlin(-1, 1, -4, 5).round.asInteger;
+	var cutoff = m.accelMassFiltered.lincurve(0, 2.8 * sens, 1200, 16000, 2);
+	var oct = ((d.sensors.gyroEvent.y / pi).fold(-0.5, 0.5) * 2.0).linlin(-1, 1, -1, 4).round.asInteger;
 
 	if(amp < 44.neg, { amp = 90.neg });
 
 	Pdef(m.ptn).set(\viewID, d.port);
-	Pdef(m.ptn).set(\amp, amp.dbamp);
+	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
 	// Pdef(m.ptn).set(\ctranspose, shift);
 	Pdef(m.ptn).set(\pulse, pulse);
 	Pdef(m.ptn).set(\cutoff, cutoff);

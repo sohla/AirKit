@@ -22,7 +22,7 @@ SynthDef(\plantGrow, { |out = 0, buf = 0, amp = 0, gate = 1,
 	var pos  = span[0] + (LFSaw.kr(scanRate).range(0, 1) * (span[1] - span[0]));
 	var pan  = TRand.ar(panSpread.neg, panSpread, trg);
 
-	var sig = GrainBuf.ar(2, trg, dur, buf, Lag.kr(rate, 0.3), pos, 2, pan) * 3;
+	var sig = GrainBuf.ar(2, trg, dur, buf, Lag.kr(rate, 0.3), pos, 2, pan);
 	// sig = RLPF.ar(sig, Lag.kr(cutoff, 0.2).clip(1000, 12000), rq) * 2;
 
 	Out.ar(out, sig * env * Lag.kr(amp, 0.1));
@@ -84,7 +84,7 @@ SynthDef(\plantGrow, { |out = 0, buf = 0, amp = 0, gate = 1,
 	var tilt = d.sensors.gyroEvent.y / pi.half;
 	var roll = d.sensors.gyroEvent.x / pi;
 
-	var amp = energy.lincurve(0, 2.0 * sens, -40, -1, -2);
+	var amp = energy.lincurve(0, 2.0 * sens, -60, -10, -2);
 	var cutoff = energy.lincurve(0, 2.5 * sens, 250, 7000, 3);
 	var rate = energy.lincurve(0, 2.5 * sens, 0.8, 1.34, 0);
 
@@ -96,7 +96,7 @@ SynthDef(\plantGrow, { |out = 0, buf = 0, amp = 0, gate = 1,
 	lo = grow * (1 - width);
 	hi = lo + width;
 
-	if(amp < -38, { amp = -110 });
+	if(amp < (-58), { amp = -110 });
 
 	synth !? { synth.set(
 		\amp, amp.dbamp * vol,

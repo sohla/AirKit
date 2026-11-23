@@ -1,6 +1,7 @@
 var m = ~model;
 var dev = ~device;
 var group, synth, buffer;
+var fxBus, verb;
 
 
 m.accelMassFilteredAttack = 0.99;
@@ -27,7 +28,15 @@ SynthDef(\spaceship, { |out = 0, buf = 0, amp = 0, gate = 1,
 	var sig = (BufRd.ar(2, buf, mainPos, 0, 4) * x.cos) + (BufRd.ar(2, buf, fadePos.max(startFrame), 0, 4) * x.sin);
 	sig = BLowShelf.ar(sig, Lag.kr(shelfFreq, 0.4), shelfRs, Lag.kr(shelfDb, 0.4));
 
-	Out.ar(out, sig * env * Lag.kr(amp, 0.02) * 4);
+	Out.ar(out, sig * env * amp.lagud(0.3,1.1) * 4);
+}).add;
+
+SynthDef(\spaceshipVerb, { |in = 0, out = 0, mix = 0.3, room = 0.9, damp = 0.8, hicut = 2500, lowcut = 120, amp = 1, gate = 1, release = 1.5|
+	var dry = In.ar(in, 2);
+	var env = EnvGen.kr(Env.asr(0.01, 1, release), gate, doneAction: 2);
+	var wet = FreeVerb2.ar(dry[0], dry[1], 1, room, damp);
+	wet = HPF.ar(LPF.ar(wet, hicut), lowcut);
+	Out.ar(out, LeakDC.ar(dry.blend(wet, mix)) * env * amp);
 }).add;
 
 //------------------------------------------------------------
@@ -35,6 +44,8 @@ SynthDef(\spaceship, { |out = 0, buf = 0, amp = 0, gate = 1,
 	var samplePath = "~/Downloads/yourDNASamples/planets/The Planets__14.wav";
 
 	group = Group.new;
+	fxBus = Bus.audio(s, 2);
+	verb = Synth.tail(group, \spaceshipVerb, [\in, fxBus, \out, 0, \mix, 0.3]);
 
 	buffer = Buffer.read(s, PathName(samplePath).fullPath, action: { |b|
 		postf("buffer alloc [%] \n", b);
@@ -42,7 +53,7 @@ SynthDef(\spaceship, { |out = 0, buf = 0, amp = 0, gate = 1,
 	s.sync;
 
 	if (group.notNil) {
-		synth = Synth(\spaceship, [\buf, buffer], group);
+		synth = Synth(\spaceship, [\buf, buffer, \out, fxBus], group);
 	};
 };
 
@@ -50,14 +61,20 @@ SynthDef(\spaceship, { |out = 0, buf = 0, amp = 0, gate = 1,
 ~deinit = ~deinit <> {
 	var dying = group;
 	var dyingBuffer = buffer;
+	var dyingVerb = verb;
+	var dyingBus = fxBus;
 
 	synth !? (_.set(\gate, 0));
 	synth = nil;
 	group = nil;
 	buffer = nil;
+	verb = nil;
+	fxBus = nil;
 
 	fork {
-		3.5.wait;
+		3.0.wait;
+		dyingVerb !? (_.set(\gate, 0));
+		2.0.wait;
 		if (dying.notNil) {
 			s.bind { dying.freeAll };
 			s.sync;
@@ -67,6 +84,7 @@ SynthDef(\spaceship, { |out = 0, buf = 0, amp = 0, gate = 1,
 			postf("buffer dealloc [%] \n", dyingBuffer);
 			dyingBuffer.free;
 		};
+		dyingBus !? (_.free);
 	};
 };
 
@@ -89,7 +107,7 @@ SynthDef(\spaceship, { |out = 0, buf = 0, amp = 0, gate = 1,
 		\amp, amp.dbamp * vol,
 		\shelfDb, shelfDb,
 		\shelfFreq, shelfFreq,
-		\rate, 0.8 *0.5
+		\rate, 0.5
 	) };
 };
 

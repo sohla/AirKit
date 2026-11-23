@@ -86,7 +86,7 @@ SynthDef(\spaceship2, { |out = 0, buf = 0, amp = 0, gate = 1, start = 1.0, rate 
 
 	if(amp < -28, { amp = -110 });
 
-	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
+	Pdef(m.ptn).set(\amp, amp.dbamp * vol * 0.3);
 	Pdef(m.ptn).set(\shelfDb, shelfDb);
 	Pdef(m.ptn).set(\shelfFreq, shelfFreq);
 	// Pdef(m.ptn).set(\step, steps[stepIdx]);

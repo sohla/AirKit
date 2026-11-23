@@ -147,10 +147,10 @@ SynthDef(\looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, freq=440,
 
 	if(TempoClock.beats > (lastTime + 0.1),{
 		lastTime = TempoClock.beats;
-		if(m.accelMass>0.05,{
+		if(m.accelMass>0.05 and: { buffers.notNil },{
 	    ev.play;
 
-			synth = Synth(\hoverSampler2, [\bufnum, bi, \amp, amp * 0.6 * vol, \rate, (1.11 * [0.5,1,2,4].choose) * (7).midiratio], group);
+			synth = Synth(\hoverSampler2, [\bufnum, buffers[bi], \amp, amp * 0.6 * vol, \rate, (1.11 * [0.5,1,2,4].choose) * (-5).midiratio], group);
 			bi = bi + 1;
 			if(bi >= 4,{bi=0});
 			{synth.set(\gate,0)}.defer(0.2);

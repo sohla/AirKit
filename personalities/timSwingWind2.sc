@@ -6,19 +6,19 @@ var group;
 
 var lastTime=0;
 // var notes = [0,0,7,0,0,0,7,0,7,5,0,0,0,7,0,0,7,5,0,0,0,-2,7,-2,7,5,-2,-2,7,5,-2,-2,-2,-4,7,5,-4,-4,7,5,-2,-2,7,5,-2,7,5];
-var notes = [0,0,7,0,0,0,7,0,7,5,0,0,0,7,0,0,7,5,0,0,0];
-// var notes = [0];
+// var notes = [0,0,7,0,0,0,7,0,7,5,0,0,0,7,0,0,7,5,0,0,0];
+var notes = [-12];
 // var mr = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-2,-2,-2,-2,-2,-2,-2,-2,-2,-2,-2,-2,-4,-4,-4,-4,-4,-4,-4,-2,-2,-2,-2,-2,-2,-2].stutter(2);
 var mr = [0].stutter(2);
-var roots = [0,3].stutter(47*2);
+var roots = [0].stutter(47*2);
 var currentNote = notes[0];
 var currentRoot = roots[0];
 
 var armed = false;
 var quietFor = 0;
 var lastNow;
-// var swingNotes = [24,40,43,48,55,50] + 12;
-var swingNotes = [36,33,28,31];
+var swingNotes = [36,33,28,31].stutter(4);
+
 var swingBase = swingNotes[0];
 
 m.accelMassFilteredAttack = 0.6;
@@ -122,7 +122,7 @@ SynthDef(\timSwingWind2Drone, {|out,freq = 1000, amp = 0.5, att = 0.02, dec = 0.
 
 	if(swingA<0.01,{swingA=0});
 	if(swingA>0.9,{swingA=1.0});
-	drone !? { drone.set(\amp, swingA * 0.1, \ch, ch, \freq, (swingNotes[0] + currentRoot + 12).midicps) };
+	drone !? { drone.set(\amp, swingA * 0.3, \ch, ch, \freq, (swingNotes[0] + currentRoot).midicps) };
 
 	quietFor = if(m.accelMassFiltered > quietThresh, { armed = true; 0 }, { quietFor + (now - (lastNow ? now)) });
 	lastNow = now;
