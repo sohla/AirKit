@@ -3,8 +3,8 @@
 		"silence",
 
 		// shhh
-		"mel4",
-		"mel6",
+		// "mel4",
+		// "mel6",
 
 		// circling
 		"multiBeat1.2",

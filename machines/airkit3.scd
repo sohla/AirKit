@@ -32,7 +32,6 @@
 		"list_BtB_Mel.sc",
 	],
 
-
 	secs: 0.01,
 	latency: 0.1,
 
