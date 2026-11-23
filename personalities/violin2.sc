@@ -33,7 +33,7 @@ SynthDef(\monoSampler, {|bufnum=0, out=0, amp=0.5, rate=1, start=0, pan=0, freq=
     Out.ar(out, sig * amp);
 }).add;
 
-SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, div=1, speed = 0.01, splay = 0.4 ,pan=0, rate=1|
+SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, div=1, speed = 0.01, splay = 0.3 ,pan=0, rate=1|
 	var pos;
 	// var mx,my;
 	var sp;
@@ -42,16 +42,16 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, 
 	var lfo = LFSaw.kr( (1.0/len) * speed ,1,0.5,0.5);
 
 	sp = Splay.arFill(4,
-		{ |i| Warp1.ar(1, buffer, lfo.linlin(0,1,0.05,0.2), rate * (2.pow(i-2)) * 1.007,splay, envbuf, 8, 0.9, 4)  },
+		{ |i| Warp1.ar(1, buffer, lfo.linlin(0,1,0.05,0.2), rate * (2.pow(i-2)) * 1.007, splay, envbuf, 8, 0.3, 4)  },
 			1,
 			1,
 			0
 	) ;
 
 	mas = HPF.ar(sp,45);
-	mas = MidEQ.ar(mas, 3000, 0.8);
+	// mas = MidEQ.ar(mas, 3000, 0.8);
 
-	Out.ar(out,Pan2.ar(Mix.ar(mas),pan.lag(1))* amp.lagud(0.7,0.9));
+	Out.ar(out,mas * amp.lagud(0.7,0.9));
 }).add;
 //------------------------------------------------------------
 ~init = ~init <> {|d|
@@ -195,15 +195,17 @@ SynthDef(\pullstretchMonoQ, {|out, amp = 1, buffer = 0, envbuf = -1, pch = 1.0, 
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var amp = m.accelMass.linlin(0, 1 * sens,0.00001,1);
-	var speed= m.accelMassFiltered.lincurve(0, 2 * sens,0.001,0.1,-2);
+	var amp = m.accelMass.linlin(0,  2.0 * sens,0.00001,1);
+	var speed = m.accelMassFiltered.lincurve(0, 2 * sens,0.001,0.1,-2);
+	var splay = m.accelMassFiltered.lincurve(0, 2 * sens,0.8,0.1,1);
 	var rate = m.gyroYFiltered.linlin(-1,1,1,2).asInteger;
 	var pan = m.gyroZFiltered.linlin(-1,1,-1,1);
 
 	if(amp < 0.01, {amp = 0});
 
-	synth.set(\rate, (rate/4) + 0.158 + 0.34);
+	synth.set(\rate, (5.neg).midiratio);
 	synth.set(\speed, speed);
+	synth.set(\splay, splay);
 	synth.set(\amp, amp * 3 * vol);
 	synth.set(\pan, pan);
 };

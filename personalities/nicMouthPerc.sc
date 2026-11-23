@@ -72,7 +72,7 @@ SynthDef(\nicMouthPerc, { |out = 0, bufnum = 0, amp = 0.3, vel = 1, rate = 1, st
 	Out.ar(fx, sig * send);
 }).add;
 
-SynthDef(\nicMouthPercPlate, { |in = 0, out = 0, predelay = 0.01, room = 0.7, damp = 0.3, lowcut = 30, hicut = 1000, amp = 1, gate = 1|
+SynthDef(\nicMouthPercPlate, { |in = 0, out = 0, predelay = 0.01, room = 0.2, damp = 0.3, lowcut = 30, hicut = 900, amp = 1, gate = 1|
 	var env = EnvGen.kr(Env.asr(0.01, 1, 0.5), gate, doneAction: 2);
 	var wet = DelayN.ar(In.ar(in, 2), 0.2, predelay);
 	wet = 4.collect({ |i| AllpassN.ar(_, 0.05, [0.0047, 0.0053] * (i + 1) * 1.3, 0.08) }).inject(wet, { |sig, ap| ap.(sig) });
@@ -118,7 +118,7 @@ SynthDef(\nicMouthPercPlate, { |in = 0, out = 0, predelay = 0.01, room = 0.7, da
 
 	group = Group.new;
 	fxBus = Bus.audio(s, 2);
-	plate = Synth.tail(group, \nicMouthPercPlate, [\in, fxBus, \out, 0, \predelay, 0.003, \room, 0.1, \damp, 0.9]);
+	plate = Synth.tail(group, \nicMouthPercPlate, [\in, fxBus, \out, 0, \predelay, 0.004, \room, 0.9, \damp, 0.4]);
 
 	samplesLib = folder.entries.select({ |p| p.extension == "wav" and: { solo.isNil or: { p.fileNameWithoutExtension.asSymbol == solo } } }).collect({ |path|
 		var stem = path.fileNameWithoutExtension;
@@ -147,7 +147,7 @@ SynthDef(\nicMouthPercPlate, { |in = 0, out = 0, predelay = 0.01, room = 0.7, da
 				\bufnum, Pfunc({ |e| e[\smp].buffer }),
 				\rate, 1,//.(e[\smp].midiNote) - e[\smp].midiNote).midiratio }),
 				\pan, lanePan[lane],
-				// \fx, fxBus.index,
+				\fx, fxBus.index,
 				\send, 0.3,
 				\decay, 0.4,
 				\sustain, 0.1,

@@ -8,7 +8,8 @@ var beatType = (\customBeatEvent_ ++ m.ptn).asSymbol;
 var marimbaLib;
 
 // var marimbaNotes = [0,1,4,5,8,11,13,16] + 50;
-var marimbaNotes = [0,2,5,7,8,11,12] + 50;
+// var marimbaNotes = [0,2,5,7,8,11,12] + 50;
+var marimbaNotes = [0,7,11,12,17,20,26] + 50 - 12;
 
 var marimbaFolder = "~/Downloads/cotf_samples/African Marimba";
 var marimbaFilter = "Marimba ln f l1x";
@@ -64,11 +65,11 @@ SynthDef(\drumkit3, {|bufnum=0, out, amp=0.5, rate=1, start=0, pan=0, freq=440,
 }).add;
 
 SynthDef(\melbb4Marimba, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0, pan = 0,
-	attack = 0.002, sustain = 0.04, release = 0.2|
+	attack = 0.004, sustain = 0.04, release = 0.03|
 	var lr = rate * BufRateScale.kr(bufnum);
-	var env = EnvGen.kr(Env([0, 1, 1, 0], [attack, sustain, release]), doneAction: 2);
-	var sig = PlayBuf.ar(2, bufnum, rate: lr, startPos: start * BufFrames.kr(bufnum), loop: 0);
-	sig = Balance2.ar(sig[0], sig[1], pan, amp * env);
+	var env = EnvGen.kr(Env([0, 1, 0.0, 0], [attack, sustain, release]), doneAction: 2);
+	var sig = PlayBuf.ar(2, bufnum, rate: lr * SinOsc.ar([9,14],0,0.02,1), startPos: start * BufFrames.kr(bufnum), loop: 0);
+	sig = sig * amp * env;
 	Out.ar(out, sig);
 }).add;
 //--------------------------------------
@@ -184,8 +185,7 @@ SynthDef(\melbb4Marimba, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0,
 
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	// var ud = m.gyroYFiltered.clip(-0.5,0.5).lincurve(-0.5,0.5,1,4,1).round;
-	var ud = m.accelMassFiltered.lincurve(0, 2.5 * sens,0,4,3).round;
+	var ud = m.accelMassFiltered.lincurve(0, 2.5 * sens,0,5,1).round;
 	var amp = m.accelMassFiltered.lincurve(0, 2.5 * sens,0,0.4,1);
 	var rate = m.gyroYFiltered.clip(-0.5,0.5).lincurve(-0.5,0.5,1,-1,-1).floor;
 	var time = TempoClock.beats;
@@ -193,6 +193,7 @@ SynthDef(\melbb4Marimba, { |out = 0, bufnum = 0, amp = 0.5, rate = 1, start = 0,
 	Pdef(m.ptn).set(\divIdx, ud.asInteger.clip(0, divs.size - 1));
 	Pdef(m.ptn).set(\amp, 0.2 * vol);
 	Pdef(m.ptn).set(\rate, 2.pow(rate));
+	Pdef(m.ptn).set(\octave, 7);
 
 	if(m.accelMassFiltered > (0.1 * sens),{
 		if( Pdef(m.ptn).isPlaying.not,{
