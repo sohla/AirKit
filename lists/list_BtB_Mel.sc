@@ -2,16 +2,9 @@
 	[
 		"silence",
 
-		// circus
-		"piano2",
-		"miniMoog",
-
-
 		// shhh
 		"mel4",
 		"mel6",
-		// "melbb2",
-		// "melbb1",
 
 		// circling
 		"multiBeat1.2",

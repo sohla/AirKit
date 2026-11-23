@@ -190,6 +190,31 @@ h2{margin:0;font-size:18pt;flex:1}
 footer{display:flex;justify-content:space-between;font-size:9pt;color:#777}
 """
 
+def pfiles(cues, p, stamp):
+    e = html.escape
+    rows = "".join(f'''<div class="row"><span class="num">{i + 1}</span><h2>{e(r["piece"])}</h2>
+    <div class="names">{"".join(f"<span>{e(n)}</span>" for n in re.split(r"[\s,]+", get(r, "mapping", p)) if n) or "<span class=none>—</span>"}</div></div>'''
+                   for i, r in enumerate(cues))
+    return f'''<section class="sheet" style="--ink:{INK.get(p.lower(), "#333")}">
+  <header><span>Beyond the Bones · <b>{e(p)}</b> · p-files</span></header>
+  {rows}
+  <footer><span>{e(p)}</span><span>score sheet {stamp}</span></footer>
+</section>'''
+
+PFILES_CSS = """
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Atkinson Hyperlegible",Verdana,sans-serif;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sheet{width:210mm;height:297mm;padding:12mm 15mm 10mm;display:flex;flex-direction:column;gap:3mm;overflow:hidden}
+header{font-size:12pt;color:#444;border-bottom:1mm solid var(--ink);padding-bottom:2mm}
+.row{flex:1;display:flex;align-items:center;gap:4mm;border-bottom:0.4mm solid #999;min-height:0}
+.num{font-size:14pt;font-weight:700;color:#777;width:8mm}
+h2{margin:0;font-size:16pt;width:62mm}
+.names{flex:1;display:flex;flex-wrap:wrap;gap:1mm 5mm;font-size:16pt;font-weight:700;color:var(--ink)}
+.none{color:#999}
+footer{display:flex;justify-content:space-between;font-size:9pt;color:#777}
+"""
+
 def render(name, pages, css, tmp):
     doc = (f'<!doctype html><html><head><meta charset="utf-8"><title>{name}</title>'
            '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">'
@@ -211,5 +236,12 @@ def main():
         wears = any(h == f"where it's worn {p.lower()}" for h in heads)
         render(f"BtB_{p}", "".join(page(r, i, len(cues), p, people, cues, stamp, wears) for i, r in enumerate(cues)), CSS, tmp)
     render("BtB_SetList", setlist(pieces, stamp), SETLIST_CSS, tmp)
+    for p in STAGED:
+        render(f"BtB_{p.capitalize()}_pfiles", pfiles(cues, p.capitalize(), stamp), PFILES_CSS, tmp)
+        txt = OUT / f"BtB_{p.capitalize()}_pfiles.txt"
+        txt.write_text(f"Beyond the Bones · {p.capitalize()} · p-files   (score sheet {stamp})\n\n" + "".join(
+            f'{i + 1:>2}  {r["piece"]:<24}{", ".join(n for n in re.split(r"[\s,]+", get(r, "mapping", p)) if n) or "—"}\n'
+            for i, r in enumerate(cues)), encoding="utf-8")
+        print(txt)
 
 main()
