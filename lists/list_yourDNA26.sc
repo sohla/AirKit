@@ -3,28 +3,27 @@
 
 		"silence",
 
-		
-		"timSwing1",
+		// 1
+		"hattieFlower",
+
+		// 2
 		"timSwingWind2",
 
-		"spaceship",
-		"spaceship2",
+		// 3 green
+		"daveBell2",
+		"bee",
+		"hover1",
 
+		// 4 & 5
 		"bleepBloop4",
 		"heyheyspaceline",
 
-
-		"daveBell1",
-		"daveBell2",
-		"timSwingWind2",
-
+		// 6 & 7
 		"hover1",
+		"hoverSong3",
 
-		"hattieFlower",
+		// 8 spare
 
-		"hoverSong",
-		"hoverSong2",
-		
 		"silence",
 
 	]

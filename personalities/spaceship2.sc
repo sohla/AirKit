@@ -35,7 +35,7 @@ SynthDef(\spaceship2, { |out = 0, buf = 0, amp = 0, gate = 1, start = 1.0, rate 
 			// \dur, Pfunc({ |e| e[\step] ? 0.5 }),
 			\slice, Pseq((0..15) / 16, inf),
 			\start, Pkey(\slice).linlin(0, 1, 1.0, 8.5),
-			\rate, 1,
+			\rate, 0.25,
 			\legato, 0.7,
 			\attack, 0.0002,
 			\release, 0.02,

@@ -104,7 +104,7 @@ SynthDef(\spaceshipVerb, { |in = 0, out = 0, mix = 0.3, room = 0.9, damp = 0.8, 
 	if(amp < -28, { amp = -110 });
 
 	synth !? { synth.set(
-		\amp, amp.dbamp * vol,
+		\amp, amp.dbamp * vol * 0.1,
 		\shelfDb, shelfDb,
 		\shelfFreq, shelfFreq,
 		\rate, 0.5

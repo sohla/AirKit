@@ -375,7 +375,7 @@ SynthDef(\bleepBloop4DulcimerVerb, {|in=0, out=0, mix=0.2, room=1.12, damp=0.2, 
 //------------------------------------------------------------
 ~next = { |d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
-	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 0.5, 1);
 	var tilt = (d.sensors.gyroEvent.y / pi.half);
 	var amp = m.accelMassFiltered.lincurve(0, 1.4 * sens, -30, -10, -1);
 	var idx = m.accelMassFiltered.lincurve(0, 8.5 * sens, 0, divs.size - 1, 3).round.asInteger.clip(0, divs.size - 1);
@@ -398,7 +398,7 @@ SynthDef(\bleepBloop4DulcimerVerb, {|in=0, out=0, mix=0.2, room=1.12, damp=0.2, 
 	if(pianoAmp < 29.neg, { pianoAmp = 120.neg});
 
 	Pdef(m.ptn).set(\viewID, d.port);
-	Pdef(m.ptn).set(\amp, amp.dbamp * vol);
+	Pdef(m.ptn).set(\amp, amp.dbamp * vol * 0.4);
 	Pdef(m.ptn).set(\divIdx, idx);
 	Pdef(m.ptn).set(\root, m.com.root ? 0);
 	Pdef(m.ptn).set(\fmIndex, fmIndex);

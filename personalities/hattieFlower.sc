@@ -133,7 +133,7 @@ SynthDef(\hattieFlowerVerb, { |in = 0, out = 0, room = 0.9, damp = 0.4, lowcut =
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
 	var move = m.accelMassFiltered.linlin(0, 6 * sens,0,1.5);
   	var a = m.accelMassFiltered * 0.5;
-  	var amp = m.accelMassFiltered.lincurve(0, 2 * sens,0.02,0.1,-5);
+  	var amp = m.accelMassFiltered.lincurve(0, 2 * sens,0.02,0.3,-5);
   	var gap = m.accelMassFiltered.lincurve(0, 2 * sens,1.3,0.1,-5);
 	var oct = d.sensors.gyroEvent.y.linlin(-1,1,1,5).floor * 12;
 	var av = d.sensors.gyroEvent.y.lincurve(-1,1,1,0.1,-2);
@@ -152,8 +152,8 @@ SynthDef(\hattieFlowerVerb, { |in = 0, out = 0, room = 0.9, damp = 0.4, lowcut =
 	// if(windAmp>0.9,{windAmp=0.9});
 	// if(leafAmp<0.03,{leafAmp=0});
 
-	windSynth !? { |x| x.set(\amp, windAmp * 0.4 * vol, \my, windMy, \mx, windMx, \filterFreq, windFreq, \pan, windPan) };
-	leafSynth !? { |x| x.set(\amp, leafAmp * 0.1, \pan, leafPan) };
+	windSynth !? { |x| x.set(\amp, windAmp * 0.05 * vol, \my, windMy, \mx, windMx, \filterFreq, windFreq, \pan, windPan) };
+	leafSynth !? { |x| x.set(\amp, leafAmp * 0.05, \pan, leafPan) };
 
 	if(a<0.02,{a=0});
 	// if(a>0.9,{a=1});
@@ -171,7 +171,7 @@ SynthDef(\hattieFlowerVerb, { |in = 0, out = 0, room = 0.9, damp = 0.4, lowcut =
 			synth = Synth(\hattieFlowerVoice, [
 				\freq, (36 + currentNote + currentRoot + oct).midicps,
 				\gate, 1,
-				\amp, amp * 2 * av * vol,
+				\amp, amp * 0.3 * av * vol,
 				\fx, fxBus ? 0,
 				\send, if(fxBus.isNil, 0, 0.4),
 			], group);

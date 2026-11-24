@@ -172,7 +172,7 @@ SynthDef(\beeSynth1, { |out=0, rr=0.1, amp = 0.0, gate = 1, release = 2, af=264,
 	).play;
 
 	group = Group.new;
-	synth = Synth(\beeSynth1, [\af, 130.rrand(290), \bf, 250.rrand(340)], group);
+	synth = Synth(\beeSynth1, [\af, 230.rrand(590), \bf, 250.rrand(340)], group);
 };
 
 //------------------------------------------------------------
@@ -199,7 +199,7 @@ SynthDef(\beeSynth1, { |out=0, rr=0.1, amp = 0.0, gate = 1, release = 2, af=264,
 	var amp = m.accelMassFiltered.linlin(0, 2 * sens,0,0.4);
 	var rate = m.accelMassFiltered.lincurve(0.0,2.5 * srr,0.3,4.2,4 * srr);
 	var rr = m.rrateMassFiltered.linlin(0, 2 * sens,1,2.1);
-	synth.set(\amp, amp * 0.05 * vol);
+	synth.set(\amp, amp * 0.01 * vol);
 	synth.set(\rr, rate * rr);
 };
 
