@@ -51,48 +51,32 @@ airkit1 and airkit2 pairs above.
 each kit expects a sound card at index 2 with a `Speaker` control. Which device
 is it, and is it the same on every kit?
 
-## airkit2 (Mel) — PMF was back on (fixed 2026-11-25)
+## airkit2 (Mel) — PMF is `0`, against the spec (2026-11-25)
 
-**Symptom.** AirKit was very slow to see the sticks, one of four did not appear
-at all, and a Mac was refused with "wrong password". The AP was up the whole
-time, and the passphrase on the Pi was correct (`AirKit2_Network`).
+The AP profile has `802-11-wireless-security.pmf` at `0 (default)`, which
+means PMF is on. `utils/network/README.md` and the `network_ap` role both
+specify `1` (off). It was already `0` on 21 Nov, while the sticks were
+working, so when it changed isn't known. airkit2 predates `rpi_tools` and has
+never been provisioned, so nothing re-applies the spec. The role can't simply
+be run on this kit either: it binds the AP to `wlan0`, and airkit2's AP is
+bound to the dongle's MAC.
 
-**Cause.** `802-11-wireless-security.pmf` was `0 (default)`, which means PMF
-is on. It has to be `1` (off): stick firmware mishandles PMF, and
-`utils/network/README.md` records the same slow joins on this kit in September.
-The September fix lived only in the AP profile. The profile was rebuilt by
-hand around 20–21 Nov, during the dongle and eth0 debugging, and the setting
-was lost. Nothing re-applies it, because airkit2 predates `rpi_tools` and has
-never been provisioned. The `network_ap` role sets PMF off, but it binds the AP
-to `wlan0`, and airkit2's AP is bound to the dongle's MAC. So it can't simply
-be run on this kit.
+On 2026-11-25 PMF was set to `1` and then back to `0`. Neither made a
+difference to the real fault, which was a Mac on the AP (next section).
+**Decision: leave it at `0`.** That's the value the sticks worked with.
 
 **Check. On the Pi:**
-`nmcli -g 802-11-wireless-security.pmf connection show AirKit2_Network` should
-print `1`.
+`nmcli -g 802-11-wireless-security.pmf connection show AirKit2_Network`
 
-**Fix.** Sticks off first. **On the Mac:**
-`ssh pi@192.168.50.110 'sudo nmcli connection modify AirKit2_Network 802-11-wireless-security.pmf 1 && sudo nmcli connection up AirKit2_Network'`
-Then sticks on. All four joined, and AirKit saw them quickly. The Mac mini
-joined with the passphrase.
-
-**Status at the end of 2026-11-25: PMF is back at `0`.** It was reverted while
-testing the lockup below. That made no difference, and all four sticks joined
-with PMF at `0` afterwards. So PMF did not cause the lockup. Whether it was
-really behind the slow joins is unproven. **Decision: leave it at `0`** until
-the lockup is understood, so only one thing changes at a time. `1` is still
-what `utils/network/README.md` and the `network_ap` role specify.
-
-**Re-check PMF after any hand edit to the AP profile.** The profile also still
-lacks the role's `proto rsn` / `ccmp` settings. They're harmless today, but
-they're a difference from the spec.
+The profile also lacks the role's `proto rsn` / `ccmp` settings, which is
+another difference from the spec.
 
 **Mel's sticks** (from the AP, 2026-11-25):
 
 | MAC | IP | Notes |
 |---|---|---|
 | 64:e8:33:64:f1:94 | 192.168.200.11 | static |
-| 64:e8:33:64:f1:80 | 192.168.200.13 | static. The one missing before the fix |
+| 64:e8:33:64:f1:80 | 192.168.200.13 | static. The one that didn't appear at first on 2026-11-25 |
 | 64:e8:33:64:f1:50 | 192.168.200.14 | static |
 | 64:e8:33:67:c1:4c | 192.168.200.56 | DHCP, reports itself as `esp32s3-67C14C` |
 
@@ -102,38 +86,55 @@ To see which are on the AP right now. **On the Mac:**
 **Also seen:** the Pi's clock reads 19 Sep 2026. It has no internet to sync
 from, so log and file times on airkit2 are Pi-clock times, not real dates.
 
-## airkit2 (Mel) — the dongle locks up, only unplugging clears it (2026-11-25)
+## airkit2 (Mel) — a Mac on the AP brings it down (2026-11-25)
 
-**Symptom.** The AP vanishes. Macs no longer list `AirKit2_Network`, and the
-sticks drop off. On the Pi, everything still looks fine: `nmcli` says the AP is
-connected, and there's no error.
+**Rule: keep Macs off `AirKit2_Network`.** On each Mac, forget the network
+or turn Auto-Join off for it. Only the sticks should be on the AP.
 
-**What the Pi shows.** Nothing at the moment it happens. About 5 minutes later,
-every device disconnects within one second (`AP-STA-DISCONNECTED` for all of
-them, no reason given). That's the AP's inactivity timeout, so the radio went
-deaf 5 minutes before. `wlan0`'s rx counter stays at 0. The
-`rtw_8822bu … failed to get tx report from firmware` lines are always there,
-including while it works, so they don't signal the lockup.
+**Symptom.** The AP vanishes: Macs no longer list it, and every stick drops
+at once. The sticks may come back on their own a minute later, or they may
+not. On the Pi, `nmcli` still says the AP is connected.
 
-**What didn't fix it:**
-- reloading the driver (the module is `rtw88_8822bu`, not `rtw_8822bu`). The
-  driver crashed on unload.
-- rebooting the Pi. **A Pi 5 keeps USB powered through a reboot**, so a hung
-  dongle stays hung.
-- changing PMF either way.
+**What the Pi shows.** When a Mac joins, it logs
+`HT: Forty MHz Intolerant is set by <the Mac>`. That's the Mac asking the AP
+to change how it uses the channel. Within 16 s to 10 min of that, every
+device disconnects in the same second (`AP-STA-DISCONNECTED` for all,
+no reason given). The driver logs bursts of
+`rtw_8822bu … failed to get tx report from firmware` around the drops.
 
-**What fixed it.** Unplug the dongle, wait 10 s, and plug it back into the same
-port. The AP profile is bound to the dongle's MAC, so it comes back on its
-own, within about 10 s. All four sticks rejoined.
+**The evidence (Pi clock, 2026-11-25):**
 
-**Check whether it's alive. On the Mac:**
-`ssh pi@192.168.50.110 'a=$(cat /sys/class/net/wlan0/statistics/rx_packets); sleep 5; echo $(( $(cat /sys/class/net/wlan0/statistics/rx_packets) - a ))'`
-With sticks on, this should be hundreds. `0` means it's locked up.
+| Mac joined | everything dropped |
+|---|---|
+| 01:20 | 01:29 |
+| 02:08 | 02:10 |
+| 02:17:38 | 02:17:54 |
 
-**Seen once so far:** it worked for ~35 min after a change, then locked up. If
-it happens again, **note the time and how long it had been up**, to tell a
-fixed run-time from random. The cause (dongle, out-of-tree driver, port or
-power) is not known yet.
+With sticks only (no Mac), it stayed up each time: 4 min until the test
+was stopped, then 12 min with 0 drops and 0 driver errors. All four sticks
+streamed at ~67 msg/s each. On earlier boots, when no Mac could join, there
+were 0 driver errors.
+
+This fits the history. Before 20 Nov the sticks were perfect and no Mac could
+join. Once Macs could join, the AP started collapsing.
+
+**Ruled out by test:** PMF (either value), eth0 / the ASUS network (cable
+unplugged: still dropped with a Mac on), a Pi reboot, and reloading the
+driver. Reloading the driver crashed it; the module is `rtw88_8822bu`.
+
+**Recovering when it's down.** Get the Mac off the AP first. Then unplug the
+dongle for 10 s and plug it back in. The profile is bound to the dongle's MAC,
+so the AP comes back by itself. A reboot doesn't always clear it, because a
+Pi 5 keeps USB powered through a reboot. If AirKit isn't running afterwards,
+start it. The sticks only appear in AirKit while `sclang` is running.
+
+**Is it alive? On the Mac:**
+`ssh pi@192.168.50.110 'sudo timeout 3 tcpdump -n -i wlan0 udp dst port 57120 | awk "{print \$3}" | sort | uniq -c'`
+should list each stick at ~200 per 3 s.
+
+**Open:** a Mac on the AP is still needed sometimes. Why a Mac's join brings
+this AP down, and how to let one on safely, is not solved. The
+`Forty MHz Intolerant` request is the lead.
 
 ## eth0 must be `auto`, never `link-local` (airkit2, fixed 2026-11-21)
 
@@ -182,9 +183,9 @@ while another Mac joined. So the fault is this Mac's join, not the AP:
 - Theory, unconfirmed: macOS 27 refuses the handshake with this AP, and shows a
   failed handshake as "requires a password".
 
-**2026-11-25:** PMF was on at the time (see the section above). It's the
-likeliest cause. If this Mac still can't join now that PMF is off, carry on
-below.
+**2026-11-25:** Macs could join, and a Mac on the AP then brought it down
+for the sticks (see "a Mac on the AP brings it down" above). Keep Macs off
+`AirKit2_Network` until that is understood.
 
 To test another day:
 1. Find the other Mac's macOS version. Older than 27 points at the new OS, and
