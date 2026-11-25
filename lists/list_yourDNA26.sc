@@ -12,11 +12,14 @@
 		// 3 green
 		"daveBell2",
 		"bee",
-		"hover1",
+		"hoverSong3",
 
 		// 4 & 5
 		"bleepBloop4",
 		"heyheyspaceline",
+		"wind1",
+		"wind2",
+		"wind3",
 
 		// 6 & 7
 		"hover1",

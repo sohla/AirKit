@@ -37,7 +37,7 @@ SynthDef(\sheet4, {
     reverbed = FreeVerb.ar(filtered, reverbMix, reverbRoom, reverbDamp);
 
 
-	Out.ar(out, reverbed * amp.lag(2) * env);
+	Out.ar(out, reverbed * amp.lagud(2,4) * env);
 
 }).add;
 
@@ -54,15 +54,16 @@ SynthDef(\sheet4, {
 
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var a = m.accelMassFiltered.lincurve(0, 6 * sens,0,5,-6);
+	var a = m.accelMassFiltered.lincurve(0, 2 * sens,0,1,-6);
 	var b = m.accelMassFiltered.linexp(0, 2 * sens,0.1,0.9);
 	var r = m.rrateMassFiltered.linlin(0, 2 * sens,0.8,1.0);
-	var e = (d.sensors.gyroEvent.y / 2pi) + 0.5;
-	e = e.fold(0,0.5) * 2;
-	e = e.linexp(0,1,600,1600);
-	if(a<0.03,{a=0});
+	var e = m.rrateMassFiltered.linexp(0, 2 * sens,1200,3000);
+	// var e = (d.sensors.gyroEvent.y / 2pi) + 0.5;
+	// e = e.fold(0,0.5) * 2;
+	// e = e.linexp(0,1,100,1600);
+	if(a<0.002,{a=0});
 	if(a>0.9,{a=0.9});
-	synth.set(\amp, a * 2 * vol);
+	synth.set(\amp, a * vol);
 	synth.set(\my, b);
 	synth.set(\mx, r);
 	synth.set(\filterFreq, e);

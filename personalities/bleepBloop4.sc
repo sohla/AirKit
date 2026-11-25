@@ -408,7 +408,7 @@ SynthDef(\bleepBloop4DulcimerVerb, {|in=0, out=0, mix=0.2, room=1.12, damp=0.2, 
 
 	Pdef(dulcPtn).set(\viewID, d.port);
 	Pdef(dulcPtn).set(\divIdx, dulcIdx);
-	Pdef(dulcPtn).set(\amp, dulcAmp.dbamp * vol * 0.5);
+	Pdef(dulcPtn).set(\amp, dulcAmp.dbamp * vol * 0.35);
 	Pdef(dulcPtn).set(\subamp, subamp.dbamp * vol * 0.5);
 	Pdef(dulcPtn).set(\root, m.com.root ? 0);
 

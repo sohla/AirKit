@@ -1,0 +1,110 @@
+var m = ~model;
+var synth;
+
+// var chords = [[48, 55, 60, 64], [45, 52, 57, 60], [41, 48, 53, 57], [43, 50, 55, 59]] + 12;
+var chords = [[55],[62],[64],[60]] + 12;
+var quietFor = 0;
+var armed = false;
+var lastNow;
+
+m.rrateMassFilteredAttack = 0.3;
+m.rrateMassFilteredDecay = 0.1;
+m.accelMassFilteredAttack = 0.2;
+m.accelMassFilteredDecay = 0.1;
+
+//------------------------------------------------------------
+SynthDef(\wind3, {
+
+	|out=0, amp=0.5, density=0.5, strength=0.5,
+     filterFreq=1000, filterQ=0.5,
+     reverbMix=0.6, reverbRoom=0.5, reverbDamp=0.2, gate=0, my=0.5, mx=1x, klankAmp=0.006, ringTime=2, glide=1.5|
+
+    var wind, filtered, reverbed;
+    var densityMod, strengthMod;
+	var chord = \chord.kr([48, 55, 60, 64]);
+	var klank;
+	var env = EnvGen.ar(Env.asr(1.3,1.0,5.0), gate, doneAction:Done.freeSelf);
+
+    // Modulate density and strength
+	densityMod = LFNoise2.kr(0.1).range(0.8, 1.2) * mx.lag(5);
+	strengthMod = LFNoise2.kr(0.2).range(0.8, 1.2) * my.lag(3.5);
+
+    // Base wind sound
+	wind = [WhiteNoise.ar(1),WhiteNoise.ar(1)] * 1;
+
+    // Apply density control (affects graininess of the wind)
+    wind = Dust.ar(densityMod * 10000) * wind * [1, pi];	
+
+    // Apply strength control (affects amplitude and filter)
+    wind = wind * strengthMod;
+
+    // Apply resonant filter
+	filtered = RLPF.ar(wind, filterFreq.lag(3)  * strengthMod.linexp(0, 1, 0.5, 2), filterQ);
+
+	klank = DynKlank.ar(`[chord.midicps.lag(glide), [1, 0.7, 0.6, 0.5], ringTime ! 4], filtered) * klankAmp;
+
+    // Apply reverb
+    reverbed = FreeVerb.ar(filtered + klank, reverbMix, reverbRoom, reverbDamp);
+
+
+	Out.ar(out, reverbed * amp.lagud(2,4) * env);
+
+}).add;
+
+~init = ~init <> {
+	synth = Synth(\wind3, [\gate, 1, \chord, chords[0]]);
+};
+
+~deinit = ~deinit <> {
+	synth.free;
+};
+
+//------------------------------------------------------------
+~next = {|d|
+
+	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
+	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
+	var a = m.accelMassFiltered.lincurve(0, 2 * sens,0,1,-6);
+	var b = m.accelMassFiltered.linexp(0, 2 * sens,0.1,0.9);
+	var r = m.rrateMassFiltered.linlin(0, 2 * sens,0.8,1.0);
+	var e = m.rrateMassFiltered.linexp(0, 2 * sens,1200,3000);
+	var klankAmp = 0.006;
+	var quietThresh = 0.02;
+	var quietSecs = 0.35;
+	var now = Main.elapsedTime;
+	// var e = (d.sensors.gyroEvent.y / 2pi) + 0.5;
+	// e = e.fold(0,0.5) * 2;
+	// e = e.linexp(0,1,100,1600);
+	quietFor = if(m.accelMassFiltered > quietThresh, { armed = true; 0 }, { quietFor + (now - (lastNow ? now)) });
+	lastNow = now;
+	if(armed and: { quietFor >= quietSecs }, { chords = chords.rotate(-1); synth.set(\chord, chords[0]); armed = false });
+
+	if(a<0.002,{a=0});
+	if(a>0.9,{a=0.9});
+	synth.set(\amp, a * vol * 0.2);
+	synth.set(\my, b);
+	synth.set(\mx, r);
+	synth.set(\filterFreq, e);
+	synth.set(\klankAmp, klankAmp);
+};
+
+//------------------------------------------------------------
+~plotMin = -1;
+~plotMax = 1;
+~plot = { |d,p|
+	// [d.sensors.quatEvent.x, d.sensors.quatEvent.y, d.sensors.quatEvent.z];
+	[m.rrateMassFiltered];
+	// [m.accelMass + m.rrateMassFiltered, m.accelMassFiltered,m.rrateMassThreshold];
+	// [m.rrateMassFiltered, m.rrateMassThreshold, m.accelMassAmp];
+	// [d.sensors.gyroEvent.x, d.sensors.gyroEvent.y, d.sensors.gyroEvent.z];
+	// [d.sensors.rrateEvent.x, d.sensors.rrateEvent.y, d.sensors.rrateEvent.z];
+	// [d.sensors.accelEvent.x, d.sensors.accelEvent.y, d.sensors.accelEvent.z];
+
+
+};
+
+
+
+
+
+

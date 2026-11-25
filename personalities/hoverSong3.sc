@@ -38,7 +38,7 @@ SynthDef(\hoverSong3Sampler, {|bufnum=0, out=0, amp=0.5, rate=1, start=0.2, pan=
 	// var env = EnvGen.kr(Env.adsr(attack, decay, sustain, release), gate, timeScale: 2,doneAction: 2);
 	var env = EnvGen.kr(Env.perc(attack, release), gate, timeScale: 1,doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum, rate: lr, startPos: start * BufFrames.kr(bufnum), loop: 0) * 0.4;
-	var tone = SinOsc.ar([freq * 0.27, freq * 0.53] * LFNoise2.ar(12,0.03,1) * rate, LFNoise2.ar(3,6),[0.1,0.12 ]* env * 4);
+	var tone = SinOsc.ar([freq * 0.27, freq * 0.53] * LFNoise2.ar(12,0.03,1) * rate, LFNoise2.ar(3,6),[0.1,0.12 ]* env * 3);
 	// sig = RLPF.ar(sig, cutoff, rq);// + osc;
 	sig = sig + tone;
 	sig = Balance2.ar(sig[0], sig[1], pan, amp);
@@ -94,7 +94,7 @@ SynthDef(\hoverSong3Looper, {|bufnum=0, out=0, amp=1.0, rate=1, start=0, pan=0, 
 ~next = {|d|
   var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
   var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-  var amp = m.accelMassFiltered.lincurve(0, 4 * sens, -40.dbamp, -30.dbamp, 2);
+  var amp = m.accelMassFiltered.lincurve(0, 4 * sens, -40.dbamp, -20.dbamp, 2);
 	var quietThresh = 0.02;
 	var quietSecs = 0.25;
 	var now = Main.elapsedTime;

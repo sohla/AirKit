@@ -171,7 +171,7 @@ SynthDef(\hattieFlowerVerb, { |in = 0, out = 0, room = 0.9, damp = 0.4, lowcut =
 			synth = Synth(\hattieFlowerVoice, [
 				\freq, (36 + currentNote + currentRoot + oct).midicps,
 				\gate, 1,
-				\amp, amp * 0.3 * av * vol,
+				\amp, amp * 0.6 * av * vol,
 				\fx, fxBus ? 0,
 				\send, if(fxBus.isNil, 0, 0.4),
 			], group);

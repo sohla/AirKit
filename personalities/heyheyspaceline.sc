@@ -168,7 +168,7 @@ SynthDef(\heheyspacelineDrone, {|out=0, freq=110, amp=0.05, pan=0,
 ~next = {|d|
 	var sens = d.params.sensitivity.lincurve(0.0, 1.0, 0.9, 0.1, 0);
 	var vol = d.params.volume.lincurve(0.0, 1.0, 0.0, 1.0, 1);
-	var idx = m.accelMassFiltered.lincurve(0,14.5 * sens, 0, divs.size - 1, 6)
+	var idx = m.accelMassFiltered.lincurve(0, 10 * sens, 0, divs.size - 1, 6)
 		.round.asInteger.clip(0, divs.size - 1);
 	var amp = m.accelMassFiltered.lincurve(0, 1.0 * sens, -40, -12, -1);
 	var ffreq = m.accelMassFiltered.lincurve(0, 1.0 * sens, 700, 12000, 2);
@@ -176,8 +176,8 @@ SynthDef(\heheyspacelineDrone, {|out=0, freq=110, amp=0.05, pan=0,
 
 	var droneAmp = m.accelMassFiltered.lincurve(0, 2.0 * sens, -32, -20, -1);
 	var droneFfreq = m.accelMassFiltered.lincurve(0, 1.0 * sens, 500, 3000, 2);
-	var quietThresh = 0.05;
-	var quietSecs = 0.25;
+	var quietThresh = 0.03;
+	var quietSecs = 0.15;
 	var now = Main.elapsedTime;
 
 	quietFor = if(m.accelMassFiltered > quietThresh, { armed = true; 0 }, { quietFor + (now - (lastNow ? now)) });

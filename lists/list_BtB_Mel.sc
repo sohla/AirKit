@@ -2,9 +2,17 @@
 	[
 		"silence",
 
+		// circus
+		"circusPiano",
+		"circusMiniMoog",
+
+		"piano2",
+		"miniMoog",
+		"miniMoog2",
+
 		// shhh
-		// "mel4",
-		// "mel6",
+		"mel4",
+		"mel6",
 
 		// circling
 		"multiBeat1.2",
