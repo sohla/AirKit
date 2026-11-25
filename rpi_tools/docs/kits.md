@@ -21,9 +21,9 @@ address at boot, and provisioning reads it from there.
 - **Passphrases are not recorded here.** You keep them in
   `ansible/vault.yml`, encrypted with `ansible-vault`. Provisioning decrypts
   them at run time and never logs them.
-- **Stick IPs:** the sticks have static IPs baked into their firmware, so they
-  must sit inside the AP's subnet. If an AP IP changes subnet, the sticks need
-  reflashing. Give the range, e.g. `.40–.48`.
+- **Stick IPs:** the sticks get their address from the AP by DHCP. The firmware
+  has no static IP. What is compiled into the firmware is the network name and
+  password (`globals.h`), so a stick only joins the kit it was flashed for.
 - **Radio:** `internal`, or the USB dongle model. A dongle kit also gets the
   internal Wi-Fi disabled, as airkit2 has now.
 
@@ -73,12 +73,20 @@ another difference from the spec.
 
 **Mel's sticks** (from the AP, 2026-11-25):
 
-| MAC | IP | Notes |
-|---|---|---|
-| 64:e8:33:64:f1:94 | 192.168.200.11 | static |
-| 64:e8:33:64:f1:80 | 192.168.200.13 | static. The one that didn't appear at first on 2026-11-25 |
-| 64:e8:33:64:f1:50 | 192.168.200.14 | static |
-| 64:e8:33:67:c1:4c | 192.168.200.56 | DHCP, reports itself as `esp32s3-67C14C` |
+| ID | MAC | IP | Notes |
+|---|---|---|---|
+| 1 | 64:e8:33:64:f1:94 | 192.168.200.11 | |
+| 2 | 64:e8:33:67:c1:4c | 192.168.200.56 | doesn't rejoin after a drop. Power-cycle it |
+| 3 | 64:e8:33:64:f1:80 | 192.168.200.13 | |
+| 4 | 64:e8:33:64:f1:50 | 192.168.200.14 | |
+
+All four use DHCP; none has a fixed address. The firmware
+(`~/Develop/Embed/Projects/AirStick-ESP-Arduino`) has no static-IP code, and
+the network name and password are compiled into `globals.h`. After a drop, the
+firmware's own retry loop doesn't run: it only runs at boot, and runtime
+reconnects are left to the ESP32 library. Sticks 1, 3 and 4 came back by
+themselves; stick 2 stayed off until power-cycled. All four report the same
+settings over OSC (`stick-config.py --show`), apart from ID and LED.
 
 To see which are on the AP right now. **On the Mac:**
 `ssh pi@192.168.50.110 'ip neigh show dev wlan0'`
@@ -86,55 +94,53 @@ To see which are on the AP right now. **On the Mac:**
 **Also seen:** the Pi's clock reads 19 Sep 2026. It has no internet to sync
 from, so log and file times on airkit2 are Pi-clock times, not real dates.
 
-## airkit2 (Mel) — a Mac on the AP brings it down (2026-11-25)
+## airkit2 (Mel) — the AP drops every stick at once (2026-11-25, cause not proven)
 
-**Rule: keep Macs off `AirKit2_Network`.** On each Mac, forget the network
-or turn Auto-Join off for it. Only the sticks should be on the AP.
+**Rule for now: keep Macs off `AirKit2_Network`** (on each Mac, forget it or
+turn Auto-Join off), and keep the dongle in its usual port (`1-2`).
 
-**Symptom.** The AP vanishes: Macs no longer list it, and every stick drops
-at once. The sticks may come back on their own a minute later, or they may
-not. On the Pi, `nmcli` still says the AP is connected.
+**Symptom.** Every device is disconnected in the same second
+(`AP-STA-DISCONNECTED` for all, no reason given). Macs may stop listing the AP.
+`nmcli` on the Pi still says the AP is connected. Sticks 1, 3 and 4 usually
+rejoin by themselves within about a minute; stick 2 doesn't (see the stick
+table above). The driver logs `rtw_8822bu … failed to get tx report from
+firmware` around the drops. Before 2026-11-25 there were none.
 
-**What the Pi shows.** When a Mac joins, it logs
-`HT: Forty MHz Intolerant is set by <the Mac>`. That's the Mac asking the AP
-to change how it uses the channel. Within 16 s to 10 min of that, every
-device disconnects in the same second (`AP-STA-DISCONNECTED` for all,
-no reason given). The driver logs bursts of
-`rtw_8822bu … failed to get tx report from firmware` around the drops.
+**The drops (Pi clock, 2026-11-25):**
 
-**The evidence (Pi clock, 2026-11-25):**
+| dropped | Mac on the AP? | dongle port |
+|---|---|---|
+| 01:29 | yes, joined 01:20 | 1-2 |
+| 02:10 | yes, joined 02:08 | 1-2 |
+| 02:17:54 | yes, joined 02:17:38 (16 s before) | 3-1 |
+| 02:46 | **no, and nothing tried to join** | 3-1 |
 
-| Mac joined | everything dropped |
-|---|---|
-| 01:20 | 01:29 |
-| 02:08 | 02:10 |
-| 02:17:38 | 02:17:54 |
-
-With sticks only (no Mac), it stayed up each time: 4 min until the test
-was stopped, then 12 min with 0 drops and 0 driver errors. All four sticks
-streamed at ~67 msg/s each. On earlier boots, when no Mac could join, there
-were 0 driver errors.
-
-This fits the history. Before 20 Nov the sticks were perfect and no Mac could
-join. Once Macs could join, the AP started collapsing.
+A Mac joining logs `HT: Forty MHz Intolerant is set by <the Mac>`. With sticks
+only, it stayed up 12 min on port `3-1`, dropped at 02:46, and then ran **24 min
+clean on port `1-2`** (03:11–03:35, 0 driver errors). The dongle had moved to
+`3-1` at a replug and was moved back. So the cause isn't proven. A Mac on the
+AP is the strongest lead, and the port is a second one.
 
 **Ruled out by test:** PMF (either value), eth0 / the ASUS network (cable
-unplugged: still dropped with a Mac on), a Pi reboot, and reloading the
-driver. Reloading the driver crashed it; the module is `rtw88_8822bu`.
+unplugged: it still dropped), a Pi reboot, and reloading the driver.
+Reloading the driver crashed it; the module is `rtw88_8822bu`. On the Pi the
+settings, kernel, driver and firmware are identical to the last good boot
+(21 Nov).
 
-**Recovering when it's down.** Get the Mac off the AP first. Then unplug the
-dongle for 10 s and plug it back in. The profile is bound to the dongle's MAC,
-so the AP comes back by itself. A reboot doesn't always clear it, because a
-Pi 5 keeps USB powered through a reboot. If AirKit isn't running afterwards,
-start it. The sticks only appear in AirKit while `sclang` is running.
+**If it's down.** Get any Mac off the AP. Unplug the dongle for 10 s and plug it
+back into the **same port** (`1-2`). The profile is bound to the dongle's MAC,
+so the AP comes back by itself. Then power-cycle stick 2. A reboot doesn't
+always clear it, because a Pi 5 keeps USB powered through a reboot. If AirKit
+isn't running, start it; sticks only appear in AirKit while `sclang` is running.
 
 **Is it alive? On the Mac:**
 `ssh pi@192.168.50.110 'sudo timeout 3 tcpdump -n -i wlan0 udp dst port 57120 | awk "{print \$3}" | sort | uniq -c'`
 should list each stick at ~200 per 3 s.
+**Which port is the dongle on? On the Mac:**
+`ssh pi@192.168.50.110 'readlink /sys/class/net/wlan0/device'` should end in `1-2:1.0`.
 
-**Open:** a Mac on the AP is still needed sometimes. Why a Mac's join brings
-this AP down, and how to let one on safely, is not solved. The
-`Forty MHz Intolerant` request is the lead.
+**When it drops, record:** the time, whether a Mac was on or trying to join, and
+the dongle's port.
 
 ## eth0 must be `auto`, never `link-local` (airkit2, fixed 2026-11-21)
 
@@ -184,7 +190,7 @@ while another Mac joined. So the fault is this Mac's join, not the AP:
   failed handshake as "requires a password".
 
 **2026-11-25:** Macs could join, and a Mac on the AP then brought it down
-for the sticks (see "a Mac on the AP brings it down" above). Keep Macs off
+for the sticks (see "the AP drops every stick at once" above). Keep Macs off
 `AirKit2_Network` until that is understood.
 
 To test another day:
