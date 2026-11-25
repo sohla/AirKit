@@ -142,6 +142,33 @@ should list each stick at ~200 per 3 s.
 **When it drops, record:** the time, whether a Mac was on or trying to join, and
 the dongle's port.
 
+**Why Macs, probably: a known rtw88 USB driver weakness** (research,
+2026-11-25; inferred, not reproduced on this kit). A patch proposed upstream
+([openwrt PR #25303](https://github.com/openwrt/openwrt/pull/25303)) describes
+this exact error, `failed to get tx report from firmware`, on rtw88 USB chips
+like the Techkey's. The chip reports each frame's delivery later than the
+driver's 500 ms wait. In AP mode this happens every 1–3 s **when clients use
+power save**. The AP software uses those reports to decide whether a station
+is still there, so it can wrongly drop stations. The fix raises the wait to
+2500 ms. It's pending upstream and is not in this Pi's kernel
+(`6.12.96+rpt-rpi-2712`).
+
+This fits what we saw. Macs use Wi-Fi power save; the sticks don't, because
+the firmware calls `WiFi.setSleep(false)`. Boots before any Mac could join had
+0 errors; on 2026-11-25, with Macs joining, there were hundreds. Other reports
+tie the same error to the AP vanishing, one only in USB 3 ports
+([lwfinger/rtw88 #430](https://github.com/lwfinger/rtw88/issues/430)).
+
+- **macOS 27 isn't the trigger.** This Mac has run it since 2026-09-28, through
+  the weeks the sticks worked. No macOS 27 bug matching this was found.
+- **`Forty MHz Intolerant`** is a common Apple-client request to narrow the
+  channel. No report links it to dropping every station, so it's probably a
+  side detail.
+
+Letting a Mac on safely would need a kernel with that patch, a different
+dongle or driver, or a test that the Mac's power save is the trigger. That's
+a quiet-day job, not a pre-session one.
+
 ## eth0 must be `auto`, never `link-local` (airkit2, fixed 2026-11-21)
 
 **Rule:** on the lab desk (Mac – switch – router/AP – Pi), a kit's eth0 profile
