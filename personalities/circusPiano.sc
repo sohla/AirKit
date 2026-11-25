@@ -69,7 +69,7 @@ m.accelMassFilteredAttack = 0.99;
 m.accelMassFilteredDecay = 0.6;
 
 //------------------------------------------------------------
-SynthDef(\pianoVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
+SynthDef(\circusPianoVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
     attack=0.004, sustain=0.3, release=0.2, mr=1, moda=0.0, modf=0.1, suba=1.0|
 	var env = EnvGen.kr(Env.new([0, 1, 1, 0], [attack, sustain, release]), doneAction: 2);
 	var sig = PlayBuf.ar(2, bufnum,
@@ -84,7 +84,7 @@ SynthDef(\pianoVoice, {|out=0, bufnum=0, amp=0.2, rate=1, start=0, pan=0,
 	Out.ar(out, Balance2.ar(sig[0], sig[1], pan, amp * env));
 }).add;
 
-SynthDef(\pianoVerb, {
+SynthDef(\circusPianoVerb, {
     |in=0, out=0, mix=0.1, room=2.83, damp=0.3, amp=1, gate=1, release=0.5|
 	var sig = In.ar(in, 2);
 	var env = EnvGen.kr(Env.asr(0.01, 1, release), gate, doneAction: 2);
@@ -153,7 +153,7 @@ SynthDef(\pianoVerb, {
 
 	group = Group.new;
 	fxBus = Bus.audio(s, 4);
-	verbSynth = Synth.tail(group, \pianoVerb, [\in, fxBus, \out, 0, \mix, 0.2, \room, 2.83, \damp, 0.3, \amp, 1]);
+	verbSynth = Synth.tail(group, \circusPianoVerb, [\in, fxBus, \out, 0, \mix, 0.2, \room, 2.83, \damp, 0.3, \amp, 1]);
 
 	
 	// The zero line, held for the life of the personality, so the shift
@@ -173,7 +173,7 @@ SynthDef(\pianoVerb, {
 
 	Pdef(m.ptn,
 		Pbind(
-			\instrument, \pianoVoice,
+			\instrument, \circusPianoVoice,
 			\group, group,
 			\out, fxBus,
 			\type, eventTypeName,

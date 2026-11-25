@@ -11,7 +11,7 @@ var pools = [
 	[0,7,2,11,12] + 2,
 	[0,7,2,11,12] - 5,
 	[0,7,4,11,12] - 6,
-];
+] - 4;
 
 m.accelMassFilteredAttack = 0.7;
 m.accelMassFilteredDecay = 0.2;

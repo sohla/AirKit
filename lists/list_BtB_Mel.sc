@@ -10,6 +10,8 @@
 		"miniMoog",
 		"miniMoog2",
 
+		"silence",
+
 		// shhh
 		"mel4",
 		"mel6",
