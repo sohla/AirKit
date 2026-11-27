@@ -254,6 +254,7 @@ transmitting them. `tx_errors` will still read `0`.
 | `wifi-monitor.sh 7200` then `wifi-report.sh` | The fault is intermittent. Samples rails, SDIO counters, station churn, nl80211 events and the firmware console every 2 s |
 | `akwifi.sh timeline` | Reconstruct any past boot from the journal — AP lifecycle, associations, handshake failures |
 | `sticks.sh` | Which sticks are on the AP, and whether each is sending (pkt/s) |
+| `sticks-mac.sh` | On a Mac: every device on its networks, and which are sticks (with ID), configured or not |
 | `stick-config.py` | Set a stick's ID, LED and stream from `stick.md` (see **Setting up a stick**) |
 | `osc-trace.sh 150` | Application layer. Captures `wlan0` **and loopback**, so it shows the stick's first data packet, the app's `/Config/GetConfig`, the reply, and `addDevice` |
 
