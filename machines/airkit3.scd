@@ -37,5 +37,6 @@
 
 	border: false,
 	fullScreen: true,
+	plotter: true,
 	bgColor: Color.black
 )

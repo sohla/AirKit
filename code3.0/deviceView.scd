@@ -1,3 +1,4 @@
+var machine = Require("machine.scd");
 var spacing = 4;
 var contentView;
 var addTitleView = Require("titleView.scd");
@@ -93,7 +94,7 @@ var addDetailView = {|d|
 		// 	NetAddr("127.0.0.1", 57120).sendMsg("/airkit/calibrate", d.port);
 		// });
 
-	gl.addSpanning(addPlotterView.(d,view), 1, 0, 1, 2);
+	if(machine[\plotter], { gl.addSpanning(addPlotterView.(d,view), 1, 0, 1, 2) });
 
 	// add device view
 	// contentView.layout.add(view, (numDevices/2).floor, numDevices%2);	

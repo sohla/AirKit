@@ -108,6 +108,10 @@ var defaults = (
 	// personalities that trigger off SoundIn. Off unless a kit asks for it.
 	drumInput: false,
 
+	// The per-device signal plotter on the devices page, driven by ~plot.
+	// Off saves its 33Hz redraw per device on a slow machine.
+	plotter: true,
+
 	listsDir: root +/+ "lists/",
 	personalityDir: root +/+ "personalities/",
 	versionPath: root +/+ "VERSION",

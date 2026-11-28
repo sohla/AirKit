@@ -42,6 +42,7 @@
 
 	border: true,
 	fullScreen: true,
+	plotter: false,
 	bgColor: Color.white,
 	screenProbe: \osx,
 
