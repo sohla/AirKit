@@ -41,7 +41,7 @@
 	numOutputs: 4,
 
 	border: true,
-	fullScreen: false,
+	fullScreen: true,
 	bgColor: Color.white,
 	screenProbe: \osx,
 

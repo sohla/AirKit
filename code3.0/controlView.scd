@@ -7,6 +7,8 @@ var addNextButton = Require("nextButton.scd");
 
 var sliderView = {|lt="default", rt="", d|
   var st;
+  var vertical = {|v| v.bounds.width < v.bounds.height };
+  var valueAt = {|v,x,y| if(vertical.(v), { 1 - (y / v.bounds.height) }, { x / v.bounds.width }) };
   View().layout_(HLayout(
     UserView()
       .background_(Color.black.lighten(0.1))
@@ -17,11 +19,13 @@ var sliderView = {|lt="default", rt="", d|
         var vw = v.bounds.width;
         var vh = v.bounds.height;
         var tw = v.bounds.width * 0.15;
+        var th = v.bounds.height * 0.15;
 		var pos = (vw * d.params.at(lt.asSymbol)) - (tw/2);
+		var posY = (vh * (1 - d.params.at(lt.asSymbol))) - (th/2);
         lt.drawLeftJustIn(Rect(10,0,vw,vh), Font(size:v.bounds.width * 0.15), Color.black());
         // rt.drawRightJustIn(Rect(vw/2,0,(vw/2)-10,vh), Font(size:48), Color.black());
         Pen.fillColor = d.color.alpha_(0.5);
-        Pen.addRect(Rect(pos, 2, tw, vh - 4));
+        if(vertical.(v), { Pen.addRect(Rect(2, posY, vw - 4, th)) }, { Pen.addRect(Rect(pos, 2, tw, vh - 4)) });
         Pen.fill;
         // lt.drawCenteredIn(Rect(pos,0,tw,40), Font(size:24), Color.black());
       })
@@ -35,13 +39,13 @@ var sliderView = {|lt="default", rt="", d|
       // own state; this one only renders the model.
       .mouseMoveAction_({|v,x,y|
         NetAddr.new("127.0.0.1", 57120)
-          .sendMsg("/airkit/param", d.port, lt, x / v.bounds.width);
+          .sendMsg("/airkit/param", d.port, lt, valueAt.(v,x,y));
       })
       .mouseUpAction_({|v,x,y|
       })
       .mouseDownAction_({|v,x,y|
         NetAddr.new("127.0.0.1", 57120)
-          .sendMsg("/airkit/param", d.port, lt, x / v.bounds.width);
+          .sendMsg("/airkit/param", d.port, lt, valueAt.(v,x,y));
       });
   ));
   
