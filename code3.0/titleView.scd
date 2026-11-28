@@ -6,7 +6,7 @@ var addTitleView = { |d|
 		.font_(Font(size:fs, bold:true))
 		.states_([
 			[d.name, Color.black, d.color.alpha_(0.8)],
-			[d.name, Color.black.alpha_(0.5), Color.white.alpha_(0.1)],
+			[d.name, d.color.alpha_(0.25), Color.white.alpha_(0.1)],
 		])
 		.value_(if(d.enabled, 0, 1))
 		.action_({|but|
