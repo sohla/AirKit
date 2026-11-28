@@ -36,7 +36,6 @@ var addNextButton = Require("nextButton.scd");
 	var host = View().background_(Color.black);
 	var buttons = View().fixedHeight_((rowHeight * 2) + spacing).layout_(GridLayout.new()
 		.hSpacing_(spacing).vSpacing_(spacing).margins_([0,0,0,0]));
-	var count = 0;
 
 	var osc = OSCFunc({ |msg, time, addr, recvPort|
 		var d = ~devices.at(msg[1].asInteger);
@@ -52,8 +51,7 @@ var addNextButton = Require("nextButton.scd");
 							addNextButton.(d),
 						]
 					).hSpacing_(spacing).vSpacing_(spacing).margins_([0,0,0,0]));
-				buttons.layout.add(view, 0, count);
-				count = count + 1;
+				buttons.layout.add(view, 0, d.index - 1);
 			}.defer;
 		});
 	},'/airkit/addDevice', NetAddr("127.0.0.1", NetAddr.langPort));

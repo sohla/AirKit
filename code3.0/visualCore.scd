@@ -41,7 +41,6 @@ var core = (
 	scene: \overlay,
 	stack: nil,
 	gridView: nil,
-	gridCount: 0,
 	latency: 0.2	// visuals are stamped this far ahead so they land with the audio
 );
 
@@ -458,8 +457,7 @@ core.addDevice = { |self, d|
 			d.personality = d.personality + 1;
 			NetAddr.new("127.0.0.1", 57120).sendMsg("/airkit/loadPersonality", d.port, d.personality);
 		});
-		core.gridView.layout.add(canvas, 0, core.gridCount);
-		core.gridCount = core.gridCount + 1;
+		core.gridView.layout.add(canvas, 0, d.index - 1);
 	});
 	core.applyScene(core.scene);
 };
