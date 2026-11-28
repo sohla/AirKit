@@ -68,7 +68,7 @@ var addDetailView = {|d|
 				[HLayout(addIDView.(d), addNetView.(d), addBatteryView.(d)).spacing_(2), columns:2],									
 			],
 			[
-				View().maxHeight_(120)
+				if(machine[\plotter], { View().maxHeight_(120) });				
 			],
 			[
 				[addThreeDeeView.(d), columns:2],
